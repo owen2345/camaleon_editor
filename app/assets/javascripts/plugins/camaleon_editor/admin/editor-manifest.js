@@ -8,3 +8,5 @@
 //= require ./text
 //= require ./video
 //= require ./editor
+
+//= require ./grid-editor
