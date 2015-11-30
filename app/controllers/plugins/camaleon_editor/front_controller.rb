@@ -1,4 +1,4 @@
-class Plugins::CamaleonEditor::FrontController < Apps::PluginsFrontController
+class Plugins::CamaleonEditor::FrontController < CamaleonCms::Apps::PluginsFrontController
   include Plugins::CamaleonEditor::MainHelper
   def index
     # actions for frontend module

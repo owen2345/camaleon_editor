@@ -10,3 +10,4 @@
 //= require ./editor
 
 //= require ./grid-editor
+//= require ./grid_editor_style

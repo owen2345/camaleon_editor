@@ -1,4 +1,4 @@
-class Plugins::CamaleonEditor::AdminController < Apps::PluginsAdminController
+class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdminController
   include Plugins::CamaleonEditor::MainHelper
   def settings
     # actions for admin panel
