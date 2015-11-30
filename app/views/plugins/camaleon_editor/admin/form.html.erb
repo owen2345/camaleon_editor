@@ -1,6 +1,6 @@
 <%= form_for @grid_template, as: "grid_template", url:{action: @grid_template.new_record? ? :create : :update}, html: { id: "grid_template_form" } do |f| %>
     <div class="panel-body">
-        <%= render partial: 'layouts/admin/form_error', locals: {data: @grid_template} %>
+        <%= render partial: 'layouts/camaleon_cms/admin/form_error', locals: {data: @grid_template} %>
         <div class="form-group">
             <%= f.label t('camaleon_cms.admin.table.name') %><br>
             <%= f.text_field :name, :class => "form-control required" %>
