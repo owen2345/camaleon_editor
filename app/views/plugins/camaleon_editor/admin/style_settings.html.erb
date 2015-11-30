@@ -1,0 +1,116 @@
+<form>
+    <fieldset>
+        <legend>Background Image</legend>
+        <div class='col-md-12'>
+            <div class="form-group">
+                <label class="control-label">Image:</label>
+                <input placeholder="Upload your image or paste an URL" type="url" class="form-control bg_image file_upload" name="b-img" />
+            </div>
+        </div>
+        <div class='col-md-6'>
+            <div class="form-group">
+                <label class="control-label">Position</label>
+                <select class="form-control pos_bg" name="b-pos">
+                    <option value="">Default</option>
+                    <option value="left top">Left Top</option>
+                    <option value="left center">Left Center</option>
+                    <option value="left bottom">Left Bottom</option>
+                    <option value="center top">Center Top</option>
+                    <option value="center center">Center Center</option>
+                    <option value="center bottom">Center Bottom</option>
+                    <option value="right top">Right Top</option>
+                    <option value="right center">Right Center</option>
+                    <option value="right bottom">Right Bottom</option>
+                </select>
+            </div>
+        </div>
+        <div class='col-md-6'>
+            <div class="form-group">
+                <label class="control-label">Repeat</label>
+                <select class="repeat_bg form-control" name="b-r">
+                    <option value="no-repeat">No Repeat</option>
+                    <option value="repeat">Repeat</option>
+                </select>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <div class='col-md-6'>
+            <div class="form-group">
+                <label class="control-label">Size</label>
+                <select class="form-control size_bg" name="b-s">
+                    <option value="">Normal</option>
+                    <option value="contain">Contain</option>
+                    <option value="cover">Cover</option>
+                </select>
+            </div>
+        </div>
+        <div class='col-md-6'>
+            <div class="form-group">
+                <label class="control-label">Attachment</label>
+                <select class="form-control attach_bg" name="b-a">
+                    <option value="">Normal</option>
+                    <option value="fixed">Fixed</option>
+                </select>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="row">
+        <div class='col-md-6'>
+            <div class="form-group">
+                <label class="control-label">Background Color:</label>
+                <div class="input-group color panel_color" data-color="" data-color-format="rgba">
+                    <input type="text" class="form-control input-value color_bg" name="b-c" value="">
+                    <span class="input-group-addon"><i></i></span>
+                </div>
+            </div>
+        </div>
+        <div class='col-md-6'>
+            <div class="form-group">
+                <label class="control-label">Text Color:</label>
+                <div class="input-group panel_color color" data-color="">
+                    <input type="text" class="form-control input-value text_bg" name="t-c" value="">
+                    <span class="input-group-addon"><i></i></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+    <fieldset>
+        <legend>Border</legend>
+        <div class='col-md-6'>
+            <div class="form-group">
+                <label class="control-label">Color:</label>
+                <div class="input-group panel_color color" data-color="">
+                    <input type="text" class="form-control input-value color_border" name="bo-c" value="">
+                    <span class="input-group-addon"><i></i></span>
+                </div>
+            </div>
+        </div>
+        <div class='col-md-6'>
+            <div class="form-group">
+                <label class="control-label">Width:</label>
+                <input type="number" class="form-control input-value border_width" name="bo-c" value="">
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="form-group"><label class="control-label">Margin:</label>
+        <div class="input-group"><span class="input-group-addon">Top: </span>
+            <input class="form-control" type="number" name="m-t"> <span class="input-group-addon">Right: </span>
+            <input type="number" class="form-control" name="m-r"> <span class="input-group-addon">Bottom: </span>
+            <input class="form-control" type="number" name="m-b"> <span class="input-group-addon">Left: </span>
+            <input class="form-control" type="number" name="m-l">
+        </div>
+    </div>
+
+    <div class="form-group"><label class="control-label">Padding:</label>
+        <div class="input-group"><span class="input-group-addon">Top: </span>
+            <input class="form-control" type="number" name="p-t"> <span class="input-group-addon">Right: </span>
+            <input type="number" class="form-control" name="p-r"> <span class="input-group-addon">Bottom: </span>
+            <input class="form-control" type="number" name="p-b"> <span class="input-group-addon">Left: </span>
+            <input class="form-control" type="number" name="p-l">
+        </div>
+    </div>
+</form>

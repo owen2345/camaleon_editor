@@ -1,0 +1,33 @@
+{
+  "title": "Visual Editor",
+  "descr": "This is a plugin that permit you to create your contents by a simple drag and drop process. More info: <a target='_blank' href='http://camaleon.tuzitio.com/store/plugins/camaleon_editor'>here.</a>",
+  "version": "0.1",
+  "key": "camaleon_editor",
+  "helpers": [
+    "Plugins::CamaleonEditor::MainHelper"
+  ],
+  "hooks": {
+    "on_active": [
+      "camaleon_editor_on_active"
+    ],
+    "on_inactive": [
+      "camaleon_editor_on_inactive"
+    ],
+    "on_upgrade": [
+      "camaleon_editor_on_upgrade"
+    ],
+    "admin_before_load": [
+      "camaleon_editor_admin"
+    ],
+    "new_post": [
+      "camaleon_editor_post_form"
+    ],
+    "edit_post": [
+      "camaleon_editor_post_form"
+    ],
+    "front_before_load": [
+      "camaleon_editor_front"
+    ]
+    //here you can add all your hooks (read documentation)
+  }
+}

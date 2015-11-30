@@ -1,0 +1,10 @@
+.panel_grid_body{
+  .grid_item_accordion{
+    .panel-heading .collapsed{
+      i.glyphicon:before {
+        content: "\e114";
+      }
+    }
+  }
+
+}
