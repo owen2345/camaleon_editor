@@ -49,5 +49,5 @@ function grid_style_setting(item, editor, parent_item){
 
     //var bg_color = parent_item.css("background-color");
     //var color_border = parent_item.css("border-left-color");
-    open_modal({title: "Style Settings", modal_size: "modal-lg", modal_settings: { keyboard: false, backdrop: "static" }, mode: "ajax", url: root_url+"admin/plugins/camaleon_editor/style-settings", callback: modal_callback, on_submit: submit_callback })
+    open_modal({id: 'cama_editor_modal2', title: "Style Settings", modal_size: "modal-lg", modal_settings: { keyboard: false, backdrop: "static" }, mode: "ajax", url: root_url+"admin/plugins/camaleon_editor/style-settings", callback: modal_callback, on_submit: submit_callback })
 }

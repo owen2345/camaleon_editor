@@ -60,7 +60,7 @@ window.grid_tab_builder = (panel, editor)->
       update_item(tr, form.find(".name").val(), form.find(".descr").val())
       modal.modal("hide")
 
-    open_modal({title: "Tab Form", type: "primary", modal_size: "modal-lg", modal_settings: { keyboard: false, backdrop: "static" }, content: form, callback: form_callback, on_submit: submit_form_callback })
+    open_modal({id: 'cama_editor_modal2', title: "Tab Form", type: "primary", modal_size: "modal-lg", modal_settings: { keyboard: false, backdrop: "static" }, content: form, callback: form_callback, on_submit: submit_form_callback })
 
   # save information in editor
   submit_callback = (modal)->
