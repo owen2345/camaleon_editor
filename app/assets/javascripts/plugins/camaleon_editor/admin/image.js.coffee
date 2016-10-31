@@ -12,13 +12,12 @@ window.grid_image_builder = (panel, editor)->
 
     form_callback = (modal)->
         form.find(".btn_upload").click ->
-            $.fn.upload_elfinder({
-                type: "image",
-                selected: (res) ->
-                    file = _.first(res)
-                    form.find('.url_file').val(file.url.to_url());
-            })
-            return false
+          $.fn.upload_filemanager({
+                formats: "image",
+                selected: (file) ->
+                    form.find('.url_file').val(file.url);
+          })
+          return false
 
     submit_form_callback = (modal) ->
         panel.attr("data-url", modal.find(".url_file").val())

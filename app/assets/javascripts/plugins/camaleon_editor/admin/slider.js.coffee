@@ -58,11 +58,10 @@ window.grid_slider_builder = (panel, editor)->
 
     form_callback = (modal)->
       form.find(".btn_upload").click ->
-        $.fn.upload_elfinder({
-          type: "image",
-          selected: (res) ->
-            file = _.first(res)
-            form.find('.url_file').val(file.url.to_url());
+        $.fn.upload_filemanager({
+          formats: "image",
+          selected: (file) ->
+            form.find('.url_file').val(file.url);
         })
         return false
       setTimeout(->
