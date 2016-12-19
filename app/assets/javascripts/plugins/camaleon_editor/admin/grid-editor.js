@@ -67,7 +67,7 @@ jQuery(function(){
             "</div>"+
             "</div>"+
             "</div>"+
-            "<div class='col-md-12'><div class='panel_grid_body row'></div></div>"+
+            "<div class='panel_grid_body_w'><div class='panel_grid_body row'></div></div>"+
             "</div>");
 
         // grid editor export
