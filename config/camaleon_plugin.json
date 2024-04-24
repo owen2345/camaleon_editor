@@ -1,6 +1,6 @@
 {
   "title": "Visual Editor",
-  "descr": "This is a plugin that permit you to create your contents by a simple drag and drop process. More info: <a target='_blank' href='http://camaleon.tuzitio.com/store/plugins/camaleon_editor'>here.</a>",
+  "descr": "This is a plugin that permit you to create your contents by a simple drag and drop process. More info: <a target='_blank' href='https://camaleon.website/store/plugins/camaleon_editor'>here.</a>",
   "version": "0.1",
   "key": "camaleon_editor",
   "helpers": [
