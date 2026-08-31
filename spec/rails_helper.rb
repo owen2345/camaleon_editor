@@ -56,9 +56,7 @@ RSpec.configure do |config|
     # camaleon_cms's brute-force counters live in Rails.cache (FileStore here) and outlive the
     # per-example transaction, so clear them or a run of frontend requests in one example bans the
     # shared client IP for the next.
-    if Rails.cache.respond_to?(:delete_matched)
-      Rails.cache.delete_matched(/cama_captcha_attack|plugins_attack_ban/)
-    end
+    Rails.cache.delete_matched(/cama_captcha_attack|plugins_attack_ban/) if Rails.cache.respond_to?(:delete_matched)
     # A between-example reset, not a scoped translation, so I18n.with_locale (a block) does not fit.
     I18n.locale = I18n.default_locale # rubocop:disable Rails/I18nLocaleAssignment
   end
