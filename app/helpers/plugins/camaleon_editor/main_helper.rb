@@ -38,12 +38,21 @@ module Plugins::CamaleonEditor::MainHelper
   # registers the plugin's own permission in the admin roles form (Users > Roles). Granting it to a
   # role allows using the grid editor; it is off by default and admins always pass.
   def camaleon_editor_available_user_roles_list(args)
-    args[:roles_list][:manager] << {
+    roles = args[:roles_list]
+    return unless roles.is_a?(Hash) && roles[:manager].is_a?(Array)
+
+    entry = {
       key: 'camaleon_editor',
       label: I18n.t('camaleon_editor.permission.label', default: 'Visual grid editor'),
       description: I18n.t('camaleon_editor.permission.description',
                           default: 'Can switch the post editor to the grid editor and manage grid templates')
     }
+    return if roles[:manager].any? { |role| role[:key] == entry[:key] }
+
+    # cama_get_roles_values hands us the shared, shallowly-frozen CamaleonCms::UserRole::ROLES constant
+    # itself; append to a copy and reassign (the helper reads args[:roles_list] back) so the permission
+    # is not permanently pushed onto the process-global constant on every roles-form render.
+    args[:roles_list] = roles.merge(manager: roles[:manager] + [entry])
   end
 
   # loaded for frontend requests
