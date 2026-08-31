@@ -60,7 +60,7 @@ RSpec.describe 'Security: the camaleon_editor permission' do
     get '/admin/user_roles/new'
 
     expect(response.body).to include('rol_values[manager][camaleon_editor]')
-    expect(response.body).to include('Visual grid editor')
+    expect(response.body).to include('Grid Editor')
   end
 
   it 'does not load the editor assets in the post form for a non-granted author' do

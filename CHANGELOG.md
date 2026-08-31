@@ -4,7 +4,7 @@
 
 ### Security: editor permissions, and no ERB evaluation of templates
 
-Stored grid-template values were ERB-evaluated as server-side code; they now come back verbatim. The editor is gated by two new default-off permissions, **Visual grid editor** and **Manage grid templates**; admins pass. [#7](https://github.com/owen2345/camaleon_editor/pull/7).
+Stored grid-template values were ERB-evaluated as server-side code; they now come back verbatim. The editor is gated by two new default-off permissions, **Grid Editor** and **Grid templates**; admins pass. [#7](https://github.com/owen2345/camaleon_editor/pull/7).
 
 **Breaking changes**
 - Non-admin roles need the new permissions (Admin > Users > Roles); the plugins permission alone no longer opens it.
