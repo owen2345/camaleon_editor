@@ -43,9 +43,8 @@ module Plugins::CamaleonEditor::MainHelper
 
     entry = {
       key: 'camaleon_editor',
-      label: I18n.t('camaleon_editor.permission.label', default: 'Visual grid editor'),
-      description: I18n.t('camaleon_editor.permission.description',
-                          default: 'Can switch the post editor to the grid editor and manage grid templates')
+      label: I18n.t('camaleon_editor.permission.label'),
+      description: I18n.t('camaleon_editor.permission.description')
     }
     return if roles[:manager].any? { |role| role[:key] == entry[:key] }
 

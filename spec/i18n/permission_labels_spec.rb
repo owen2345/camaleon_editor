@@ -8,4 +8,16 @@ RSpec.describe 'the editor permission labels are localized' do
     expect(I18n.t('camaleon_editor.permission.label', locale: :es)).to eq('Editor visual de rejilla')
     expect(I18n.t('camaleon_editor.permission.label', locale: :it)).to eq('Editor visuale a griglia')
   end
+
+  # The hook resolves label/description from the locale file with no in-code default:, so a missing
+  # or misnested key surfaces as a translation-missing string rather than being silently absorbed.
+  it 'resolves label and description from the locale file, not an in-code default' do
+    %i[label description].each do |key|
+      %i[en es it].each do |locale|
+        value = I18n.t("camaleon_editor.permission.#{key}", locale: locale)
+        expect(value).to be_present
+        expect(value).not_to include('translation missing')
+      end
+    end
+  end
 end
