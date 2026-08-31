@@ -21,7 +21,7 @@ en:
 es:
   camaleon_editor:
     permission:
-      label: "Visual grid editor"
+      label: "Editor visual de rejilla"
       description: "Puede cambiar el editor de contenidos al editor de rejilla y administrar sus plantillas"
   admin:
     js:
@@ -41,7 +41,7 @@ es:
 it:
   camaleon_editor:
     permission:
-      label: "Visual grid editor"
+      label: "Editor visuale a griglia"
       description: "Può passare l'editor dei contenuti all'editor a griglia e gestire i suoi modelli"
   admin:
     js:
