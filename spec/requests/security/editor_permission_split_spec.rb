@@ -34,7 +34,8 @@ RSpec.describe 'Security: the editor use/manage permission split' do
       expect do
         post base, params: { grid_template: { name: 'Nope', description: '<div>x</div>' } }
       end.not_to change { @site.grid_templates.count }
-      expect(response).to have_http_status(:redirect)
+      expect(response.location).to include('/admin/dashboard')
+      expect(flash[:error]).to be_present
     end
 
     it 'may not destroy a template' do
@@ -42,7 +43,8 @@ RSpec.describe 'Security: the editor use/manage permission split' do
 
       delete "#{base}/#{template.id}"
 
-      expect(response).to have_http_status(:redirect)
+      expect(response.location).to include('/admin/dashboard')
+      expect(flash[:error]).to be_present
       expect(@site.grid_templates.where(id: template.id)).to exist
     end
   end

@@ -20,13 +20,21 @@ RSpec.describe 'Security: the camaleon_editor permission' do
     create(:user, role: slug, site: @site)
   end
 
+  # Assert the request was refused by the authorization gate specifically -- CanCan::AccessDenied
+  # redirects to the admin dashboard with a flash error -- not by the plugin-inactive redirect
+  # (which goes to the site root) or an unauthenticated redirect (which goes to the login page).
+  def expect_authorization_denied
+    expect(response).to have_http_status(:redirect)
+    expect(response.location).to include('/admin/dashboard')
+    expect(flash[:error]).to be_present
+  end
+
   it 'refuses the grid-template endpoints to a plugins manager without the grant' do
     sign_in_as(user_with_manager_grants({ plugins: 1 }, 'plugins-manager'), site: @site)
 
     get '/admin/plugins/camaleon_editor/grid_editor'
 
-    expect(response).to have_http_status(:redirect)
-    expect(response.location).to include('/admin')
+    expect_authorization_denied
   end
 
   it 'admits a role granted only the camaleon_editor permission' do
@@ -42,7 +50,7 @@ RSpec.describe 'Security: the camaleon_editor permission' do
 
     get '/admin/plugins/camaleon_editor/grid_editor'
 
-    expect(response).to have_http_status(:redirect)
+    expect_authorization_denied
   end
 
   it 'still admits admins everywhere' do
