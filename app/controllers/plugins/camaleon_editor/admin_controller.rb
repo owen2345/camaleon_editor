@@ -38,18 +38,26 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
 
   # create a new grid editor template
   def create
-    params[:grid_template][:slug] = Time.now.to_i
-    if current_site.grid_templates.create(params.require(:grid_template).permit(:name, :slug, :description))
+    @grid_template = current_site.grid_templates.new(grid_template_params)
+    @grid_template.slug = unique_grid_template_slug
+    if @grid_template.save
       index
     else
-      render html: "<div class='alert alert-danger'>#{t('admin.message.form_error')}</div>".html_safe
+      # Re-render the form, which lists @grid_template.errors via the form_error partial. Relation#create
+      # returns the record whether or not it saved, so checking #save is what makes a refused save
+      # (blank name, or a description the content-shortcode gate rejects) visible instead of a silent 200.
+      render 'form', layout: false
     end
   end
 
   # update a grid editor template
   def update
-    current_site.grid_templates.find(params[:id]).update(params.require(:grid_template).permit(:name, :description))
-    index
+    @grid_template = current_site.grid_templates.find(params[:id])
+    if @grid_template.update(grid_template_params)
+      index
+    else
+      render 'form', layout: false
+    end
   end
 
   # destroy a grid editor template
@@ -64,6 +72,17 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
   end
 
   private
+
+  def grid_template_params
+    params.require(:grid_template).permit(:name, :description)
+  end
+
+  # A collision-resistant, server-minted slug. The name alone can repeat, and a plain second-resolution
+  # timestamp collides for two saves in the same second (TermTaxonomy's slug uniqueness then refuses
+  # the second), so a random suffix is appended.
+  def unique_grid_template_slug
+    "grid-editor-#{Time.now.to_i}-#{SecureRandom.hex(4)}"
+  end
 
   # The base class gates on :manage, :plugins -- plugin administration. These endpoints are editor
   # usage, so they are gated by the plugin's own default-off permission instead (registered in the
