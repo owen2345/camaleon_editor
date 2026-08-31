@@ -40,4 +40,26 @@ RSpec.describe 'the grid editor style recovery', :js do
     expect(result).to eq('{}')
     expect(page.evaluate_script('window.__cama_editor_pwned')).to be(false)
   end
+
+  # Pin the call site, not just the helper: drive grid_style_setting on an element whose data-style
+  # is a code payload and prove the recovery path parses it instead of eval-ing it. open_modal is
+  # stubbed to run its callback synchronously so the recover step executes without the ajax modal.
+  # If the recovery ever reverts to eval (even with the safe helper still defined), this goes red.
+  it 'recovers a grid block style through the safe parser, never eval' do
+    pwned = page.evaluate_script(<<~JS)
+      (function(){
+        window.__cama_editor_call_site_pwned = false;
+        var saved = window.open_modal;
+        window.open_modal = function(opts){ try { if(opts.callback) opts.callback($('<div></div>')); } catch(e){} };
+        try {
+          var el = $('<div class="btn" data-style="window.__cama_editor_call_site_pwned = true"></div>');
+          grid_style_setting(el, $('<div></div>'), el);
+        } catch(e){}
+        window.open_modal = saved;
+        return window.__cama_editor_call_site_pwned;
+      })()
+    JS
+
+    expect(pwned).to be(false)
+  end
 end
