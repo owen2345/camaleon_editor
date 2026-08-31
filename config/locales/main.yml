@@ -2,7 +2,9 @@ en:
   camaleon_editor:
     permission:
       label: "Visual grid editor"
-      description: "Can switch the post editor to the grid editor and manage grid templates"
+      description: "Can switch the post editor to the grid editor and apply saved grid templates"
+      manage_label: "Manage grid templates"
+      manage_description: "Can create, edit and delete the shared grid templates of the site"
   admin:
     js:
       grid_editor:
@@ -22,7 +24,9 @@ es:
   camaleon_editor:
     permission:
       label: "Editor visual de rejilla"
-      description: "Puede cambiar el editor de contenidos al editor de rejilla y administrar sus plantillas"
+      description: "Puede cambiar el editor de contenidos al editor de rejilla y aplicar plantillas guardadas"
+      manage_label: "Administrar plantillas de rejilla"
+      manage_description: "Puede crear, editar y eliminar las plantillas de rejilla compartidas del sitio"
   admin:
     js:
       grid_editor:
@@ -42,7 +46,9 @@ it:
   camaleon_editor:
     permission:
       label: "Editor visuale a griglia"
-      description: "Può passare l'editor dei contenuti all'editor a griglia e gestire i suoi modelli"
+      description: "Può passare l'editor dei contenuti all'editor a griglia e applicare i modelli salvati"
+      manage_label: "Gestire i modelli a griglia"
+      manage_description: "Può creare, modificare ed eliminare i modelli a griglia condivisi del sito"
   admin:
     js:
       grid_editor:

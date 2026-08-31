@@ -71,6 +71,9 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
     render layout: false
   end
 
+  # Actions that curate the shared template library, as opposed to using the editor.
+  MANAGE_ACTIONS = %w[new create edit update destroy].freeze
+
   private
 
   def grid_template_params
@@ -84,10 +87,18 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
     "grid-editor-#{Time.now.to_i}-#{SecureRandom.hex(4)}"
   end
 
-  # The base class gates on :manage, :plugins -- plugin administration. These endpoints are editor
-  # usage, so they are gated by the plugin's own default-off permission instead (registered in the
-  # roles form via camaleon_editor_available_user_roles_list; admins always pass).
+  # The base class gates every action on :manage, :plugins (plugin administration). Split that: the
+  # plugin-config `settings` action stays plugin administration, template-library management needs the
+  # manage permission, and the rest (using the editor / reading templates) needs the use permission --
+  # or the manage permission, so a template manager can read too. All default-off; admins always pass.
   def authorize_plugin
-    authorize! :manage, :camaleon_editor
+    case action_name
+    when 'settings'
+      authorize! :manage, :plugins
+    when *MANAGE_ACTIONS
+      authorize! :manage, PERMISSION_MANAGE
+    else
+      authorize! :manage, PERMISSION_USE unless can?(:manage, PERMISSION_MANAGE)
+    end
   end
 end
