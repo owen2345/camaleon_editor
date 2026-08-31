@@ -35,11 +35,6 @@ Metrics/MethodLength:
   Exclude:
     - spec/**/*
 
-# The admin controller intentionally answers with tiny inline snippets and stored template values
-# over AJAX; converting them to view templates is a behavior refactor out of scope for a lint pass.
-Rails/RenderInline:
-  Enabled: false
-
 RSpec/ExampleLength:
   Enabled: false
 

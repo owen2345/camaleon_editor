@@ -17,7 +17,11 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
 
   # return grid template value
   def show
-    render inline: current_site.grid_templates.find(params[:id]).description
+    # html, not inline: the stored description is grid HTML the editor inserts verbatim -- an inline
+    # render would evaluate it as an ERB template, i.e. server-side Ruby execution. html_safe keeps
+    # the pre-existing trust model (authored markup served unescaped to its authors), minus the
+    # code execution.
+    render html: current_site.grid_templates.find(params[:id]).description.to_s.html_safe # rubocop:disable Rails/OutputSafety
   end
 
   # return new grid editor template form
@@ -38,7 +42,7 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
     if current_site.grid_templates.create(params.require(:grid_template).permit(:name, :slug, :description))
       index
     else
-      render inline: "<div class='alert alert-danger'>#{t('admin.message.form_error')}</div>"
+      render html: "<div class='alert alert-danger'>#{t('admin.message.form_error')}</div>".html_safe
     end
   end
 
