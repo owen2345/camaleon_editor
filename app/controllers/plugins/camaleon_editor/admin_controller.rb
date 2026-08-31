@@ -62,4 +62,13 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
   def style_settings
     render layout: false
   end
+
+  private
+
+  # The base class gates on :manage, :plugins -- plugin administration. These endpoints are editor
+  # usage, so they are gated by the plugin's own default-off permission instead (registered in the
+  # roles form via camaleon_editor_available_user_roles_list; admins always pass).
+  def authorize_plugin
+    authorize! :manage, :camaleon_editor
+  end
 end

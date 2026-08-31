@@ -1,4 +1,8 @@
 en:
+  camaleon_editor:
+    permission:
+      label: "Visual grid editor"
+      description: "Can switch the post editor to the grid editor and manage grid templates"
   admin:
     js:
       grid_editor:
@@ -15,6 +19,10 @@ en:
         clear_editor: "Are you sure to clear the editor?"
 
 es:
+  camaleon_editor:
+    permission:
+      label: "Visual grid editor"
+      description: "Puede cambiar el editor de contenidos al editor de rejilla y administrar sus plantillas"
   admin:
     js:
       grid_editor:
@@ -31,6 +39,10 @@ es:
         clear_editor: "Esta seguro de limpiar el editor?"
 
 it:
+  camaleon_editor:
+    permission:
+      label: "Visual grid editor"
+      description: "Può passare l'editor dei contenuti all'editor a griglia e gestire i suoi modelli"
   admin:
     js:
       grid_editor:
