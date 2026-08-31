@@ -5,6 +5,13 @@
 class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdminController
   include Plugins::CamaleonEditor::MainHelper
 
+  # The base registers init_plugin before authorize_plugin, and init_plugin does a
+  # first_or_create on the site's plugins -- so an authenticated but unauthorized user could seed an
+  # (inactive) plugins row for a site just by hitting the URL. Re-register init_plugin after
+  # authorize_plugin so authorization runs first and that side effect never happens for a denied user.
+  skip_before_action :init_plugin
+  before_action :init_plugin
+
   def settings
     # actions for admin panel
   end
