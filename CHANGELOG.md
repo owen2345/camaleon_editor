@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Release pipeline
+
+Adds the manually dispatched Release workflow (same pipeline as cama_contact_form and camaleon_cms): it verifies the requested version against `lib/camaleon_editor/version.rb`, RubyGems and existing tags, requires a green CI run for the released commit, builds the gem with `--strict`, audits the packaged files, publishes to RubyGems, then tags and creates the GitHub release with the version's CHANGELOG section as notes. Development tooling only. [#8](https://github.com/owen2345/camaleon_editor/pull/8).
+
 ### Security: editor permissions, and no ERB evaluation of templates
 
 Stored grid-template values were ERB-evaluated as server-side code; they now come back verbatim. The editor is gated by two new default-off permissions, **Grid Editor** and **Grid templates**; admins pass. [#7](https://github.com/owen2345/camaleon_editor/pull/7).
