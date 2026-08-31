@@ -1,4 +1,10 @@
 en:
+  camaleon_editor:
+    permission:
+      label: "Grid Editor"
+      description: "Can switch the post editor to the grid editor and apply saved grid templates"
+      manage_label: "Grid templates"
+      manage_description: "Can create, edit and delete the shared grid templates of the site"
   admin:
     js:
       grid_editor:
@@ -15,6 +21,12 @@ en:
         clear_editor: "Are you sure to clear the editor?"
 
 es:
+  camaleon_editor:
+    permission:
+      label: "Grid Editor"
+      description: "Puede cambiar el editor de contenidos al editor de rejilla y aplicar plantillas guardadas"
+      manage_label: "Grid templates"
+      manage_description: "Puede crear, editar y eliminar las plantillas de rejilla compartidas del sitio"
   admin:
     js:
       grid_editor:
@@ -31,6 +43,12 @@ es:
         clear_editor: "Esta seguro de limpiar el editor?"
 
 it:
+  camaleon_editor:
+    permission:
+      label: "Grid Editor"
+      description: "Può passare l'editor dei contenuti all'editor a griglia e applicare i modelli salvati"
+      manage_label: "Grid templates"
+      manage_description: "Può creare, modificare ed eliminare i modelli a griglia condivisi del sito"
   admin:
     js:
       grid_editor:

@@ -5,6 +5,13 @@
 class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdminController
   include Plugins::CamaleonEditor::MainHelper
 
+  # The base registers init_plugin before authorize_plugin, and init_plugin does a
+  # first_or_create on the site's plugins -- so an authenticated but unauthorized user could seed an
+  # (inactive) plugins row for a site just by hitting the URL. Re-register init_plugin after
+  # authorize_plugin so authorization runs first and that side effect never happens for a denied user.
+  skip_before_action :init_plugin
+  before_action :init_plugin
+
   def settings
     # actions for admin panel
   end
@@ -17,7 +24,11 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
 
   # return grid template value
   def show
-    render inline: current_site.grid_templates.find(params[:id]).description
+    # html, not inline: the stored description is grid HTML the editor inserts verbatim -- an inline
+    # render would evaluate it as an ERB template, i.e. server-side Ruby execution. html_safe keeps
+    # the pre-existing trust model (authored markup served unescaped to its authors), minus the
+    # code execution.
+    render html: current_site.grid_templates.find(params[:id]).description.to_s.html_safe # rubocop:disable Rails/OutputSafety
   end
 
   # return new grid editor template form
@@ -34,18 +45,26 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
 
   # create a new grid editor template
   def create
-    params[:grid_template][:slug] = Time.now.to_i
-    if current_site.grid_templates.create(params.require(:grid_template).permit(:name, :slug, :description))
+    @grid_template = current_site.grid_templates.new(grid_template_params)
+    @grid_template.slug = unique_grid_template_slug
+    if @grid_template.save
       index
     else
-      render inline: "<div class='alert alert-danger'>#{t('admin.message.form_error')}</div>"
+      # Re-render the form, which lists @grid_template.errors via the form_error partial. Relation#create
+      # returns the record whether or not it saved, so checking #save is what makes a refused save
+      # (blank name, or a description the content-shortcode gate rejects) visible instead of a silent 200.
+      render 'form', layout: false
     end
   end
 
   # update a grid editor template
   def update
-    current_site.grid_templates.find(params[:id]).update(params.require(:grid_template).permit(:name, :description))
-    index
+    @grid_template = current_site.grid_templates.find(params[:id])
+    if @grid_template.update(grid_template_params)
+      index
+    else
+      render 'form', layout: false
+    end
   end
 
   # destroy a grid editor template
@@ -57,5 +76,36 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
   # show style settings for a element
   def style_settings
     render layout: false
+  end
+
+  # Actions that curate the shared template library, as opposed to using the editor.
+  MANAGE_ACTIONS = %w[new create edit update destroy].freeze
+
+  private
+
+  def grid_template_params
+    params.require(:grid_template).permit(:name, :description)
+  end
+
+  # A collision-resistant, server-minted slug. The name alone can repeat, and a plain second-resolution
+  # timestamp collides for two saves in the same second (TermTaxonomy's slug uniqueness then refuses
+  # the second), so a random suffix is appended.
+  def unique_grid_template_slug
+    "grid-editor-#{Time.now.to_i}-#{SecureRandom.hex(4)}"
+  end
+
+  # The base class gates every action on :manage, :plugins (plugin administration). Split that: the
+  # plugin-config `settings` action stays plugin administration, template-library management needs the
+  # manage permission, and the rest (using the editor / reading templates) needs the use permission --
+  # or the manage permission, so a template manager can read too. All default-off; admins always pass.
+  def authorize_plugin
+    case action_name
+    when 'settings'
+      authorize! :manage, :plugins
+    when *MANAGE_ACTIONS
+      authorize! :manage, PERMISSION_MANAGE
+    else
+      authorize! :manage, PERMISSION_USE unless can?(:manage, PERMISSION_MANAGE)
+    end
   end
 end
