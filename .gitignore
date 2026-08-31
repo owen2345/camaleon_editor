@@ -1,9 +1,6 @@
 .bundle/
 log/*.log
 pkg/
-test/dummy/db/*.sqlite3
-test/dummy/db/*.sqlite3-journal
-test/dummy/log/*.log
-test/dummy/tmp/
-test/dummy/.sass-cache
-app/helpers/plugin_camaleon_editor_private_helper.rb
+node_modules
+.idea
+.DS_Store
