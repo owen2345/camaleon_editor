@@ -45,6 +45,15 @@ RSpec.configure do |config|
   config.use_transactional_fixtures = true
   config.infer_spec_type_from_file_location!
 
+  # CamaleonCms::UserRole::ROLES is a process-global constant the roles-form hook reads; restore its
+  # manager list around every example so a stray mutation can never make one example's roles form
+  # depend on whether another ran first (transactional fixtures cannot roll a constant back).
+  config.around do |example|
+    manager_snapshot = CamaleonCms::UserRole::ROLES[:manager].map(&:dup)
+    example.run
+    CamaleonCms::UserRole::ROLES[:manager].replace(manager_snapshot)
+  end
+
   config.before do
     # Clear per-request Current state so nothing leaks between examples.
     CurrentRequest.reset

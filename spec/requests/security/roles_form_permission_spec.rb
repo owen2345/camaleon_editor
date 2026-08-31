@@ -5,9 +5,10 @@
 # a mutation would append one more checkbox on every roles-form render and leak across sites.
 RSpec.describe 'the roles form registers the editor permission safely' do
   include Plugins::CamaleonEditor::MainHelper
+
   init_site
 
-  let(:admin) { CamaManager.get_user_class_name.constantize.find_by!(username: 'admin') }
+  let(:admin) { cama_admin_user }
 
   before do
     store_current_site(@site)

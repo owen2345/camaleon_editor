@@ -5,7 +5,7 @@
 RSpec.describe 'the grid editor admin' do
   init_site
 
-  let(:admin) { CamaManager.get_user_class_name.constantize.find_by!(username: 'admin') }
+  let(:admin) { cama_admin_user }
 
   before do
     store_current_site(@site)
@@ -63,6 +63,17 @@ RSpec.describe 'the grid editor admin' do
     get "/admin/plugins/camaleon_editor/grid_editor/#{template.id}"
 
     expect(response.body).to eq('<div>template value</div>')
+  end
+
+  # The value is returned verbatim, never evaluated as an ERB template (which would be server-side
+  # Ruby execution for anyone who can author a template, or any path that seeds a term_taxonomy row).
+  it 'returns a description containing ERB tags verbatim, unevaluated' do
+    template = @site.grid_templates.create!(name: 'Payload', slug: 'payload',
+                                            description: '<div><%= 7 * 6 %></div>')
+
+    get "/admin/plugins/camaleon_editor/grid_editor/#{template.id}"
+
+    expect(response.body).to eq('<div><%= 7 * 6 %></div>')
   end
 
   it 'destroys a grid template' do

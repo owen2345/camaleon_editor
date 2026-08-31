@@ -4,25 +4,18 @@
 # toolbar) covers the read actions, PERMISSION_MANAGE covers template-library CRUD, and the plugin's
 # `settings` action stays under :manage,:plugins. Admins pass everything.
 RSpec.describe 'Security: the editor use/manage permission split' do
-  use = Plugins::CamaleonEditor::MainHelper::PERMISSION_USE
-  manage = Plugins::CamaleonEditor::MainHelper::PERMISSION_MANAGE
-
   init_site
 
+  let(:use) { Plugins::CamaleonEditor::MainHelper::PERMISSION_USE }
+  let(:manage) { Plugins::CamaleonEditor::MainHelper::PERMISSION_MANAGE }
   let(:base) { '/admin/plugins/camaleon_editor/grid_editor' }
-
-  def user_with_manager_grants(manager_meta, slug)
-    role = @site.user_roles.create!(name: slug, slug: slug)
-    role.set_meta("_manager_#{@site.id}", manager_meta)
-    create(:user, role: slug, site: @site)
-  end
 
   before do
     store_current_site(@site)
     plugin_install('camaleon_editor')
   end
 
-  context 'a use-only grantee' do
+  context 'with a use-only grant' do
     before { sign_in_as(user_with_manager_grants({ use => 1 }, 'use-only'), site: @site) }
 
     it 'may read the template list' do
@@ -33,7 +26,7 @@ RSpec.describe 'Security: the editor use/manage permission split' do
     it 'may not create a template' do
       expect do
         post base, params: { grid_template: { name: 'Nope', description: '<div>x</div>' } }
-      end.not_to change { @site.grid_templates.count }
+      end.not_to(change { @site.grid_templates.count })
       expect(response.location).to include('/admin/dashboard')
       expect(flash[:error]).to be_present
     end
@@ -49,7 +42,7 @@ RSpec.describe 'Security: the editor use/manage permission split' do
     end
   end
 
-  context 'a manage grantee' do
+  context 'with a manage grant' do
     before { sign_in_as(user_with_manager_grants({ manage => 1 }, 'manager'), site: @site) }
 
     it 'may read the template list' do
@@ -75,7 +68,7 @@ RSpec.describe 'Security: the editor use/manage permission split' do
   end
 
   it 'registers both permission checkboxes, keyed to the gate constants' do
-    sign_in_as(CamaManager.get_user_class_name.constantize.find_by!(username: 'admin'), site: @site)
+    sign_in_as(cama_admin_user, site: @site)
 
     get '/admin/user_roles/new'
 

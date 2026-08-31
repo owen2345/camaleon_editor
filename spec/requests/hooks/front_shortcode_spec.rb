@@ -6,7 +6,7 @@
 RSpec.describe 'the front hook' do
   init_site
 
-  let(:admin) { CamaManager.get_user_class_name.constantize.find_by!(username: 'admin') }
+  let(:admin) { cama_admin_user }
 
   # grid_editor is a registered shortcode, so seeding post content that contains it goes through the
   # content-shortcode gate; store an admin as the acting user so the fixture save is allowed.

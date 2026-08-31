@@ -6,18 +6,11 @@
 RSpec.describe 'Security: the camaleon_editor permission' do
   init_site
 
-  let(:admin) { CamaManager.get_user_class_name.constantize.find_by!(username: 'admin') }
+  let(:admin) { cama_admin_user }
 
   before do
     store_current_site(@site)
     plugin_install('camaleon_editor')
-  end
-
-  # A user whose role holds exactly the given manager grants.
-  def user_with_manager_grants(manager_meta, slug)
-    role = @site.user_roles.create!(name: slug, slug: slug)
-    role.set_meta("_manager_#{@site.id}", manager_meta)
-    create(:user, role: slug, site: @site)
   end
 
   # Assert the request was refused by the authorization gate specifically -- CanCan::AccessDenied
@@ -72,9 +65,7 @@ RSpec.describe 'Security: the camaleon_editor permission' do
 
   it 'does not load the editor assets in the post form for a non-granted author' do
     post_type = @site.post_types.first
-    author = user_with_manager_grants({}, 'post-author')
-    @site.user_roles.find_by(slug: 'post-author').set_meta("_post_type_#{@site.id}",
-                                                           { edit: [post_type.id.to_s] })
+    author = user_with_manager_grants({}, 'post-author', post_type_meta: { edit: [post_type.id.to_s] })
     sign_in_as(author, site: @site)
 
     get "/admin/post_type/#{post_type.id}/posts/new"

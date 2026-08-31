@@ -6,7 +6,7 @@
 RSpec.describe 'the post-form hook' do
   init_site
 
-  let(:admin) { CamaManager.get_user_class_name.constantize.find_by!(username: 'admin') }
+  let(:admin) { cama_admin_user }
   let(:post_type) { CamaleonCms::Site.first.post_types.first }
 
   before { sign_in_as(admin, site: @site) }
@@ -44,12 +44,10 @@ RSpec.describe 'the post-form hook' do
 
   # The positive path for a non-admin: an admin passes via can :manage,:all, so it does not exercise
   # the permission. A granted non-admin author must actually get the editor assets.
-  context 'for a granted non-admin author' do
+  context 'with a granted non-admin author' do
     let(:author) do
-      role = @site.user_roles.create!(name: 'grid-author', slug: 'grid-author')
-      role.set_meta("_manager_#{@site.id}", { Plugins::CamaleonEditor::MainHelper::PERMISSION_USE => 1 })
-      role.set_meta("_post_type_#{@site.id}", { edit: [post_type.id.to_s] })
-      create(:user, role: 'grid-author', site: @site)
+      user_with_manager_grants({ Plugins::CamaleonEditor::MainHelper::PERMISSION_USE => 1 }, 'grid-author',
+                               post_type_meta: { edit: [post_type.id.to_s] })
     end
 
     before do

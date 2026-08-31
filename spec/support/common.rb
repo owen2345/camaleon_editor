@@ -22,11 +22,26 @@ def init_site(fresh: false)
   end
 end
 
+# The site's seeded admin user (username 'admin', see spec/factories/site.rb).
+def cama_admin_user(username = 'admin')
+  CamaManager.get_user_class_name.constantize.find_by!(username: username)
+end
+
+# A user on @site whose role holds exactly the given manager grants (permission meta), plus optional
+# post-type edit rights. An empty grants hash leaves the meta unset -- which Camaleon's Ability reads
+# identically to an empty grant -- so no needless meta rows are written.
+def user_with_manager_grants(manager_meta, slug, site: @site, post_type_meta: nil)
+  role = site.user_roles.create!(name: slug, slug: slug)
+  role.set_meta("_manager_#{site.id}", manager_meta) if manager_meta.present?
+  role.set_meta("_post_type_#{site.id}", post_type_meta) if post_type_meta.present?
+  create(:user, role: slug, site: site)
+end
+
 # Sign in to the admin panel by setting the auth cookie directly (the browser must be on the app's
 # origin to accept it, hence the static bootstrap visit). Feature specs only; the password is still
 # verified so a wrong one fails loudly instead of producing a silently signed-out session.
 def admin_sign_in(username = 'admin', pass = 'admin123')
-  user = CamaManager.get_user_class_name.constantize.find_by!(username: username)
+  user = cama_admin_user(username)
   raise ArgumentError, "wrong password for #{username}" unless user.authenticate(pass)
 
   visit '/favicon.ico' unless page.current_url.start_with?('http')

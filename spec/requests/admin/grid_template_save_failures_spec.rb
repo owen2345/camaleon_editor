@@ -8,16 +8,13 @@ RSpec.describe 'grid-template save failures are surfaced' do
 
   init_site
 
-  let(:admin) { CamaManager.get_user_class_name.constantize.find_by!(username: 'admin') }
+  let(:admin) { cama_admin_user }
   let(:path) { '/admin/plugins/camaleon_editor/grid_editor' }
 
-  # A non-admin whose role holds the editor grants but NOT content_shortcodes, so the content-shortcode
-  # gate on the template description refuses a registered shortcode. Both editor keys are granted so the
-  # example survives the later split of the permission into use vs manage-templates.
+  # A non-admin holding both editor permissions but NOT content_shortcodes, so the content-shortcode
+  # gate on the template description refuses a registered shortcode.
   def editor_user
-    role = @site.user_roles.create!(name: 'grid-editor-user', slug: 'grid-editor-user')
-    role.set_meta("_manager_#{@site.id}", { camaleon_editor: 1, camaleon_editor_templates: 1 })
-    create(:user, role: 'grid-editor-user', site: @site)
+    user_with_manager_grants({ camaleon_editor: 1, camaleon_editor_templates: 1 }, 'grid-editor-user')
   end
 
   before do
@@ -41,7 +38,7 @@ RSpec.describe 'grid-template save failures are surfaced' do
 
     expect do
       post path, params: { grid_template: { name: 'Blocked', description: '<div>[widget id=1]</div>' } }
-    end.not_to change { @site.grid_templates.count }
+    end.not_to(change { @site.grid_templates.count })
 
     expect(response.body).to include('grid_template_form')
     expect(response.body).to include('error_explanation')
