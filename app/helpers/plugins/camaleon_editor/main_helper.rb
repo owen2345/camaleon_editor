@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# Camaleon plugin helper carrying the hook methods camaleon_plugin.json names: the activation
+# lifecycle, the admin post-form asset injection and the grid_editor frontend shortcode.
 module Plugins::CamaleonEditor::MainHelper
   # here all actions on going to active
   # you can run sql commands like this:
@@ -24,7 +26,7 @@ module Plugins::CamaleonEditor::MainHelper
 
   # for post form editor
   def camaleon_editor_post_form(_args)
-    append_asset_libraries({ admin_grid_editor: { js:  ['plugins/camaleon_editor/admin/editor-manifest.js'],
+    append_asset_libraries({ admin_grid_editor: { js: ['plugins/camaleon_editor/admin/editor-manifest.js'],
                                                   css: [plugin_gem_asset('admin/grid-editor-manifest.css',
                                                                          'camaleon_editor')] } })
   end

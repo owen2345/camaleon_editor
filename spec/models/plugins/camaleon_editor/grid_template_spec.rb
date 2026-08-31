@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Plugins::CamaleonEditor::GridTemplate, type: :model do
+RSpec.describe Plugins::CamaleonEditor::GridTemplate do
   init_site
 
   it 'stores grid templates on the grid_template term taxonomy' do
