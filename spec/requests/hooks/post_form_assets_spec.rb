@@ -41,4 +41,28 @@ RSpec.describe 'the post-form hook' do
       expect(response.body).not_to include('editor-manifest')
     end
   end
+
+  # The positive path for a non-admin: an admin passes via can :manage,:all, so it does not exercise
+  # the permission. A granted non-admin author must actually get the editor assets.
+  context 'for a granted non-admin author' do
+    let(:author) do
+      role = @site.user_roles.create!(name: 'grid-author', slug: 'grid-author')
+      role.set_meta("_manager_#{@site.id}", { Plugins::CamaleonEditor::MainHelper::PERMISSION_USE => 1 })
+      role.set_meta("_post_type_#{@site.id}", { edit: [post_type.id.to_s] })
+      create(:user, role: 'grid-author', site: @site)
+    end
+
+    before do
+      store_current_site(@site)
+      plugin_install('camaleon_editor')
+      sign_in_as(author, site: @site)
+    end
+
+    it 'appends the editor assets when the author holds the use permission' do
+      get "/admin/post_type/#{post_type.id}/posts/new"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include('editor-manifest')
+    end
+  end
 end
