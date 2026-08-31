@@ -76,7 +76,11 @@ window.grid_accordion_builder = function (panel, editor) {
       $(this).find("> div > .panel-body").html(),
     );
   });
-  tpl.find(".style-accordion").val(panel.attr("data-style"));
+  // Own attribute: data-style is the grid block's JSON style object (see grid_editor_style.js),
+  // written on the parent .drg_item; the accordion stores only a Bootstrap panel class here on its
+  // child .grid_item_content, so it must not share that name. Fall back to the legacy data-style so
+  // accordions saved before this split still restore their style.
+  tpl.find(".style-accordion").val(panel.attr("data-accordion-style") || panel.attr("data-style"));
 
   // show form for each accordion
   let show_form = function (tr) {
@@ -121,7 +125,9 @@ window.grid_accordion_builder = function (panel, editor) {
   // save information in editor
   const submit_callback = function (modal) {
     let res = "";
-    panel.attr("data-style", tpl.find(".style-accordion").val());
+    // Migrate off the shared data-style name (see the recover comment above): write the accordion's
+    // own attribute and drop any legacy value left on this element.
+    panel.attr("data-accordion-style", tpl.find(".style-accordion").val()).removeAttr("data-style");
     tpl.find("tbody tr").each(function (index, item) {
       (res +=
         '<div class="panel panel-' +

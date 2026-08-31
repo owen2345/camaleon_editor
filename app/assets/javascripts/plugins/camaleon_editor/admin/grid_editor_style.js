@@ -1,9 +1,18 @@
+// Recover a saved element's style. data-style is written by the submit handler below via
+// JSON.stringify, and rides along in a stored grid-template description -- so parse it as data,
+// never eval it (a crafted value would otherwise run as JavaScript in the editor's browser).
+// Malformed input yields an empty style rather than throwing, keeping the panel usable.
+window.cama_editor_parse_style = function(raw){
+    if(!raw) return {};
+    try { return JSON.parse(raw); } catch(e){ return {}; }
+}
+
 // manage style settings for an item
 function grid_style_setting(item, editor, parent_item){
     var parent_item = parent_item || (item.closest(".btn"));
     var modal_callback = function(modal){
         var c_style = parent_item.attr("data-style");
-        var recover_style = eval("("+(c_style ? c_style : "{}")+")");
+        var recover_style = window.cama_editor_parse_style(c_style);
         for(var k in recover_style){
             var i = modal.find("[name='"+k+"']").val(recover_style[k]);
             var p = i.parent();
