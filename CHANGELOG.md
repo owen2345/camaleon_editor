@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Security: parse saved element styles as JSON, never eval
+
+The grid editor recovered a block's saved style by running `eval()` on its `data-style` attribute, which rides along in a stored grid-template — so a crafted value ran as JavaScript in the editing user's browser. The value is now parsed with `JSON.parse` (it is written with `JSON.stringify`), and malformed input yields an empty style instead of executing. [#9](https://github.com/owen2345/camaleon_editor/pull/9).
+
 ### Release pipeline
 
 Adds the manually dispatched Release workflow (same pipeline as cama_contact_form and camaleon_cms): it verifies the requested version against `lib/camaleon_editor/version.rb`, RubyGems and existing tags, requires a green CI run for the released commit, builds the gem with `--strict`, audits the packaged files, publishes to RubyGems, then tags and creates the GitHub release with the version's CHANGELOG section as notes. Development tooling only. [#8](https://github.com/owen2345/camaleon_editor/pull/8).
