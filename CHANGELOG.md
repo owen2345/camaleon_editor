@@ -4,7 +4,7 @@
 
 ### Security: parse saved element styles as JSON, never eval
 
-The grid editor recovered a block's saved style by running `eval()` on its `data-style` attribute, which rides along in a stored grid-template — so a crafted value ran as JavaScript in the editing user's browser. The value is now parsed with `JSON.parse` (it is written with `JSON.stringify`), and malformed input yields an empty style instead of executing. [#9](https://github.com/owen2345/camaleon_editor/pull/9).
+The grid editor recovered a block's saved style by running `eval()` on its `data-style` attribute, which rides along in a stored grid-template — so a crafted value ran as JavaScript in the editing user's browser. The value is now parsed with `JSON.parse` (it is written with `JSON.stringify`), and malformed input yields an empty style instead of executing. The accordion builder no longer shares that `data-style` name (it stored a plain panel class there): it uses `data-accordion-style`, falling back to the legacy attribute so existing accordions keep their style. [#9](https://github.com/owen2345/camaleon_editor/pull/9).
 
 ### Release pipeline
 
