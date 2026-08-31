@@ -11,9 +11,15 @@ https://camaleon.website/store/plugins/camaleon_editor
 
 ## Permissions
 
-The editor is available to administrators, and to any role granted the plugin's own
-**Visual grid editor** permission (Admin > Users > Roles). The permission is off by
-default: without it, users get the plain post editor, and the grid-template endpoints refuse them.
+The plugin adds two role permissions under **Admin > Users > Roles**, both off by default
+(administrators always have them):
+
+- **Visual grid editor** — use the editor in the post form and apply saved templates. Without it, a
+  user gets the plain post editor.
+- **Manage grid templates** — create, edit and delete the site's shared grid templates.
+
+Plugin settings stay under the core **plugins** permission. A role holding neither editor permission
+is refused the grid-template endpoints.
 
 ## Development
 
