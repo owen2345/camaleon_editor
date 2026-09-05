@@ -99,6 +99,17 @@ RSpec.describe 'the grid editor admin' do
     expect(doc.at_css('input.border_width')['name']).to eq('bo-w')
   end
 
+  it 'lets every style panel select fall back to the default' do
+    get '/admin/plugins/camaleon_editor/style-settings'
+
+    # The save skips empty values, so a select whose first option carries a value force-writes
+    # that CSS property on every save, overriding whatever the theme set.
+    doc = Nokogiri::HTML(response.body)
+    doc.css('select').each do |select|
+      expect(select.at_css('option')['value']).to eq(''), "select #{select['name']} forces its first option"
+    end
+  end
+
   it 'associates every label in the style panel with a field' do
     get '/admin/plugins/camaleon_editor/style-settings'
 
