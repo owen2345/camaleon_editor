@@ -43,16 +43,21 @@ RSpec.describe 'reopening the grid block style panel', :js do
     expect(all_colorpickers_initialised).to be(true)
   end
 
-  it 'opens the style panel even when a stored style holds a non-colour border value' do
-    # A block as the buggy build saved it: the border colour slot carries a width number ("2").
-    page.execute_script(<<~JS)
-      window.__blk = jQuery('<div class="btn" data-style=\\'{"b-c":"#ffcc00","bo-c":"2","bo-w":"2"}\\'></div>').appendTo('body');
-      grid_style_setting(window.__blk, jQuery('<div></div>'), window.__blk);
-    JS
+  it 'migrates a legacy width stored under the colour name and heals the block on save' do
+    # A block as the buggy build saved it: both border inputs shared name="bo-c", so only the
+    # width survived, filed under the colour key - a bo-w key could not exist yet.
+    open_style_panel('b-c' => '#ffcc00', 'bo-c' => '2')
 
-    # The ajax modal must load and become visible (its style form fields are present), rather than
-    # being aborted by a colorpicker exception. have_css polls, so it waits for the ajax content.
-    expect(page).to have_css("#cama_editor_modal2 input[name='bo-w']", visible: :visible, wait: 10)
-    expect(page).to have_css("#cama_editor_modal2 input[name='b-c']", visible: :visible)
+    expect(page).to have_css("#cama_editor_modal2 input[name='bo-w']")
+    expect(page.find("#cama_editor_modal2 input[name='bo-w']").value).to eq('2')
+    expect(page.find("#cama_editor_modal2 input[name='bo-c']").value).to eq('')
+
+    page.find('#cama_editor_modal2 .modal_submit').click
+
+    saved = JSON.parse(page.evaluate_script("window.__cama_style_block.attr('data-style')"))
+    expect(saved).to include('bo-w' => '2', 'b-c' => '#ffcc00')
+    expect(saved).not_to have_key('bo-c')
+    expect(page.evaluate_script('window.__cama_style_block[0].style.borderTopWidth')).to eq('2px')
+    expect(page.evaluate_script('window.__cama_style_block[0].style.borderTopStyle')).to eq('solid')
   end
 end

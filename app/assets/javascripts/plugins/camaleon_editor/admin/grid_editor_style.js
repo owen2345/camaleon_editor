@@ -13,6 +13,13 @@ function grid_style_setting(item, editor, parent_item){
     var modal_callback = function(modal){
         var c_style = parent_item.attr("data-style");
         var recover_style = window.cama_editor_parse_style(c_style);
+        // A block saved while colour and width shared name="bo-c" kept only the width, filed
+        // under the colour key. Move such a value to its own field so the width is restored and
+        // the colour slot is freed; the next save then persists the healed shape.
+        if(recover_style["bo-c"] && !recover_style["bo-w"] && /^-?\d+(\.\d+)?$/.test(recover_style["bo-c"])){
+            recover_style["bo-w"] = recover_style["bo-c"];
+            delete recover_style["bo-c"];
+        }
         for(var k in recover_style){
             var i = modal.find("[name='"+k+"']").val(recover_style[k]);
             var p = i.parent();
