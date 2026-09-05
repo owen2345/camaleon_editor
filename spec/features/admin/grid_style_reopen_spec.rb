@@ -28,7 +28,7 @@ RSpec.describe 'reopening the grid block style panel', :js do
 
   def all_colorpickers_initialised
     page.evaluate_script(<<~JS)
-      jQuery('#cama_editor_modal2 .panel_color').toArray().every(function(el){
+      jQuery('#cama_editor_style_modal .panel_color').toArray().every(function(el){
         return !!jQuery(el).data('colorpicker');
       })
     JS
@@ -39,8 +39,18 @@ RSpec.describe 'reopening the grid block style panel', :js do
     # and the colorpicker's colour parser only takes strings.
     open_style_panel('b-c' => '2', 't-c' => '0')
 
-    expect(page).to have_css('#cama_editor_modal2 .panel_color', count: 3)
+    expect(page).to have_css('#cama_editor_style_modal .panel_color', count: 3)
     expect(all_colorpickers_initialised).to be(true)
+  end
+
+  it 'opens its own modal even while an item-form modal holds the shared id' do
+    # The tabs/slider/gallery/accordion item forms open a modal with id cama_editor_modal2. A
+    # style panel opened from a grid nested inside one of them must not be swallowed by
+    # open_modal's existing-id short-circuit, which re-shows the old modal with its old callbacks.
+    page.execute_script(%(jQuery('<div id="cama_editor_modal2" class="modal"></div>').appendTo('body');))
+    open_style_panel('b-c' => '#ffcc00')
+
+    expect(page).to have_css("#cama_editor_style_modal input[name='bo-w']")
   end
 
   def capture_console_warnings
@@ -58,7 +68,7 @@ RSpec.describe 'reopening the grid block style panel', :js do
     page.execute_script("jQuery.fn.colorpicker = function(){ throw new Error('widget broken'); };")
     open_style_panel('b-c' => '#ffcc00')
 
-    expect(page).to have_css("#cama_editor_modal2 input[name='bo-w']")
+    expect(page).to have_css("#cama_editor_style_modal input[name='bo-w']")
     expect(page.evaluate_script('window.__cama_warns.length')).to be > 0
   end
 
@@ -67,7 +77,7 @@ RSpec.describe 'reopening the grid block style panel', :js do
     page.execute_script("jQuery.fn.input_upload_field = function(){ throw new Error('uploader broken'); };")
     open_style_panel('b-c' => '#ffcc00')
 
-    expect(page).to have_css("#cama_editor_modal2 input[name='bo-w']")
+    expect(page).to have_css("#cama_editor_style_modal input[name='bo-w']")
     expect(page.evaluate_script('window.__cama_warns.length')).to be > 0
   end
 
@@ -76,8 +86,8 @@ RSpec.describe 'reopening the grid block style panel', :js do
     # abort the recovery (jQuery throws on the malformed selector it would produce).
     open_style_panel("a']" => 'junk', 'b-c' => '#ffcc00')
 
-    expect(page).to have_css("#cama_editor_modal2 input[name='b-c']")
-    expect(page.find("#cama_editor_modal2 input[name='b-c']").value).to eq('#ffcc00')
+    expect(page).to have_css("#cama_editor_style_modal input[name='b-c']")
+    expect(page.find("#cama_editor_style_modal input[name='b-c']").value).to eq('#ffcc00')
   end
 
   it 'migrates a legacy width stored under the colour name and heals the block on save' do
@@ -85,11 +95,11 @@ RSpec.describe 'reopening the grid block style panel', :js do
     # width survived, filed under the colour key - a bo-w key could not exist yet.
     open_style_panel('b-c' => '#ffcc00', 'bo-c' => '2')
 
-    expect(page).to have_css("#cama_editor_modal2 input[name='bo-w']")
-    expect(page.find("#cama_editor_modal2 input[name='bo-w']").value).to eq('2')
-    expect(page.find("#cama_editor_modal2 input[name='bo-c']").value).to eq('')
+    expect(page).to have_css("#cama_editor_style_modal input[name='bo-w']")
+    expect(page.find("#cama_editor_style_modal input[name='bo-w']").value).to eq('2')
+    expect(page.find("#cama_editor_style_modal input[name='bo-c']").value).to eq('')
 
-    page.find('#cama_editor_modal2 .modal_submit').click
+    page.find('#cama_editor_style_modal .modal_submit').click
 
     saved = JSON.parse(page.evaluate_script("window.__cama_style_block.attr('data-style')"))
     expect(saved).to include('bo-w' => '2', 'b-c' => '#ffcc00')
