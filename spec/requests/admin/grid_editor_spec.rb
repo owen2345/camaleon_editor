@@ -98,4 +98,16 @@ RSpec.describe 'the grid editor admin' do
     expect(doc.at_css('input.color_border')['name']).to eq('bo-c')
     expect(doc.at_css('input.border_width')['name']).to eq('bo-w')
   end
+
+  it 'associates every label in the style panel with a field' do
+    get '/admin/plugins/camaleon_editor/style-settings'
+
+    doc = Nokogiri::HTML(response.body)
+    field_ids = doc.css('input[id], select[id]').pluck('id')
+    labels = doc.css('label')
+    expect(labels).not_to be_empty
+    labels.each do |label|
+      expect(field_ids).to include(label['for']), "label #{label.text.inspect} points at no field"
+    end
+  end
 end
