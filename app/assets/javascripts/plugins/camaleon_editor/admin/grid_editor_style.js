@@ -21,6 +21,9 @@ function grid_style_setting(item, editor, parent_item){
             delete recover_style["bo-c"];
         }
         for(var k in recover_style){
+            // Keys are data from a stored template, not selector fragments: a key that isn't
+            // shaped like a field name would make the selector below throw or match elsewhere.
+            if(!/^[\w-]+$/.test(k)) continue;
             var i = modal.find("[name='"+k+"']").val(recover_style[k]);
             var p = i.parent();
             // Prime jQuery's data cache with the string form as well: the colorpicker reads

@@ -43,6 +43,15 @@ RSpec.describe 'reopening the grid block style panel', :js do
     expect(all_colorpickers_initialised).to be(true)
   end
 
+  it 'opens the panel even when a stored style holds a key that is not a field name' do
+    # Stored styles ride along in grid templates, so keys are data: a quote in a key must not
+    # abort the recovery (jQuery throws on the malformed selector it would produce).
+    open_style_panel("a']" => 'junk', 'b-c' => '#ffcc00')
+
+    expect(page).to have_css("#cama_editor_modal2 input[name='b-c']")
+    expect(page.find("#cama_editor_modal2 input[name='b-c']").value).to eq('#ffcc00')
+  end
+
   it 'migrates a legacy width stored under the colour name and heals the block on save' do
     # A block as the buggy build saved it: both border inputs shared name="bo-c", so only the
     # width survived, filed under the colour key - a bo-w key could not exist yet.
