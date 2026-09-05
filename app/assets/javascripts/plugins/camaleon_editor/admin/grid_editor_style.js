@@ -45,10 +45,15 @@ function grid_style_setting(item, editor, parent_item){
         var res = {};
         var img_url = form.find("[name='b-img']").val();
         var width_field = modal.find(".border_width");
-        // border-width rejects a non-positive length: the declaration is dropped and the computed
-        // width falls back to 'medium' (a thicker border), so treat it as no border at all.
-        if(!(parseFloat(width_field.val()) > 0)) width_field.val("");
-        var b_width = width_field.val() + (width_field.val() ? "px" : "");
+        var width_group = width_field.closest(".form-group");
+        width_group.removeClass("has-error").find(".border_width_error").remove();
+        // border-width drops a negative length and the computed width falls back to 'medium' (a
+        // thicker border than asked), so reject the value with an error instead of saving it.
+        if(parseFloat(width_field.val()) < 0){
+            width_group.addClass("has-error").append('<span class="help-block border_width_error">Width must be zero or greater</span>');
+            return;
+        }
+        var b_width = parseFloat(width_field.val()) > 0 ? width_field.val() + "px" : "";
         form.find("input, select").each(function(){ if($(this).val()){ res[$(this).attr("name")] = $(this).val(); } });
         parent_item.attr("data-style", JSON.stringify(res));
         parent_item.css({

@@ -4,7 +4,7 @@
 
 ### Fix: border color and width no longer share a form field name
 
-The style panel's border Color and Width inputs shared a field name: a saved border kept only the width, and reopening the block's Style Settings crashed before the panel appeared. Each input now has its own name, and legacy blocks heal on reopen (width restored, the stray value cleared on the next save). The panel also survives malformed stored styles, rejects negative widths, and no longer forces `background-repeat` on every save. [#10](https://github.com/owen2345/camaleon_editor/pull/10).
+The style panel's border Color and Width inputs shared a field name: a saved border kept only the width, and reopening the block's Style Settings crashed before the panel appeared. Each input now has its own name, and legacy blocks heal on reopen (width restored, the stray value cleared on the next save). The panel also survives malformed stored styles, rejects negative widths with an inline error, and no longer forces `background-repeat` on every save. [#10](https://github.com/owen2345/camaleon_editor/pull/10).
 
 ### Security: parse saved element styles as JSON, never eval
 

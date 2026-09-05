@@ -85,15 +85,17 @@ RSpec.describe 'reopening the grid block style panel', :js do
     expect(page.find("#cama_editor_style_modal input[name='b-c']").value).to eq('#ffcc00')
   end
 
-  it 'drops a non-positive width on save instead of persisting a phantom border' do
+  it 'rejects a negative width on save with an inline error' do
     # border-width: -2px is invalid CSS: the declaration is dropped and the computed width falls
     # back to medium (3px) while border-style: solid still applies - a thicker border than asked.
+    # Reject the value and say so, rather than saving or silently correcting it.
     open_style_panel({})
     page.find("#cama_editor_style_modal input[name='bo-w']").set('-2')
     page.find('#cama_editor_style_modal .modal_submit').click
 
-    saved = JSON.parse(page.evaluate_script("window.__cama_style_block.attr('data-style')"))
-    expect(saved).not_to have_key('bo-w')
+    expect(page).to have_css('#cama_editor_style_modal .form-group.has-error .border_width_error')
+    # the save is blocked: the stored style is untouched (a run save would have written bo-w)
+    expect(page.evaluate_script("window.__cama_style_block.attr('data-style')")).to eq('{}')
     expect(page.evaluate_script('window.__cama_style_block[0].style.borderTopStyle')).to eq('')
   end
 
