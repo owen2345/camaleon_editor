@@ -43,6 +43,34 @@ RSpec.describe 'reopening the grid block style panel', :js do
     expect(all_colorpickers_initialised).to be(true)
   end
 
+  def capture_console_warnings
+    page.execute_script(<<~JS)
+      window.__cama_warns = [];
+      var original = console.warn;
+      console.warn = function(){ window.__cama_warns.push(String(arguments[0])); original.apply(console, arguments); };
+    JS
+  end
+
+  it 'opens the panel and warns when a colorpicker cannot initialise at all' do
+    # A broken widget (dropped asset, plugin name collision) must degrade one field, not the
+    # whole panel - and must say so, not fail silently.
+    capture_console_warnings
+    page.execute_script("jQuery.fn.colorpicker = function(){ throw new Error('widget broken'); };")
+    open_style_panel('b-c' => '#ffcc00')
+
+    expect(page).to have_css("#cama_editor_modal2 input[name='bo-w']")
+    expect(page.evaluate_script('window.__cama_warns.length')).to be > 0
+  end
+
+  it 'opens the panel and warns when the upload field initialiser is broken' do
+    capture_console_warnings
+    page.execute_script("jQuery.fn.input_upload_field = function(){ throw new Error('uploader broken'); };")
+    open_style_panel('b-c' => '#ffcc00')
+
+    expect(page).to have_css("#cama_editor_modal2 input[name='bo-w']")
+    expect(page.evaluate_script('window.__cama_warns.length')).to be > 0
+  end
+
   it 'opens the panel even when a stored style holds a key that is not a field name' do
     # Stored styles ride along in grid templates, so keys are data: a quote in a key must not
     # abort the recovery (jQuery throws on the malformed selector it would produce).

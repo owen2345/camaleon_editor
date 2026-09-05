@@ -31,13 +31,13 @@ function grid_style_setting(item, editor, parent_item){
             // values to Numbers, which the widget's colour parser cannot take.
             if(p.hasClass("color") && i.val()) p.attr("data-color", recover_style[k]).data("color", String(recover_style[k]));
         }
-        // Init each colorpicker independently: a malformed stored colour (e.g. a value left on a
-        // colour field by older data) throws inside the widget, and a single throw must not abort
-        // the whole modal and leave the panel unopened.
+        // Init each field independently: this callback runs inside show.bs.modal, so a throw here
+        // would abort Bootstrap's show and leave the panel unopened. Degrade the one field and say
+        // so instead of failing the whole panel silently.
         modal.find(".panel_color").each(function(){
-            try { $(this).colorpicker(); } catch(e){ /* skip an unparseable stored colour */ }
+            try { $(this).colorpicker(); } catch(e){ console.warn("camaleon_editor: colorpicker init failed", e); }
         });
-        modal.find(".file_upload").input_upload_field();
+        try { modal.find(".file_upload").input_upload_field(); } catch(e){ console.warn("camaleon_editor: upload field init failed", e); }
     }
 
     var submit_callback = function(modal){
