@@ -38,6 +38,11 @@ function grid_style_setting(item, editor, parent_item){
             try { $(this).colorpicker(); } catch(e){ console.warn("camaleon_editor: colorpicker init failed", e); }
         });
         try { modal.find(".file_upload").input_upload_field(); } catch(e){ console.warn("camaleon_editor: upload field init failed", e); }
+        // A rejected width leaves an inline error (see the submit handler); editing the field is
+        // the correction, so the stale error must not outlive the first keystroke.
+        modal.on("input", ".border_width", function(){
+            $(this).closest(".form-group").removeClass("has-error").find(".border_width_error").remove();
+        });
     }
 
     var submit_callback = function(modal){

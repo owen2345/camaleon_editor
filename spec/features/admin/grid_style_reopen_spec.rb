@@ -99,6 +99,18 @@ RSpec.describe 'reopening the grid block style panel', :js do
     expect(page.evaluate_script('window.__cama_style_block[0].style.borderTopStyle')).to eq('')
   end
 
+  it 'clears the width error as soon as the user edits the field' do
+    open_style_panel({})
+    page.find("#cama_editor_style_modal input[name='bo-w']").set('-2')
+    page.find('#cama_editor_style_modal .modal_submit').click
+    expect(page).to have_css('#cama_editor_style_modal .border_width_error')
+
+    page.find("#cama_editor_style_modal input[name='bo-w']").set('3')
+
+    expect(page).to have_no_css('#cama_editor_style_modal .border_width_error')
+    expect(page).to have_no_css('#cama_editor_style_modal .form-group.has-error')
+  end
+
   it 'migrates a legacy width stored under the colour name and heals the block on save' do
     # A block as the buggy build saved it: both border inputs shared name="bo-c", so only the
     # width survived, filed under the colour key - a bo-w key could not exist yet.
