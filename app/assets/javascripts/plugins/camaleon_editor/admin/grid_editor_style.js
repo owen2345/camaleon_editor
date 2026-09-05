@@ -18,7 +18,12 @@ function grid_style_setting(item, editor, parent_item){
             var p = i.parent();
             if(p.hasClass("color") && i.val()) p.attr("data-color", recover_style[k]);
         }
-        modal.find(".panel_color").colorpicker();
+        // Init each colorpicker independently: a malformed stored colour (e.g. a value left on a
+        // colour field by older data) throws inside the widget, and a single throw must not abort
+        // the whole modal and leave the panel unopened.
+        modal.find(".panel_color").each(function(){
+            try { $(this).colorpicker(); } catch(e){ /* skip an unparseable stored colour */ }
+        });
         modal.find(".file_upload").input_upload_field();
     }
 
