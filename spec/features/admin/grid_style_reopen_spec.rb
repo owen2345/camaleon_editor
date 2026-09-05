@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-# Reopening the per-block Style Settings must not crash. A block saved by an older build (or any
-# block whose stored style holds a value the colorpicker can't parse as a colour) put a non-colour
-# value on the border colour field; initialising the colorpicker on it threw
-# `val.toLowerCase is not a function`, which aborted the modal callback so the panel never appeared.
-# The recovery now initialises each colorpicker independently and tolerates an unparseable colour.
+# Opening the per-block Style Settings must not crash, whatever the stored style holds: the modal
+# callback runs inside show.bs.modal, where any throw aborts Bootstrap's show and the panel never
+# appears. The recovery hands the colorpicker strings (jQuery would coerce numeric-looking
+# data-attributes to Numbers, which its parser can't take), skips keys not shaped like field names,
+# migrates a legacy width filed under the border colour name, and degrades a broken field
+# initialiser to a console warning instead of failing the panel.
 RSpec.describe 'reopening the grid block style panel', :js do
   init_site
 
