@@ -8,13 +8,7 @@
 RSpec.describe 'reopening the grid block style panel', :js do
   init_site
 
-  before do
-    store_current_site(@site)
-    plugin_install('camaleon_editor')
-    admin_sign_in
-    post_type = CamaleonCms::Site.first.post_types.first
-    visit "#{cama_root_relative_path}/admin/post_type/#{post_type.id}/posts/new"
-  end
+  before { install_plugin_and_open_post_editor }
 
   # Build a synthetic block carrying the given stored style and open its Style Settings panel.
   # The block lives on window so later execute_script calls (e.g. after a save) can re-read its

@@ -10,13 +10,7 @@ RSpec.describe 'the grid editor style recovery', :js do
 
   # Reuse the post editor: it loads editor-manifest.js, which includes grid_editor_style.js and so
   # defines the global parser under test.
-  before do
-    store_current_site(@site)
-    plugin_install('camaleon_editor')
-    admin_sign_in
-    post_type = CamaleonCms::Site.first.post_types.first
-    visit "#{cama_root_relative_path}/admin/post_type/#{post_type.id}/posts/new"
-  end
+  before { install_plugin_and_open_post_editor }
 
   it 'parses a JSON style blob into an object' do
     result = page.evaluate_script('JSON.stringify(cama_editor_parse_style(\'{"color":"red","m-l":"5"}\'))')
