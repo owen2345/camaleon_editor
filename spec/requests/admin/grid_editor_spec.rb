@@ -85,9 +85,17 @@ RSpec.describe 'the grid editor admin' do
     expect(@site.grid_templates.where(id: template.id)).not_to exist
   end
 
-  it 'serves the style-settings panel' do
+  it 'serves the style-settings panel with a unique name per field' do
     get '/admin/plugins/camaleon_editor/style-settings'
 
     expect(response).to have_http_status(:ok)
+
+    # The style save serialises the form by field name, last-wins and silently: two fields
+    # sharing a name destroy one of them (the border colour/width inputs once shipped that way).
+    doc = Nokogiri::HTML(response.body)
+    names = doc.css('input[name], select[name]').pluck('name')
+    expect(names).to eq(names.uniq)
+    expect(doc.at_css('input.color_border')['name']).to eq('bo-c')
+    expect(doc.at_css('input.border_width')['name']).to eq('bo-w')
   end
 end
