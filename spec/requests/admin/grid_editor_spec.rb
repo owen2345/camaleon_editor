@@ -99,6 +99,15 @@ RSpec.describe 'the grid editor admin' do
     expect(doc.at_css('input.border_width')['name']).to eq('bo-w')
   end
 
+  it 'serves the background image input as free text' do
+    get '/admin/plugins/camaleon_editor/style-settings'
+
+    # The upload picker writes site-relative paths ("/media/..."), which type=url would mark
+    # invalid the moment native validation ever runs on this form.
+    doc = Nokogiri::HTML(response.body)
+    expect(doc.at_css('input.bg_image')['type']).to eq('text')
+  end
+
   it 'lets every style panel select fall back to the default' do
     get '/admin/plugins/camaleon_editor/style-settings'
 
