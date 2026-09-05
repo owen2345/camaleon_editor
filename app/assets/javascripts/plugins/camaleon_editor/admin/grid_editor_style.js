@@ -44,7 +44,11 @@ function grid_style_setting(item, editor, parent_item){
         var form = modal.find("form");
         var res = {};
         var img_url = form.find("[name='b-img']").val();
-        var b_width = modal.find(".border_width").val() + (modal.find(".border_width").val() ? "px" : "");
+        var width_field = modal.find(".border_width");
+        // border-width rejects a non-positive length: the declaration is dropped and the computed
+        // width falls back to 'medium' (a thicker border), so treat it as no border at all.
+        if(!(parseFloat(width_field.val()) > 0)) width_field.val("");
+        var b_width = width_field.val() + (width_field.val() ? "px" : "");
         form.find("input, select").each(function(){ if($(this).val()){ res[$(this).attr("name")] = $(this).val(); } });
         parent_item.attr("data-style", JSON.stringify(res));
         parent_item.css({
