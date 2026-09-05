@@ -8,13 +8,7 @@
 RSpec.describe 'the accordion style attribute', :js do
   init_site
 
-  before do
-    store_current_site(@site)
-    plugin_install('camaleon_editor')
-    admin_sign_in
-    post_type = CamaleonCms::Site.first.post_types.first
-    visit "#{cama_root_relative_path}/admin/post_type/#{post_type.id}/posts/new"
-  end
+  before { install_plugin_and_open_post_editor }
 
   # Drive grid_accordion_builder with open_modal stubbed so the builder's recover step runs and the
   # returned template's select is inspectable; then invoke the captured on_submit to check the save.

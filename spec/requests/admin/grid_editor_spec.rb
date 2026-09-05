@@ -85,9 +85,49 @@ RSpec.describe 'the grid editor admin' do
     expect(@site.grid_templates.where(id: template.id)).not_to exist
   end
 
-  it 'serves the style-settings panel' do
+  it 'serves the style-settings panel with a unique name per field' do
     get '/admin/plugins/camaleon_editor/style-settings'
 
     expect(response).to have_http_status(:ok)
+
+    # The style save serialises the form by field name, last-wins and silently: two fields
+    # sharing a name destroy one of them (the border colour/width inputs once shipped that way).
+    doc = Nokogiri::HTML(response.body)
+    names = doc.css('input[name], select[name]').pluck('name')
+    expect(names).to eq(names.uniq)
+    expect(doc.at_css('input.color_border')['name']).to eq('bo-c')
+    expect(doc.at_css('input.border_width')['name']).to eq('bo-w')
+  end
+
+  it 'serves the background image input as free text' do
+    get '/admin/plugins/camaleon_editor/style-settings'
+
+    # The upload picker writes site-relative paths ("/media/..."), which type=url would mark
+    # invalid the moment native validation ever runs on this form.
+    doc = Nokogiri::HTML(response.body)
+    expect(doc.at_css('input.bg_image')['type']).to eq('text')
+  end
+
+  it 'lets every style panel select fall back to the default' do
+    get '/admin/plugins/camaleon_editor/style-settings'
+
+    # The save skips empty values, so a select whose first option carries a value force-writes
+    # that CSS property on every save, overriding whatever the theme set.
+    doc = Nokogiri::HTML(response.body)
+    doc.css('select').each do |select|
+      expect(select.at_css('option')['value']).to eq(''), "select #{select['name']} forces its first option"
+    end
+  end
+
+  it 'associates every label in the style panel with a field' do
+    get '/admin/plugins/camaleon_editor/style-settings'
+
+    doc = Nokogiri::HTML(response.body)
+    field_ids = doc.css('input[id], select[id]').pluck('id')
+    labels = doc.css('label')
+    expect(labels).not_to be_empty
+    labels.each do |label|
+      expect(field_ids).to include(label['for']), "label #{label.text.inspect} points at no field"
+    end
   end
 end

@@ -3,14 +3,14 @@
         <legend>Background Image</legend>
         <div class='col-md-12'>
             <div class="form-group">
-                <label class="control-label">Image:</label>
-                <input placeholder="Upload your image or paste an URL" type="url" class="form-control bg_image file_upload" name="b-img" />
+                <label class="control-label" for="cama_style_b-img">Image:</label>
+                <input placeholder="Upload your image or paste an URL" type="text" class="form-control bg_image file_upload" name="b-img" id="cama_style_b-img" />
             </div>
         </div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label">Position</label>
-                <select class="form-control pos_bg" name="b-pos">
+                <label class="control-label" for="cama_style_b-pos">Position</label>
+                <select class="form-control pos_bg" name="b-pos" id="cama_style_b-pos">
                     <option value="">Default</option>
                     <option value="left top">Left Top</option>
                     <option value="left center">Left Center</option>
@@ -26,8 +26,9 @@
         </div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label">Repeat</label>
-                <select class="repeat_bg form-control" name="b-r">
+                <label class="control-label" for="cama_style_b-r">Repeat</label>
+                <select class="repeat_bg form-control" name="b-r" id="cama_style_b-r">
+                    <option value="">Default</option>
                     <option value="no-repeat">No Repeat</option>
                     <option value="repeat">Repeat</option>
                 </select>
@@ -36,8 +37,8 @@
         <div class="clearfix"></div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label">Size</label>
-                <select class="form-control size_bg" name="b-s">
+                <label class="control-label" for="cama_style_b-s">Size</label>
+                <select class="form-control size_bg" name="b-s" id="cama_style_b-s">
                     <option value="">Normal</option>
                     <option value="contain">Contain</option>
                     <option value="cover">Cover</option>
@@ -46,8 +47,8 @@
         </div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label">Attachment</label>
-                <select class="form-control attach_bg" name="b-a">
+                <label class="control-label" for="cama_style_b-a">Attachment</label>
+                <select class="form-control attach_bg" name="b-a" id="cama_style_b-a">
                     <option value="">Normal</option>
                     <option value="fixed">Fixed</option>
                 </select>
@@ -58,18 +59,18 @@
     <div class="row">
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label">Background Color:</label>
+                <label class="control-label" for="cama_style_b-c">Background Color:</label>
                 <div class="input-group color panel_color" data-color="" data-color-format="rgba">
-                    <input type="text" class="form-control input-value color_bg" name="b-c" value="">
+                    <input type="text" class="form-control input-value color_bg" name="b-c" id="cama_style_b-c" value="">
                     <span class="input-group-addon"><i></i></span>
                 </div>
             </div>
         </div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label">Text Color:</label>
+                <label class="control-label" for="cama_style_t-c">Text Color:</label>
                 <div class="input-group panel_color color" data-color="">
-                    <input type="text" class="form-control input-value text_bg" name="t-c" value="">
+                    <input type="text" class="form-control input-value text_bg" name="t-c" id="cama_style_t-c" value="">
                     <span class="input-group-addon"><i></i></span>
                 </div>
             </div>
@@ -81,36 +82,36 @@
         <legend>Border</legend>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label">Color:</label>
+                <label class="control-label" for="cama_style_bo-c">Color:</label>
                 <div class="input-group panel_color color" data-color="">
-                    <input type="text" class="form-control input-value color_border" name="bo-c" value="">
+                    <input type="text" class="form-control input-value color_border" name="bo-c" id="cama_style_bo-c" value="">
                     <span class="input-group-addon"><i></i></span>
                 </div>
             </div>
         </div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label">Width:</label>
-                <input type="number" class="form-control input-value border_width" name="bo-c" value="">
+                <label class="control-label" for="cama_style_bo-w">Width:</label>
+                <input type="number" class="form-control input-value border_width" name="bo-w" id="cama_style_bo-w" value="" min="0">
             </div>
         </div>
     </fieldset>
 
-    <div class="form-group"><label class="control-label">Margin:</label>
+    <div class="form-group"><label class="control-label" for="cama_style_m-t">Margin:</label>
         <div class="input-group"><span class="input-group-addon">Top: </span>
-            <input class="form-control" type="number" name="m-t"> <span class="input-group-addon">Right: </span>
-            <input type="number" class="form-control" name="m-r"> <span class="input-group-addon">Bottom: </span>
-            <input class="form-control" type="number" name="m-b"> <span class="input-group-addon">Left: </span>
-            <input class="form-control" type="number" name="m-l">
+            <input class="form-control" type="number" name="m-t" id="cama_style_m-t"> <span class="input-group-addon">Right: </span>
+            <input type="number" class="form-control" name="m-r" id="cama_style_m-r"> <span class="input-group-addon">Bottom: </span>
+            <input class="form-control" type="number" name="m-b" id="cama_style_m-b"> <span class="input-group-addon">Left: </span>
+            <input class="form-control" type="number" name="m-l" id="cama_style_m-l">
         </div>
     </div>
 
-    <div class="form-group"><label class="control-label">Padding:</label>
+    <div class="form-group"><label class="control-label" for="cama_style_p-t">Padding:</label>
         <div class="input-group"><span class="input-group-addon">Top: </span>
-            <input class="form-control" type="number" name="p-t"> <span class="input-group-addon">Right: </span>
-            <input type="number" class="form-control" name="p-r"> <span class="input-group-addon">Bottom: </span>
-            <input class="form-control" type="number" name="p-b"> <span class="input-group-addon">Left: </span>
-            <input class="form-control" type="number" name="p-l">
+            <input class="form-control" type="number" name="p-t" id="cama_style_p-t"> <span class="input-group-addon">Right: </span>
+            <input type="number" class="form-control" name="p-r" id="cama_style_p-r"> <span class="input-group-addon">Bottom: </span>
+            <input class="form-control" type="number" name="p-b" id="cama_style_p-b"> <span class="input-group-addon">Left: </span>
+            <input class="form-control" type="number" name="p-l" id="cama_style_p-l">
         </div>
     </div>
 </form>

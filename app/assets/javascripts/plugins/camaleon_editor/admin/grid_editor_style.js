@@ -13,20 +13,52 @@ function grid_style_setting(item, editor, parent_item){
     var modal_callback = function(modal){
         var c_style = parent_item.attr("data-style");
         var recover_style = window.cama_editor_parse_style(c_style);
+        // A block saved while colour and width shared name="bo-c" kept only the width, filed
+        // under the colour key. Move such a value to its own field so the width is restored and
+        // the colour slot is freed; the next save then persists the healed shape.
+        if(recover_style["bo-c"] && !recover_style["bo-w"] && /^-?\d+(\.\d+)?$/.test(recover_style["bo-c"])){
+            recover_style["bo-w"] = recover_style["bo-c"];
+            delete recover_style["bo-c"];
+        }
         for(var k in recover_style){
+            // Keys are data from a stored template, not selector fragments: a key that isn't
+            // shaped like a field name would make the selector below throw or match elsewhere.
+            if(!/^[\w-]+$/.test(k)) continue;
             var i = modal.find("[name='"+k+"']").val(recover_style[k]);
             var p = i.parent();
-            if(p.hasClass("color") && i.val()) p.attr("data-color", recover_style[k]);
+            // Prime jQuery's data cache with the string form as well: the colorpicker reads
+            // data('color'), and reading it from the attribute alone coerces numeric-looking
+            // values to Numbers, which the widget's colour parser cannot take.
+            if(p.hasClass("color") && i.val()) p.attr("data-color", recover_style[k]).data("color", String(recover_style[k]));
         }
-        modal.find(".panel_color").colorpicker();
-        modal.find(".file_upload").input_upload_field();
+        // Init each field independently: this callback runs inside show.bs.modal, so a throw here
+        // would abort Bootstrap's show and leave the panel unopened. Degrade the one field and say
+        // so instead of failing the whole panel silently.
+        modal.find(".panel_color").each(function(){
+            try { $(this).colorpicker(); } catch(e){ console.warn("camaleon_editor: colorpicker init failed", e); }
+        });
+        try { modal.find(".file_upload").input_upload_field(); } catch(e){ console.warn("camaleon_editor: upload field init failed", e); }
+        // A rejected width leaves an inline error (see the submit handler); editing the field is
+        // the correction, so the stale error must not outlive the first keystroke.
+        modal.on("input", ".border_width", function(){
+            $(this).closest(".form-group").removeClass("has-error").find(".border_width_error").remove();
+        });
     }
 
     var submit_callback = function(modal){
         var form = modal.find("form");
         var res = {};
         var img_url = form.find("[name='b-img']").val();
-        var b_width = modal.find(".border_width").val() + (modal.find(".border_width").val() ? "px" : "");
+        var width_field = modal.find(".border_width");
+        var width_group = width_field.closest(".form-group");
+        width_group.removeClass("has-error").find(".border_width_error").remove();
+        // border-width drops a negative length and the computed width falls back to 'medium' (a
+        // thicker border than asked), so reject the value with an error instead of saving it.
+        if(parseFloat(width_field.val()) < 0){
+            width_group.addClass("has-error").append('<span class="help-block border_width_error">Width must be zero or greater</span>');
+            return;
+        }
+        var b_width = parseFloat(width_field.val()) > 0 ? width_field.val() + "px" : "";
         form.find("input, select").each(function(){ if($(this).val()){ res[$(this).attr("name")] = $(this).val(); } });
         parent_item.attr("data-style", JSON.stringify(res));
         parent_item.css({
@@ -58,5 +90,8 @@ function grid_style_setting(item, editor, parent_item){
 
     //var bg_color = parent_item.css("background-color");
     //var color_border = parent_item.css("border-left-color");
-    open_modal({id: 'cama_editor_modal2', title: "Style Settings", modal_size: "modal-lg", modal_settings: { keyboard: false, backdrop: "static" }, mode: "ajax", url: root_url+"admin/plugins/camaleon_editor/style-settings", callback: modal_callback, on_submit: submit_callback })
+    // The item-form builders (tabs, slider, gallery, accordion) share id cama_editor_modal2; the
+    // style panel needs its own, or open_modal's existing-id short-circuit re-shows their modal
+    // (with their callbacks) when a style gear is clicked inside a nested grid.
+    open_modal({id: 'cama_editor_style_modal', title: "Style Settings", modal_size: "modal-lg", modal_settings: { keyboard: false, backdrop: "static" }, mode: "ajax", url: root_url+"admin/plugins/camaleon_editor/style-settings", callback: modal_callback, on_submit: submit_callback })
 }
