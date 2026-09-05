@@ -16,7 +16,10 @@ function grid_style_setting(item, editor, parent_item){
         for(var k in recover_style){
             var i = modal.find("[name='"+k+"']").val(recover_style[k]);
             var p = i.parent();
-            if(p.hasClass("color") && i.val()) p.attr("data-color", recover_style[k]);
+            // Prime jQuery's data cache with the string form as well: the colorpicker reads
+            // data('color'), and reading it from the attribute alone coerces numeric-looking
+            // values to Numbers, which the widget's colour parser cannot take.
+            if(p.hasClass("color") && i.val()) p.attr("data-color", recover_style[k]).data("color", String(recover_style[k]));
         }
         // Init each colorpicker independently: a malformed stored colour (e.g. a value left on a
         // colour field by older data) throws inside the widget, and a single throw must not abort
