@@ -31,6 +31,5 @@
     "available_user_roles_list": [
       "camaleon_editor_available_user_roles_list"
     ]
-    //here you can add all your hooks (read documentation)
   }
 }
