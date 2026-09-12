@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix: plugin config parses under json 3
+
+`config/camaleon_plugin.json` carried a `//` comment, which the json gem no longer accepts by default as of 3.0, so a host app resolving json 3.x raised `JSON::ParserError` at boot. The file is now plain JSON. [#12](https://github.com/owen2345/camaleon_editor/pull/12).
+
 ### Fix: plugin stylesheets reach the host's precompile set
 
 The gem's asset manifest linked the raw `.css.scss` sources instead of the compiled stylesheets, so rendering a grid post on the public site (or its draft Preview) raised `AssetNotPrecompiledError` in host apps. The manifest now links every stylesheet by its compiled path. [#11](https://github.com/owen2345/camaleon_editor/pull/11).
