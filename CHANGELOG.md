@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Tooling: RuboCop runs with its default formatter in CI
+
+The CI RuboCop step runs without `-f github`, so the job log lists the offenses and the summary. Development tooling only. [#13](https://github.com/owen2345/camaleon_editor/pull/13).
+
 ### Fix: plugin config parses under json 3
 
 `config/camaleon_plugin.json` carried a `//` comment, which the json gem no longer accepts by default as of 3.0, so a host app resolving json 3.x raised `JSON::ParserError` at boot. The file is now plain JSON. [#12](https://github.com/owen2345/camaleon_editor/pull/12).
