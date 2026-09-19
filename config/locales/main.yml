@@ -1,4 +1,11 @@
 en:
+  # Core hands the browser only the camaleon_cms.admin.js tree, so a string the editor's script
+  # reads has to live under it.
+  camaleon_cms:
+    admin:
+      js:
+        grid_editor:
+          import_failed: "The template could not be loaded."
   camaleon_editor:
     permission:
       label: "Grid Editor"
@@ -22,9 +29,15 @@ en:
         del_block: "Are you sure to delete this block?"
         del_content: "Are you sure to delete this content?"
         clear_editor: "Are you sure to clear the editor?"
-        import_failed: "The template could not be loaded."
 
 es:
+  # Core hands the browser only the camaleon_cms.admin.js tree, so a string the editor's script
+  # reads has to live under it.
+  camaleon_cms:
+    admin:
+      js:
+        grid_editor:
+          import_failed: "No se pudo cargar la plantilla."
   camaleon_editor:
     permission:
       label: "Grid Editor"
@@ -48,9 +61,15 @@ es:
         del_block: "Esta seguro de eliminar este bloque?"
         del_content: "Esta seguro de eliminar este contenido?"
         clear_editor: "Esta seguro de limpiar el editor?"
-        import_failed: "No se pudo cargar la plantilla."
 
 it:
+  # Core hands the browser only the camaleon_cms.admin.js tree, so a string the editor's script
+  # reads has to live under it.
+  camaleon_cms:
+    admin:
+      js:
+        grid_editor:
+          import_failed: "Impossibile caricare il modello."
   camaleon_editor:
     permission:
       label: "Grid Editor"
@@ -74,4 +93,3 @@ it:
         del_block: "Sei sicuro di voler eliminare questo blocco?"
         del_content: "Sei sicuro di voler cancellare questo contenuto?"
         clear_editor: "Sei sicuro di voler cancellare l'editor?"
-        import_failed: "Impossibile caricare il modello."

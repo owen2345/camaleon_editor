@@ -13,4 +13,13 @@ RSpec.describe 'the template apply action strings', type: :model do
       end
     end
   end
+
+  # Strings the editor's script reads reach the browser only from the camaleon_cms.admin.js tree.
+  it 'ships the failed-import message where the admin layout exports it, in every locale' do
+    %i[en es it].each do |locale|
+      value = I18n.t('camaleon_cms.admin.js.grid_editor.import_failed', locale: locale)
+      expect(value).not_to include('translation missing')
+      expect(value).not_to include('Translation missing')
+    end
+  end
 end

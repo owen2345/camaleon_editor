@@ -79,6 +79,8 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
     expect(page).to have_no_css('#cama_custom_loading')
     expect(page).to have_css('#grid_table_list .import_item')
+    # the message is the delivered translation, not the script's built-in English default
+    expect(page.evaluate_script('I18n_data.grid_editor.import_failed')).to eq('The template could not be loaded.')
   end
 
   # A refused or signed-out request is not a failed one: the server redirects it, the browser follows
