@@ -158,16 +158,27 @@ RSpec.describe 'importing a grid template', :js do
   end
 
   # Rebuilding the grid runs the column and content parsers and every auto_save listener, any of
-  # which can throw on markup it does not expect; the list is closed by then, so a lingering
-  # overlay would leave no way back to the post.
-  it 'lifts the loading overlay even when rebuilding the grid throws' do
+  # which can throw on markup it does not expect. The list is closed by then, so the overlay has to
+  # lift, and a half-built grid the post content may not match has to give way to the previous one.
+  it 'puts the previous grid back and says so when rebuilding the grid throws' do
+    accept_confirm { find('#grid_table_list .import_item').click }
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+
+    full_width = '<div class="col-md-12" data-col="12" data-col_title="100%">' \
+                 '<div class="grid_sortable_items"></div></div>'
+    @template.update!(description: %(<div class="panel_grid_body row">#{full_width}</div>))
     page.execute_script(<<~JS)
       jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
     JS
-
+    find('.grid_editor_menu a.dropdown-toggle', text: 'Templates').click
+    find('.grid_editor_menu .list_templates').click
     accept_confirm { find('#grid_table_list .import_item').click }
 
-    expect(page).to have_css('.panel_grid_body .drg_column')
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
     expect(page).to have_no_css('#cama_custom_loading')
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+    expect(page).to have_no_css('.panel_grid_body .drg_column .header_box', text: '100%')
+    expect(saved_grid_content).to include('data-col="6"')
+    expect(saved_grid_content).not_to include('data-col="12"')
   end
 end

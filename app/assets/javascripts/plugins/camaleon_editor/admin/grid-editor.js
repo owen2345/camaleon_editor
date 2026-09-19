@@ -216,18 +216,30 @@ jQuery(function(){
                         var template_body = template_grid_body(res);
                         if(!template_body) return import_failed();
                         modal.modal("hide");
-                        // the list is gone by now, so nothing thrown while rebuilding the grid may keep the overlay up
-                        try {
-                            var grid = editor.find(".panel_grid_body");
-                            // the style of the whole grid (Templates > Settings) lives on the root, not inside it
-                            $.each(["style", "data-style"], function(_index, name){
-                                var value = template_body.attr(name);
+                        var grid = editor.find(".panel_grid_body");
+                        // the style of the whole grid (Templates > Settings) lives on the root, not inside it
+                        var set_grid_style = function(style){
+                            $.each(style, function(name, value){
                                 if(value === undefined) grid.removeAttr(name); else grid.attr(name, value);
                             });
+                        };
+                        // the current grid is set aside as nodes, handlers included, in case the rebuild fails
+                        var previous = {contents: grid.contents().detach(), style: {"style": grid.attr("style"), "data-style": grid.attr("data-style")}};
+                        try {
+                            set_grid_style({"style": template_body.attr("style"), "data-style": template_body.attr("data-style")});
                             grid.html(template_body.html());
                             parse_content(editor); // recover saved content
                             editor.trigger("auto_save");
+                        } catch(error) {
+                            // A parser or an auto_save listener threw part-way: a half-built grid that the post content
+                            // may not match is worse than no template, so the grid goes back to what it was.
+                            set_grid_style(previous.style);
+                            grid.empty().append(previous.contents);
+                            try { editor.trigger("auto_save"); } catch(resync_error) {}
+                            if(window.console) console.error(error);
+                            import_failed();
                         } finally {
+                            // the list is gone by now, so nothing may keep the overlay up
                             hideLoading();
                         }
                     }).fail(import_failed);
