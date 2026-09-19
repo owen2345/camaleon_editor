@@ -22,6 +22,16 @@ jQuery(function(){
     };
     //********************** end editor content options **********************//
 
+    // Sets an element's markup without running the scripts in it. jQuery's html() evaluates every
+    // inline script of what it inserts; a grid's scripts are content for the public page, where the
+    // theme has loaded what they call, and have no business in the administrator's session.
+    $.fn.gridEditorInertHtml = function(markup){
+        return this.each(function(){
+            $(this).empty();
+            this.innerHTML = markup;
+        });
+    };
+
     // The templates modal swaps its content for what its requests return: the list, or the template
     // form. A signed-out or refused request is redirected and comes back as a 200 carrying the login
     // or dashboard page, so the views check a response is one of those panels before showing it.
@@ -413,7 +423,7 @@ jQuery(function(){
             placeholder: "placeholder",
             start: function (e, ui) {
                 ui.helper.css({'width': '' , 'height': ''}).addClass('col-md-' + jQuery(ui.helper).attr('data-col'));
-                ui.placeholder.attr('class', jQuery(ui.helper).attr("class")).html(ui.helper.html()).fadeTo("fast", 0.4);
+                ui.placeholder.attr('class', jQuery(ui.helper).attr("class")).gridEditorInertHtml(ui.helper.html()).fadeTo("fast", 0.4);
             },
             over: function (e, ui) {
                 ui.placeholder.attr('class', jQuery(ui.helper).attr("class"));
@@ -443,7 +453,7 @@ jQuery(function(){
                 placeholder: "placeholder",
                 start: function (e, ui) {
                     ui.helper.css({'width': '' , 'height': ''}).addClass('col-md-12');
-                    ui.placeholder.attr('class', jQuery(ui.helper).attr("class")).html(ui.helper.html()).fadeTo("fast", 0.4);
+                    ui.placeholder.attr('class', jQuery(ui.helper).attr("class")).gridEditorInertHtml(ui.helper.html()).fadeTo("fast", 0.4);
                 },
                 over: function (e, ui) {
                     $(this).addClass("hover-grid");
