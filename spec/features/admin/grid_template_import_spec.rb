@@ -1,0 +1,36 @@
+# frozen_string_literal: true
+
+# The Import link in the templates list points at the template's own URL, which the click handler
+# fetches over XHR. Declining the confirm must leave the editor as it was: a handler that returns
+# without cancelling the click lets the browser follow the link to the raw template markup, and
+# the unsaved post is lost.
+RSpec.describe 'importing a grid template', :js do
+  init_site
+
+  before do
+    install_plugin_and_open_post_editor
+    column = '<div class="col-md-6" data-col="6" data-col_title="50%"><div class="grid_sortable_items"></div></div>'
+    @site.grid_templates.create!(name: 'Half column', slug: 'half-column',
+                                 description: %(<div class="panel_grid_body row">#{column}</div>))
+    accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
+    find('.grid_editor_menu a.dropdown-toggle', text: 'Templates').click
+    find('.grid_editor_menu .list_templates').click
+  end
+
+  it 'stays on the post editor when the confirm is declined' do
+    editor_url = page.current_url
+
+    dismiss_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_current_path(URI(editor_url).path)
+    expect(page).to have_css('#grid_table_list .import_item')
+    expect(page).to have_no_css('.panel_grid_body .drg_column')
+  end
+
+  it 'loads the template into the grid when the confirm is accepted' do
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+    expect(page).to have_no_css('#grid_table_list')
+  end
+end

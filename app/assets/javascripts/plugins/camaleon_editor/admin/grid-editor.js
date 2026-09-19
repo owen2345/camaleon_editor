@@ -185,7 +185,7 @@ jQuery(function(){
             // modal with available templates
             editor.find(".grid_editor_menu .list_templates").ajax_modal({callback: function(modal){
                 modal.on("click", ".import_item", function(){
-                    if(!confirm($(this).attr("data-message"))) return;
+                    if(!confirm($(this).attr("data-message"))) return false;
                     modal.modal("hide");
                     showLoading();
                     $.get($(this).attr("href"), function(res){
