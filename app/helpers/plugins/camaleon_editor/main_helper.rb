@@ -54,6 +54,17 @@ module Plugins::CamaleonEditor::MainHelper
     append_asset_content("<script>var cama_grid_editor_can_manage_templates = #{can_manage};</script>")
   end
 
+  # A string of the plugin's own for the admin panel. The plugin ships fewer languages than core,
+  # which ships every admin language: where the plugin has no string for the current one, the core
+  # string that comes closest keeps the admin in their language, and the plugin's English is the last
+  # resort. The plugin's string is looked up without locale fallbacks, which would otherwise answer in
+  # English before the core string got its turn.
+  def camaleon_editor_t(key, core_key)
+    plugin_key = "camaleon_editor.#{key}"
+    I18n.t(plugin_key, fallback: false, default: nil) ||
+      I18n.t(core_key, default: I18n.t(plugin_key, locale: :en))
+  end
+
   # registers the plugin's two permissions in the admin roles form (Users > Roles). Both are off by
   # default and admins always pass.
   def camaleon_editor_available_user_roles_list(args)
