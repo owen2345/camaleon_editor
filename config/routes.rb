@@ -7,6 +7,7 @@ Rails.application.routes.draw do
       namespace 'camaleon_editor' do
         resources :grid_editor, controller: 'admin'
         get 'style-settings' => 'admin#style_settings'
+        get 'abilities' => 'admin#abilities'
       end
     end
   end

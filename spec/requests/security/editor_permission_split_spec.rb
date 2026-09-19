@@ -33,6 +33,12 @@ RSpec.describe 'Security: the editor use/manage permission split' do
       expect(response.body).not_to include('class="edit_item"')
     end
 
+    it 'is told it may not manage templates' do
+      get '/admin/plugins/camaleon_editor/abilities'
+
+      expect(response.parsed_body).to eq('manage_templates' => false)
+    end
+
     it 'may not create a template' do
       expect do
         post base, params: { grid_template: { name: 'Nope', description: '<div>x</div>' } }
@@ -68,6 +74,12 @@ RSpec.describe 'Security: the editor use/manage permission split' do
       expect(response.body).to include('class="import_item"', 'class="edit_item"', 'class="destroy_item"')
     end
 
+    it 'is told it may manage templates' do
+      get '/admin/plugins/camaleon_editor/abilities'
+
+      expect(response.parsed_body).to eq('manage_templates' => true)
+    end
+
     it 'may create a template' do
       post base, params: { grid_template: { name: 'Made', description: '<div>x</div>' } }
 
@@ -83,6 +95,14 @@ RSpec.describe 'Security: the editor use/manage permission split' do
       expect(response).to have_http_status(:ok)
       expect(@site.grid_templates.where(id: template.id)).not_to exist
     end
+  end
+
+  it 'answers the abilities question with a redirect for a user with neither permission' do
+    sign_in_as(user_with_manager_grants({}, 'no-grants'), site: @site)
+
+    get '/admin/plugins/camaleon_editor/abilities'
+
+    expect(response.location).to include('/admin/dashboard')
   end
 
   it 'registers both permission checkboxes, keyed to the gate constants' do

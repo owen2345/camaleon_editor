@@ -38,10 +38,11 @@ jQuery(function(){
         var tpl_options = "";
         $.each($.fn.gridEditor_options, function(key, item){ tpl_options += '<div class="" data-kind="'+key+'" title="'+item["description"]+'"><div class="grid_item_content grid_item_'+key+'"></div></div>'; });
 
-        // Saving a template needs the template-management permission, and the page says who lacks it.
-        // A page that loaded the editor without saying keeps the entry: hiding it is a courtesy, the
-        // server is what refuses, and an administrator must not lose the action to a missing variable.
-        var can_manage_templates = window.cama_grid_editor_can_manage_templates !== false;
+        // Saving a template needs the template-management permission. The page says whether the user
+        // holds it; on a page that loaded the editor without saying, the entry is built hidden and the
+        // server is asked, so nobody is offered an action they would be refused and nobody entitled
+        // to it loses it to a missing variable.
+        var can_manage_templates = window.cama_grid_editor_can_manage_templates;
 
         // template grid editor
         var editor = $("<div class='panel_grid_editor' id='"+editor_id+"'>"+
@@ -53,7 +54,7 @@ jQuery(function(){
             '<a class="dropdown-toggle" href="#" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+I18n("grid_editor.templates")+' <span class="caret"></span> </a>'+
             '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1"> ' +
             '<li><a class="list_templates" title="Grid Templates" href = "'+root_url+'admin/plugins/camaleon_editor/grid_editor" >'+I18n("grid_editor.list")+'</a></li >'+
-            (can_manage_templates ? '<li><a class="new_template" title="New Template" href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl")+'</a></li >' : '')+
+            (can_manage_templates !== false ? '<li class="'+(can_manage_templates === true ? '' : 'hidden')+'"><a class="new_template" title="New Template" href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl")+'</a></li >' : '')+
             "<li><a class='grid_style_settings' title='Style Settings' href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
             '</ul> ' +
             '</li>'+
@@ -248,6 +249,11 @@ jQuery(function(){
                     return false;
                 });
             }});
+
+            // anything but a plain yes - a refusal, a redirect to the login page, a failed request - leaves it hidden
+            if(can_manage_templates === undefined) $.getJSON(root_url+"admin/plugins/camaleon_editor/abilities", function(abilities){
+                if(abilities && abilities.manage_templates === true) editor.find(".grid_editor_menu .new_template").parent().removeClass("hidden");
+            });
 
             // save as a new template
             editor.find(".grid_editor_menu .new_template").ajax_modal({callback: function(modal){

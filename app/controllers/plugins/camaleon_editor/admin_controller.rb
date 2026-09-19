@@ -78,6 +78,13 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
     render layout: false
   end
 
+  # What the signed-in user may do with the template library, for an editor loaded on a page that
+  # did not say (see camaleon_editor_append_editor_assets). Open to every editor user; a refused
+  # or signed-out request is redirected like any other, which the editor reads as a no.
+  def abilities
+    render json: { manage_templates: can?(:manage, PERMISSION_MANAGE) }
+  end
+
   # Actions that curate the shared template library, as opposed to using the editor.
   MANAGE_ACTIONS = %w[new create edit update destroy].freeze
 
