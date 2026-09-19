@@ -4,7 +4,7 @@
 
 ### Fix: applying a grid template can no longer lose the unsaved post
 
-In the templates list, cancelling the confirm followed the link away from the post editor, and a failed request left the editor behind the loading overlay. Both now leave the editor and the list usable. The action is a green check titled "Apply template", its prompt warns that the grid is replaced, and Delete and Edit show only to template managers. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
+In the templates list, cancelling the confirm left the post editor, a failed request left it behind the loading overlay, and an expired session wrote the login page into the grid. All now leave the post intact. The action is a green "Apply template" check whose prompt warns that the grid is replaced; Delete, Edit and "Save as template" show only to template managers. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
 
 ### Tooling: RuboCop runs with its default formatter in CI
 
