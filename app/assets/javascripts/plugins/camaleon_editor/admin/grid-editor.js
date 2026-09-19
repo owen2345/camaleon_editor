@@ -85,6 +85,15 @@ jQuery(function(){
             return res;
         }
 
+        // the grid body of a fetched template, or null when the response is not one. A refused or signed
+        // out request is redirected, and the request follows it to a 200: without this check the
+        // dashboard or login page would be written into the grid and auto-saved over the post content.
+        function template_grid_body(res){
+            var nodes = $.parseHTML($.trim($.fn.skipGridEditorLibraries(String(res)))) || [];
+            var body = $(nodes).filter(".panel_grid_body").first();
+            return body.length ? body : null;
+        }
+
         // grid editor parser to recover from saved content
         function parse_content(editor){
             editor.find(".panel_grid_body").children("div").each(function(){ var col = parse_content_column($(this)); });
@@ -189,17 +198,19 @@ jQuery(function(){
                     e.preventDefault();
                     if(!confirm($(this).attr("data-message"))) return false;
                     showLoading();
+                    // the list stays open on a failure, so another template can be picked
+                    var import_failed = function(){
+                        $.fn.alert({type: "error", title: I18n("grid_editor.import_failed", "The template could not be loaded.")});
+                    };
                     $.get($(this).attr("data-url"), function(res){
+                        var template_body = template_grid_body(res);
+                        if(!template_body) return import_failed();
                         modal.modal("hide");
-                        //editor.children(".panel_grid_body").html(res);
-                        editor.find(".panel_grid_body").html($($.fn.skipGridEditorLibraries(res)).html());
+                        editor.find(".panel_grid_body").html(template_body.html());
                         parse_content(editor); // recover saved content
                         editor.trigger("auto_save");
                         hideLoading();
-                    }).fail(function(){
-                        // the list stays open, so another template can be picked
-                        $.fn.alert({type: "error", title: I18n("grid_editor.import_failed", "The template could not be loaded.")});
-                    });
+                    }).fail(import_failed);
                     return false;
                 });
             }});

@@ -10,8 +10,8 @@ RSpec.describe 'importing a grid template', :js do
   before do
     install_plugin_and_open_post_editor
     column = '<div class="col-md-6" data-col="6" data-col_title="50%"><div class="grid_sortable_items"></div></div>'
-    @site.grid_templates.create!(name: 'Half column', slug: 'half-column',
-                                 description: %(<div class="panel_grid_body row">#{column}</div>))
+    @template = @site.grid_templates.create!(name: 'Half column', slug: 'half-column',
+                                             description: %(<div class="panel_grid_body row">#{column}</div>))
     accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
     find('.grid_editor_menu a.dropdown-toggle', text: 'Templates').click
     find('.grid_editor_menu .list_templates').click
@@ -73,6 +73,28 @@ RSpec.describe 'importing a grid template', :js do
         if(/grid_editor\/\d+$/.test(options.url)) xhr.abort();
       });
     JS
+
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
+    expect(page).to have_no_css('#cama_custom_loading')
+    expect(page).to have_css('#grid_table_list .import_item')
+  end
+
+  # A refused or signed-out request is not a failed one: the server redirects it, the browser follows
+  # the redirect, and the request succeeds with the login or dashboard page as its body.
+  it 'refuses a redirected response instead of writing that page into the grid' do
+    page.driver.browser.manage.delete_cookie('auth_token')
+
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
+    expect(page).to have_no_css('#cama_custom_loading')
+    expect(page.evaluate_script("jQuery('.panel_grid_body').children().length")).to eq(0)
+  end
+
+  it 'refuses a stored template that is not a grid body' do
+    @template.update!(description: 'plain text, not a grid')
 
     accept_confirm { find('#grid_table_list .import_item').click }
 
