@@ -281,12 +281,13 @@ jQuery(function(){
                         $.fn.alert({type: "error", title: I18n("grid_editor.import_failed", "The template could not be loaded.")});
                     };
                     $.get($(this).attr("data-url"), function(res){
-                        var template_body = parse_grid_body(res);
-                        if(!template_body) return import_failed();
-                        var grid = editor.find(".panel_grid_body");
-                        // the current grid is set aside as nodes, handlers included, in case the rebuild fails
-                        var previous = {contents: grid.contents().detach(), style: {"style": grid.attr("style"), "data-style": grid.attr("data-style")}};
+                        var grid = editor.find(".panel_grid_body"), previous = null;
+                        // everything from reading the response on runs under the finally that lifts the overlay
                         try {
+                            var template_body = parse_grid_body(res);
+                            if(!template_body) return import_failed();
+                            // the current grid is set aside as nodes, handlers included, in case the rebuild fails
+                            previous = {contents: grid.contents().detach(), style: {"style": grid.attr("style"), "data-style": grid.attr("data-style")}};
                             fill_grid(grid, template_body);
                             parse_content(editor); // recover saved content
                             editor.trigger("auto_save");
@@ -296,10 +297,15 @@ jQuery(function(){
                             modal.modal("hide"); // only now: every failure leaves the list open
                         } catch(error) {
                             // A parser or an auto_save listener threw part-way: a half-built grid that the post content
-                            // may not match is worse than no template, so the grid goes back to what it was.
-                            set_grid_style(grid, previous.style);
-                            grid.empty().append(previous.contents);
-                            try { editor.trigger("auto_save"); } catch(resync_error) {}
+                            // may not match is worse than no template, so the grid goes back to what it was. The way
+                            // back is guarded too: whatever it hits, the failure still gets reported.
+                            try {
+                                if(previous){
+                                    set_grid_style(grid, previous.style);
+                                    grid.empty().append(previous.contents);
+                                    editor.trigger("auto_save");
+                                }
+                            } catch(restore_error) { if(window.console) console.error(restore_error); }
                             if(window.console) console.error(error);
                             import_failed();
                         } finally {

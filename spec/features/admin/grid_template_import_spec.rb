@@ -235,6 +235,19 @@ RSpec.describe 'importing a grid template', :js do
     expect(page.evaluate_script('jQuery.hasData(window.__cama_replaced)')).to be(false)
   end
 
+  # Reading the response is the first thing that can go wrong once it has arrived; the overlay and
+  # the failure message must not depend on it going right.
+  it 'reports a response it fails to read and lifts the overlay' do
+    find('#grid_table_list .import_item') # the list has arrived
+    page.execute_script("document.implementation.createHTMLDocument = function(){ throw new Error('parser broke'); };")
+
+    apply_listed_template
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
+    expect(page).to have_no_css('#cama_custom_loading')
+    expect(page).to have_css('#grid_table_list .import_item')
+  end
+
   # Rebuilding the grid runs the column and content parsers and every auto_save listener, any of
   # which can throw on markup it does not expect. The overlay has to lift, a half-built grid the post
   # content may not match has to give way to the previous one, and the list has to stay open like
