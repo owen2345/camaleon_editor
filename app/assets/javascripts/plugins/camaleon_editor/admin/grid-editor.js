@@ -272,7 +272,9 @@ jQuery(function(){
                 modal.on("click", ".import_item", function(e){
                     // the template url is request data, never a place to go: leaving the page drops the unsaved post
                     e.preventDefault();
-                    if(!confirm($(this).attr("data-message"))) return false;
+                    // one apply at a time: the overlay below stops the mouse, not Enter on the link that keeps the focus
+                    if(modal.data("applying_template") || !confirm($(this).attr("data-message"))) return false;
+                    modal.data("applying_template", true);
                     showLoading();
                     // the list stays open on a failure, so another template can be picked
                     var import_failed = function(){
@@ -304,7 +306,7 @@ jQuery(function(){
                             // whatever happened above, the overlay must not outlive it
                             hideLoading();
                         }
-                    }).fail(import_failed);
+                    }).fail(import_failed).always(function(){ modal.removeData("applying_template"); });
                     return false;
                 });
             }});

@@ -125,6 +125,25 @@ RSpec.describe 'importing a grid template', :js do
     expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)')
   end
 
+  # The list stays open while the template is fetched, and the loading overlay stops the mouse, not
+  # the keyboard: Enter on the focused link would start a second apply over the first.
+  it 'ignores a second apply while one is under way' do
+    find('#grid_table_list .import_item') # the list has arrived
+    page.execute_script(<<~'JS')
+      window.confirm = function(){ return true; };
+      window.__cama_import_requests = 0;
+      jQuery(document).ajaxSend(function(_event, _xhr, options){
+        if(/grid_editor\/\d+$/.test(options.url)) window.__cama_import_requests++;
+      });
+      var link = jQuery('#grid_table_list .import_item').first();
+      link.click();
+      link.click();
+    JS
+
+    expect(page).to have_css('.panel_grid_body .drg_column')
+    expect(page.evaluate_script('window.__cama_import_requests')).to eq(1)
+  end
+
   it 'loads the template into the grid when the confirm is accepted' do
     accept_confirm { find('#grid_table_list .import_item').click }
 
