@@ -91,8 +91,11 @@ jQuery(function(){
         // the grid body of a fetched template, or null when the response is not one. A refused or signed
         // out request is redirected, and the request follows it to a 200: without this check the
         // dashboard or login page would be written into the grid and auto-saved over the post content.
+        // Parsed in a document of its own, where nothing loads or runs, and with its scripts kept: a
+        // template's embed blocks carry them, and they belong to the grid as much as the markup does.
         function template_grid_body(res){
-            var nodes = $.parseHTML($.trim($.fn.skipGridEditorLibraries(String(res)))) || [];
+            var inert_document = document.implementation.createHTMLDocument("");
+            var nodes = $.parseHTML($.trim($.fn.skipGridEditorLibraries(String(res))), inert_document, true) || [];
             var body = $(nodes).filter(".panel_grid_body").first();
             return body.length ? body : null;
         }

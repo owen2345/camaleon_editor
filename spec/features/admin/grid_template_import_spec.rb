@@ -57,6 +57,31 @@ RSpec.describe 'importing a grid template', :js do
     expect(message).to eq('Apply this template? It replaces the current content of the grid.')
   end
 
+  # What the editor would save for the post right now: the grid as the auto_save export wrote it.
+  def saved_grid_content
+    page.evaluate_script("jQuery('.panel_grid_editor').next('textarea').val()")
+  end
+
+  # A template the way the editor stores a real one: a column holding an Editor content block whose
+  # markup carries an embed script.
+  def store_template_with_embed
+    block = '<div class="" data-kind="editor"><div class="grid_item_content grid_item_editor">' \
+            '<p>embedded widget</p><script>window.__cama_widget_loaded = true;</script></div></div>'
+    column = '<div class="col-md-6" data-col="6" data-col_title="50%">' \
+             "<div class=\"grid_sortable_items\">#{block}</div></div>"
+    @template.update!(description: %(<div class="panel_grid_body row">#{column}</div>))
+  end
+
+  it 'applies a template complete with the scripts of its content blocks' do
+    store_template_with_embed
+
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
+    expect(saved_grid_content).to include('<p>embedded widget</p>')
+    expect(saved_grid_content).to include('<script>window.__cama_widget_loaded = true;</script>')
+  end
+
   it 'loads the template into the grid when the confirm is accepted' do
     accept_confirm { find('#grid_table_list .import_item').click }
 
