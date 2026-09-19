@@ -23,6 +23,16 @@ RSpec.describe 'Security: the editor use/manage permission split' do
       expect(response).to have_http_status(:ok)
     end
 
+    it 'is offered the import action but not the library management ones' do
+      @site.grid_templates.create!(name: 'Shared', slug: 'shared', description: '<div>x</div>')
+
+      get base
+
+      expect(response.body).to include('class="import_item"')
+      expect(response.body).not_to include('class="destroy_item"')
+      expect(response.body).not_to include('class="edit_item"')
+    end
+
     it 'may not create a template' do
       expect do
         post base, params: { grid_template: { name: 'Nope', description: '<div>x</div>' } }
@@ -48,6 +58,14 @@ RSpec.describe 'Security: the editor use/manage permission split' do
     it 'may read the template list' do
       get base
       expect(response).to have_http_status(:ok)
+    end
+
+    it 'is offered the import, edit and delete actions' do
+      @site.grid_templates.create!(name: 'Shared', slug: 'shared', description: '<div>x</div>')
+
+      get base
+
+      expect(response.body).to include('class="import_item"', 'class="edit_item"', 'class="destroy_item"')
     end
 
     it 'may create a template' do
