@@ -45,6 +45,23 @@ jQuery(function(){
         $.fn.alert({type: "error", title: I18n("grid_editor.request_failed", "The request was not completed. Reload the page and try again.")});
     };
 
+    // Opens the panel a templates menu link points at - the list, the template form - in a modal.
+    // Core's ajax_modal would show whatever a 200 carries, and the menu is built from what the page
+    // knew when it loaded: a session gone or a permission taken away since then comes back as the
+    // login or dashboard page. The panel is fetched and checked first, and only a panel is shown.
+    function open_templates_modal_on_click(links, callback){
+        links.click(function(e){
+            e.preventDefault();
+            var link = $(this);
+            showLoading();
+            $.get(link.attr("href")).done(function(res){
+                if(!$.fn.gridEditor_is_templates_panel(res)) return $.fn.gridEditor_request_failed();
+                hideLoading();
+                open_modal({title: link.attr("title"), content: res, callback: callback});
+            }).fail($.fn.gridEditor_request_failed);
+        });
+    }
+
     // What the server says the user may do with the template library. A page can hold several
     // editors (one per language of a post): they share one request, and its answer. A request that
     // failed is forgotten, so the next look at the menu asks again. cama_ajax_request spares the
@@ -283,7 +300,7 @@ jQuery(function(){
             });
 
             // modal with available templates
-            editor.find(".grid_editor_menu .list_templates").ajax_modal({callback: function(modal){
+            open_templates_modal_on_click(editor.find(".grid_editor_menu .list_templates"), function(modal){
                 modal.on("click", ".import_item", function(e){
                     // the template url is request data, never a place to go: leaving the page drops the unsaved post
                     e.preventDefault();
@@ -330,7 +347,7 @@ jQuery(function(){
                     }).fail(import_failed).always(function(){ modal.removeData("applying_template"); });
                     return false;
                 });
-            }});
+            });
 
             // Asked when the Templates menu is opened, the first moment the answer matters. Anything but a
             // plain yes - a refusal, a redirect to the login page, a failed request - leaves the entry hidden.
@@ -341,9 +358,9 @@ jQuery(function(){
             });
 
             // save as a new template
-            editor.find(".grid_editor_menu .new_template").ajax_modal({callback: function(modal){
+            open_templates_modal_on_click(editor.find(".grid_editor_menu .new_template"), function(modal){
                 modal.find("textarea").val(export_content(editor));
-            }});
+            });
 
             // parse menu options
             editor.find("#grid_columns_"+gridEditor_id).children("div").each(function(){ parse_content_column($(this), true) });

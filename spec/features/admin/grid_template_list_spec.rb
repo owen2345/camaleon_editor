@@ -73,4 +73,41 @@ RSpec.describe 'managing grid templates after the session is gone', :js do
     expect(page).to have_css('#grid_table_list td', text: 'Renamed')
     expect(page).to have_no_css('#cama_alert_modal')
   end
+
+  context 'when a templates modal is opened' do
+    before { find('#ow_inline_modal .close').click }
+
+    it 'reports a list that came back as the login page instead of showing that page' do
+      expect(page).to have_no_css('#ow_inline_modal')
+      sign_out_behind_the_page
+
+      open_templates_list
+
+      expect_the_request_to_be_reported
+      expect(page).to have_no_css('#ow_inline_modal')
+    end
+
+    # The menu is built from what the page knew about the user when it loaded; a permission taken
+    # away since then sends the request to the dashboard.
+    it 'reports a Save as template that is refused instead of showing the dashboard' do
+      expect(page).to have_no_css('#ow_inline_modal')
+      refused = user_with_manager_grants({ Plugins::CamaleonEditor::MainHelper::PERMISSION_USE => 1 }, 'use-only')
+      sign_out_behind_the_page
+      admin_sign_in(refused.username, refused.password)
+
+      open_templates_menu
+      find('.grid_editor_menu .new_template').click
+
+      expect_the_request_to_be_reported
+      expect(page).to have_no_css('#ow_inline_modal')
+    end
+
+    it 'still opens the template form for a manager, filled with the current grid' do
+      open_templates_menu
+      find('.grid_editor_menu .new_template').click
+
+      expect(page).to have_css('#ow_inline_modal #grid_template_form')
+      expect(find('#grid_template_form textarea', visible: :all).value).to include('panel_grid_body')
+    end
+  end
 end
