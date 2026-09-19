@@ -171,8 +171,9 @@ RSpec.describe 'importing a grid template', :js do
   end
 
   # Rebuilding the grid runs the column and content parsers and every auto_save listener, any of
-  # which can throw on markup it does not expect. The list is closed by then, so the overlay has to
-  # lift, and a half-built grid the post content may not match has to give way to the previous one.
+  # which can throw on markup it does not expect. The overlay has to lift, a half-built grid the post
+  # content may not match has to give way to the previous one, and the list has to stay open like
+  # on any other failure, so another template can be picked.
   it 'puts the previous grid back and says so when rebuilding the grid throws' do
     accept_confirm { find('#grid_table_list .import_item').click }
     expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
@@ -193,5 +194,6 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_no_css('.panel_grid_body .drg_column .header_box', text: '100%')
     expect(saved_grid_content).to include('data-col="6"')
     expect(saved_grid_content).not_to include('data-col="12"')
+    expect(page).to have_css('#grid_table_list .import_item')
   end
 end

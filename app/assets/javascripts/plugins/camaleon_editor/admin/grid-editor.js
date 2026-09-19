@@ -235,7 +235,6 @@ jQuery(function(){
                     $.get($(this).attr("data-url"), function(res){
                         var template_body = parse_grid_body(res);
                         if(!template_body) return import_failed();
-                        modal.modal("hide");
                         var grid = editor.find(".panel_grid_body");
                         // the current grid is set aside as nodes, handlers included, in case the rebuild fails
                         var previous = {contents: grid.contents().detach(), style: {"style": grid.attr("style"), "data-style": grid.attr("data-style")}};
@@ -243,6 +242,7 @@ jQuery(function(){
                             fill_grid(grid, template_body);
                             parse_content(editor); // recover saved content
                             editor.trigger("auto_save");
+                            modal.modal("hide"); // only now: every failure leaves the list open
                         } catch(error) {
                             // A parser or an auto_save listener threw part-way: a half-built grid that the post content
                             // may not match is worse than no template, so the grid goes back to what it was.
@@ -252,7 +252,7 @@ jQuery(function(){
                             if(window.console) console.error(error);
                             import_failed();
                         } finally {
-                            // the list is gone by now, so nothing may keep the overlay up
+                            // whatever happened above, the overlay must not outlive it
                             hideLoading();
                         }
                     }).fail(import_failed);
