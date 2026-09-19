@@ -91,12 +91,12 @@ jQuery(function(){
             return res;
         }
 
-        // the grid body of a fetched template, or null when the response is not one. A refused or signed
+        // The grid body in a fetched template or in saved post content, or null when there is none. A refused or signed
         // out request is redirected, and the request follows it to a 200: without this check the
         // dashboard or login page would be written into the grid and auto-saved over the post content.
         // Parsed in a document of its own, where nothing loads or runs, and with its scripts kept: a
         // template's embed blocks carry them, and they belong to the grid as much as the markup does.
-        function template_grid_body(res){
+        function parse_grid_body(res){
             var inert_document = document.implementation.createHTMLDocument("");
             var nodes = $.parseHTML($.trim($.fn.skipGridEditorLibraries(String(res))), inert_document, true) || [];
             var elements = $(nodes).filter(function(){ return this.nodeType === 1; });
@@ -233,7 +233,7 @@ jQuery(function(){
                         $.fn.alert({type: "error", title: I18n("grid_editor.import_failed", "The template could not be loaded.")});
                     };
                     $.get($(this).attr("data-url"), function(res){
-                        var template_body = template_grid_body(res);
+                        var template_body = parse_grid_body(res);
                         if(!template_body) return import_failed();
                         modal.modal("hide");
                         var grid = editor.find(".panel_grid_body");
@@ -278,9 +278,10 @@ jQuery(function(){
             editor.find(".grid_editor_menu .drg_item, .grid_editor_menu .drg_column").tooltip();
 
             // if saved content is a grid_editor content, then rebuilt or recover this content
-            if($.fn.isGridEditorContent(textarea.val())){
-                //editor.find(".panel_grid_body").html($($.fn.skipGridEditorLibraries(textarea.val())).html());
-                editor.find(".panel_grid_body").replaceWith($($.fn.skipGridEditorLibraries(textarea.val())));
+            var saved_body = $.fn.isGridEditorContent(textarea.val()) ? parse_grid_body(textarea.val()) : null;
+            if(saved_body){
+                // filled rather than swapped in as live nodes, which would run the saved content's scripts
+                fill_grid(editor.find(".panel_grid_body"), saved_body);
                 parse_content(editor); // recover saved content
             }else{
                 editor.data("tiny_backup", tinyEditor.getContent())
@@ -342,7 +343,8 @@ jQuery(function(){
         }
 
         do_editor_menus(editor);
-        textarea.before(editor);
+        // inserted natively: jQuery's before() would run the scripts of the grid just rebuilt from saved content
+        textarea[0].parentNode.insertBefore(editor[0], textarea[0]);
 
         // drag columns
         jQuery(".grid_editor_menu .drg_column", editor).draggable({
