@@ -218,7 +218,13 @@ jQuery(function(){
                         modal.modal("hide");
                         // the list is gone by now, so nothing thrown while rebuilding the grid may keep the overlay up
                         try {
-                            editor.find(".panel_grid_body").html(template_body.html());
+                            var grid = editor.find(".panel_grid_body");
+                            // the style of the whole grid (Templates > Settings) lives on the root, not inside it
+                            $.each(["style", "data-style"], function(_index, name){
+                                var value = template_body.attr(name);
+                                if(value === undefined) grid.removeAttr(name); else grid.attr(name, value);
+                            });
+                            grid.html(template_body.html());
                             parse_content(editor); // recover saved content
                             editor.trigger("auto_save");
                         } finally {

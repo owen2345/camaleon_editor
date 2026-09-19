@@ -82,6 +82,21 @@ RSpec.describe 'importing a grid template', :js do
     expect(saved_grid_content).to include('<script>window.__cama_widget_loaded = true;</script>')
   end
 
+  # Templates > Settings styles the grid as a whole, and the editor keeps that on the grid's root
+  # element: a template saved from a styled grid must bring the style along.
+  it 'applies the style of the whole grid along with its columns' do
+    column = '<div class="col-md-6" data-col="6" data-col_title="50%"><div class="grid_sortable_items"></div></div>'
+    root = %(<div class="panel_grid_body row" style="background-color: rgb(255, 204, 0);" ) +
+           %(data-style='{"b-c":"#ffcc00"}'>)
+    @template.update!(description: "#{root}#{column}</div>")
+
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_css('.panel_grid_body .drg_column')
+    expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)')
+    expect(saved_grid_content).to include('data-style="{&quot;b-c&quot;:&quot;#ffcc00&quot;}"')
+  end
+
   it 'loads the template into the grid when the confirm is accepted' do
     accept_confirm { find('#grid_table_list .import_item').click }
 
