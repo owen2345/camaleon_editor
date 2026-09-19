@@ -150,6 +150,21 @@ RSpec.describe 'importing a grid template', :js do
 
   # Templates seeded by a host app or copied from another site do not always carry the editor's own
   # root class; their columns sit in a plain wrapper.
+  # The other redirect core issues: a permission refused mid-session sends the request to the
+  # dashboard, a full admin page, which must not reach the grid either.
+  it 'refuses the dashboard page a refused request is redirected to' do
+    # the list was opened by the administrator; the session now becomes one the editor refuses
+    refused = user_with_manager_grants({}, 'no-grants')
+    page.driver.browser.manage.delete_cookie('auth_token')
+    admin_sign_in(refused.username, '12345678')
+
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
+    expect(page).to have_no_css('#cama_custom_loading')
+    expect(page.evaluate_script("jQuery('.panel_grid_body').children().length")).to eq(0)
+  end
+
   it 'applies a template whose columns sit in a plain wrapper' do
     column = '<div class="col-md-6" data-col="6" data-col_title="50%"><div class="grid_sortable_items"></div></div>'
     @template.update!(description: "<div>#{column}</div>")
