@@ -70,11 +70,26 @@ RSpec.describe 'the grid editor templates menu', :js do
       expect(page.evaluate_script('window.__cama_abilities_requests')).to eq(1)
     end
 
+    # The entry starts hidden, so "still hidden" says nothing until the server has answered: the
+    # example waits for the answer before it looks.
     it 'keeps Save as template from a user who may not manage templates' do
       open_post_editor_as_use_only_author
       forget_the_declaration
+      page.execute_script(<<~'JS')
+        window.__cama_abilities_answers = [];
+        jQuery(document).ajaxComplete(function(_event, xhr, options){
+          if(/camaleon_editor\/abilities/.test(options.url)) window.__cama_abilities_answers.push(xhr.responseText);
+        });
+      JS
       open_templates_menu
 
+      answers = page.document.synchronize do
+        found = page.evaluate_script('window.__cama_abilities_answers')
+        raise Capybara::ElementNotFound, 'no abilities answer yet' if found.empty?
+
+        found
+      end
+      expect(answers).to eq(['{"manage_templates":false}'])
       expect(page).to have_css('.grid_editor_menu .list_templates')
       expect(page).to have_no_css('.grid_editor_menu .new_template')
     end
