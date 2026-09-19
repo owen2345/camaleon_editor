@@ -2,13 +2,13 @@
 
 ## Unreleased
 
-### Fix: scripts in a grid no longer run inside the admin editor
+### Security: grid scripts stay inert in the editor, template markup is scanned
 
-Applying a template, or opening a post whose content is a grid, ran every inline script of that grid (an embed or widget snippet) in the administrator's session, and a script calling something only the public theme loads made the template impossible to apply. The editor now keeps such scripts in the content without running them; they still run on the public page. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
+Scripts inside a grid no longer run in the admin editor; they still run on the public page. A grid template saved by anyone but an administrator is refused when it holds markup core refuses as post content (scripts, event handlers, embeds). **Notes for upgraders:** stored templates are untouched and stay editable, since only a changed template is scanned. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
 
 ### Fix: applying a grid template can no longer lose the unsaved post
 
-In the templates list, cancelling the confirm left the post editor, a failed request left it behind the loading overlay, and an expired session wrote the login page into the grid. None does now. The action is a green "Apply template" check that warns the grid is replaced and keeps the grid-wide style; only template managers see Delete, Edit and "Save as template". [#14](https://github.com/owen2345/camaleon_editor/pull/14).
+Cancelling, a failed or redirected request and an expired session now leave the post and its grid as they were. The action is a green "Apply template" check that warns the grid is replaced; a template brings its grid-wide style when it has one. Only template managers see Delete, Edit and "Save as template". Unreadable grid content stays in the text editor. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
 
 ### Tooling: RuboCop runs with its default formatter in CI
 

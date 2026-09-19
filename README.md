@@ -18,6 +18,10 @@ The plugin adds two role permissions under **Admin > Users > Roles**, both off b
   gets the plain post editor.
 - **Grid templates** — create, edit and delete the site's shared grid templates.
 
+A template is markup the editor puts into the page of whoever applies it. From a **Grid templates**
+holder who is not an administrator, markup that core refuses as post content (scripts, event
+handlers, embeds) is refused when the template is saved; it is never rewritten.
+
 Plugin settings stay under the core **plugins** permission. A role holding neither editor permission
 is refused the grid-template endpoints.
 
@@ -33,8 +37,8 @@ camaleon_editor_append_editor_assets if can?(:manage, Plugins::CamaleonEditor::M
 
 The helper appends the editor's scripts and stylesheet, and tells the editor whether the user holds
 the **Grid templates** permission, which decides whether **Templates > Save as template** is
-offered. A page that appends the asset library directly still works: the editor then asks
-`GET /admin/plugins/camaleon_editor/abilities`, which answers `{"manage_templates": true|false}`
+offered. A page that appends the asset library directly still works: when the Templates menu is
+first opened the editor asks `GET /admin/plugins/camaleon_editor/abilities`, which answers `{"manage_templates": true|false}`
 to any user holding either editor permission, and offers the entry only on a `true`.
 
 ## Development
