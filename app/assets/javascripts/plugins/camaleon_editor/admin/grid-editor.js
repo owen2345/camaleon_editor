@@ -166,9 +166,9 @@ jQuery(function(){
         // column: content element
         // skip_options: boolean to add drodown options
         function parse_content_column(column, skip_options){
-            var html = '<div class="header_box">'+
-                '<a><i class="fa fa-stop"></i> '+column.attr("data-col_title")+'</a>'+
-                '</div>';
+            // the title comes from stored content: it goes in as text, never as markup
+            var html = $('<div class="header_box"><a><i class="fa fa-stop"></i> </a></div>');
+            html.children("a").append(document.createTextNode(column.attr("data-col_title") || ""));
             var options = "<div class='dropdown'>" +
                 "<a class='dropdown-toggle' data-toggle='dropdown'>&nbsp; <span class='caret'></span></a>" +
                 "<ul class='dropdown-menu auto_with pull-right' role='menu'>"+
