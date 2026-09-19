@@ -5,6 +5,9 @@ en:
       description: "Can switch the post editor to the grid editor and apply saved grid templates"
       manage_label: "Grid templates"
       manage_description: "Can create, edit and delete the shared grid templates of the site"
+    templates:
+      apply: "Apply template"
+      apply_confirm: "Apply this template? It replaces the current content of the grid."
   admin:
     js:
       grid_editor:
@@ -28,6 +31,9 @@ es:
       description: "Puede cambiar el editor de contenidos al editor de rejilla y aplicar plantillas guardadas"
       manage_label: "Grid templates"
       manage_description: "Puede crear, editar y eliminar las plantillas de rejilla compartidas del sitio"
+    templates:
+      apply: "Aplicar plantilla"
+      apply_confirm: "¿Aplicar esta plantilla? Reemplaza el contenido actual de la rejilla."
   admin:
     js:
       grid_editor:
@@ -51,6 +57,9 @@ it:
       description: "Può passare l'editor dei contenuti all'editor a griglia e applicare i modelli salvati"
       manage_label: "Grid templates"
       manage_description: "Può creare, modificare ed eliminare i modelli a griglia condivisi del sito"
+    templates:
+      apply: "Applica modello"
+      apply_confirm: "Applicare questo modello? Sostituisce il contenuto attuale della griglia."
   admin:
     js:
       grid_editor:

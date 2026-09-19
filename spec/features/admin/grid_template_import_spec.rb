@@ -47,6 +47,16 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_no_css('.panel_grid_body .drg_column')
   end
 
+  # Applying a template overwrites the grid and auto-saves, so the action has to look like an apply
+  # and its prompt has to say what is about to be lost.
+  it 'presents the action as applying a template and warns that the grid is replaced' do
+    expect(page).to have_css("#grid_table_list .import_item[title='Apply template'] .fa-check-circle.text-success")
+
+    message = dismiss_confirm { find('#grid_table_list .import_item').click }
+
+    expect(message).to eq('Apply this template? It replaces the current content of the grid.')
+  end
+
   it 'loads the template into the grid when the confirm is accepted' do
     accept_confirm { find('#grid_table_list .import_item').click }
 
