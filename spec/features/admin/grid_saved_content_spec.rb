@@ -30,6 +30,19 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
   end
 
+  # A theme hook or a hand edit can leave an id or a class of its own on the grid root; the public
+  # page may style by them, so they have to survive the editor.
+  it 'keeps the attributes the saved grid root carries' do
+    body = %(<div class="panel_grid_body row hero" id="landing" data-theme="dark">#{grid_column_markup}</div>)
+    store_post_content(@post, grid_post_content(body))
+    open_post_in_editor(@post)
+    find('.panel_grid_editor .panel_grid_body .drg_column')
+    trigger_grid_auto_save
+
+    expect(saved_grid_content).to include('id="landing"', 'data-theme="dark"')
+    expect(saved_grid_content).to match(/class="[^"]*\bhero\b/)
+  end
+
   # A host page can build its field first and attach it later; jQuery's before() quietly did
   # nothing for a detached field, and its native replacement must not throw instead.
   it 'does not break on a text field that is not in the page yet' do

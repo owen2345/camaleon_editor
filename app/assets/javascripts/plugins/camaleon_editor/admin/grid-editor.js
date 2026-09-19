@@ -166,6 +166,16 @@ jQuery(function(){
             });
         }
 
+        // The saved grid root used to be swapped in whole, so whatever a theme hook or a hand edit left on
+        // it - an id, a class, a data attribute the public page styles by - came back out on the next
+        // save. Now that the editor keeps its own root, those are carried over to it.
+        function keep_root_attributes(grid, root){
+            $.each(root[0].attributes, function(_index, attribute){
+                if(attribute.name === "class") grid.addClass(attribute.value);
+                else if(attribute.name !== "style" && attribute.name !== "data-style") grid.attr(attribute.name, attribute.value);
+            });
+        }
+
         // Fills the grid from a parsed grid root: the root's style when it has one, then its markup. A
         // root without a style - a template saved from a grid nobody styled - says nothing about the
         // style of the grid it goes into, which stays. The markup goes in inertly (gridEditorInertHtml).
@@ -345,6 +355,7 @@ jQuery(function(){
             // if saved content is a grid_editor content, then rebuilt or recover this content
             if(saved_body){
                 // filled rather than swapped in as live nodes, which would run the saved content's scripts
+                keep_root_attributes(editor.find(".panel_grid_body"), saved_body);
                 fill_grid(editor.find(".panel_grid_body"), saved_body);
                 parse_content(editor); // recover saved content
             }else{
