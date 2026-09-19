@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix: cancelling a template import no longer leaves the post editor
+
+Declining the "Are you sure you want to import?" prompt in the templates list let the browser follow the Import link to the raw template markup, dropping the unsaved post. Cancel now leaves the list and the editor untouched. The Import action also gets a download icon instead of the exchange arrows, and the Delete and Edit icons get tooltips. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
+
 ### Tooling: RuboCop runs with its default formatter in CI
 
 The CI RuboCop step runs without `-f github`, so the job log lists the offenses and the summary. Development tooling only. [#13](https://github.com/owen2345/camaleon_editor/pull/13).
