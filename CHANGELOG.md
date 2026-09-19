@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix: scripts in a grid no longer run inside the admin editor
+
+Applying a template, or opening a post whose content is a grid, ran every inline script of that grid (an embed or widget snippet) in the administrator's session, and a script calling something only the public theme loads made the template impossible to apply. The editor now keeps such scripts in the content without running them; they still run on the public page. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
+
 ### Fix: applying a grid template can no longer lose the unsaved post
 
 In the templates list, cancelling the confirm left the post editor, a failed request left it behind the loading overlay, and an expired session wrote the login page into the grid. None does now. The action is a green "Apply template" check that warns the grid is replaced and keeps the grid-wide style; only template managers see Delete, Edit and "Save as template". [#14](https://github.com/owen2345/camaleon_editor/pull/14).
