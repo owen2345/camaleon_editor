@@ -242,6 +242,9 @@ jQuery(function(){
                             fill_grid(grid, template_body);
                             parse_content(editor); // recover saved content
                             editor.trigger("auto_save");
+                            // set aside with its handlers and widgets for a rollback that did not come: released
+                            // for good, or jQuery's data store would hold every replaced grid for the life of the page
+                            previous.contents.remove();
                             modal.modal("hide"); // only now: every failure leaves the list open
                         } catch(error) {
                             // A parser or an auto_save listener threw part-way: a half-built grid that the post content

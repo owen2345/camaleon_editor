@@ -170,6 +170,22 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('#grid_table_list .import_item')
   end
 
+  # The replaced grid is kept as live nodes while the new one is built, in case it has to come
+  # back. Once the apply has succeeded it has to be released, handlers and sortable widgets included.
+  it 'releases the grid it replaced once the template is applied' do
+    accept_confirm { find('#grid_table_list .import_item').click }
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+    page.execute_script("window.__cama_replaced = jQuery('.panel_grid_body .grid_sortable_items')[0];")
+    expect(page.evaluate_script('jQuery.hasData(window.__cama_replaced)')).to be(true)
+
+    find('.grid_editor_menu a.dropdown-toggle', text: 'Templates').click
+    find('.grid_editor_menu .list_templates').click
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_no_css('#grid_table_list')
+    expect(page.evaluate_script('jQuery.hasData(window.__cama_replaced)')).to be(false)
+  end
+
   # Rebuilding the grid runs the column and content parsers and every auto_save listener, any of
   # which can throw on markup it does not expect. The overlay has to lift, a half-built grid the post
   # content may not match has to give way to the previous one, and the list has to stay open like
