@@ -20,9 +20,10 @@
                     form = $(form);
                     showLoading();
                     $.post(form.attr("action"), form.serialize(), function(res){
+                        if(!$.fn.gridEditor_is_templates_panel(res)) return $.fn.gridEditor_request_failed();
                         form.replaceWith(res);
                         hideLoading();
-                    });
+                    }).fail($.fn.gridEditor_request_failed);
                     return false;
                 }
             });

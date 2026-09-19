@@ -6,6 +6,7 @@ en:
       js:
         grid_editor:
           import_failed: "The template could not be loaded."
+          request_failed: "The request was not completed. Reload the page and try again."
   camaleon_editor:
     permission:
       label: "Grid Editor"
@@ -38,6 +39,7 @@ es:
       js:
         grid_editor:
           import_failed: "No se pudo cargar la plantilla."
+          request_failed: "La solicitud no se completó. Recargue la página e inténtelo de nuevo."
   camaleon_editor:
     permission:
       label: "Grid Editor"
@@ -70,6 +72,7 @@ it:
       js:
         grid_editor:
           import_failed: "Impossibile caricare il modello."
+          request_failed: "La richiesta non è stata completata. Ricarica la pagina e riprova."
   camaleon_editor:
     permission:
       label: "Grid Editor"

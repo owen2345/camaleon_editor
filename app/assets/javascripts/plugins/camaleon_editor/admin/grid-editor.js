@@ -20,6 +20,19 @@ jQuery(function(){
     };
     //********************** end editor content options **********************//
 
+    // The templates modal swaps its content for what its requests return: the list, or the template
+    // form. A signed-out or refused request is redirected and comes back as a 200 carrying the login
+    // or dashboard page, so the views check a response is one of those panels before showing it.
+    $.fn.gridEditor_is_templates_panel = function(res){
+        var inert_document = document.implementation.createHTMLDocument("");
+        var nodes = $.parseHTML($.trim(String(res)), inert_document, true) || [];
+        return $(nodes).filter("#grid_table_list, #grid_template_form").length > 0;
+    };
+    // for those requests when they fail or return something else; $.fn.alert lifts the loading overlay
+    $.fn.gridEditor_request_failed = function(){
+        $.fn.alert({type: "error", title: I18n("grid_editor.request_failed", "The request was not completed. Reload the page and try again.")});
+    };
+
     // What the server says the user may do with the template library. A page can hold several
     // editors (one per language of a post): they share one request, and its answer.
     var abilities_request = null;

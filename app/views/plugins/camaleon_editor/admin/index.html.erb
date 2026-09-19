@@ -17,15 +17,21 @@
 <script>
     jQuery(function(){
         var table = $("#grid_table_list");
+        // shows the panel a request returned, or reports the request when it returned anything else
+        var show_panel = function(res){
+            if(!$.fn.gridEditor_is_templates_panel(res)) return $.fn.gridEditor_request_failed();
+            table.parent().html(res);
+            hideLoading();
+        };
         table.on("click", ".destroy_item", function(){
             if(!confirm($(this).attr("data-message"))) return false;
             showLoading();
-            $.ajax({type: "delete", url: $(this).attr("href"), success: function(res){ table.parent().html(res); hideLoading(); }});
+            $.ajax({type: "delete", url: $(this).attr("href")}).done(show_panel).fail($.fn.gridEditor_request_failed);
             return false;
         });
         table.on("click", ".edit_item", function(){
             showLoading();
-            $.get($(this).attr("href"), function(res){ table.parent().html(res); hideLoading(); });
+            $.get($(this).attr("href"), show_panel).fail($.fn.gridEditor_request_failed);
             return false;
         });
     })
