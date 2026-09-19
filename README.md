@@ -21,6 +21,22 @@ The plugin adds two role permissions under **Admin > Users > Roles**, both off b
 Plugin settings stay under the core **plugins** permission. A role holding neither editor permission
 is refused the grid-template endpoints.
 
+## Loading the editor on another admin page
+
+The plugin loads the grid editor into the post form by itself. To offer it on a TinyMCE field of
+another admin page (a theme settings page, another plugin's form), call the plugin's helper from
+that page's controller or view, after checking the user may use the editor:
+
+```ruby
+camaleon_editor_append_editor_assets if can?(:manage, Plugins::CamaleonEditor::MainHelper::PERMISSION_USE)
+```
+
+The helper appends the editor's scripts and stylesheet, and tells the editor whether the user holds
+the **Grid templates** permission, which decides whether **Templates > Save as template** is
+offered. A page that appends the asset library directly still works: the editor then asks
+`GET /admin/plugins/camaleon_editor/abilities`, which answers `{"manage_templates": true|false}`
+to any user holding either editor permission, and offers the entry only on a `true`.
+
 ## Development
 
 The suite runs against a camaleon_cms-backed dummy Rails app under `spec/` (the Ruby version comes
