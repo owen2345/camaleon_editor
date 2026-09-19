@@ -32,17 +32,31 @@ jQuery(function(){
         });
     };
 
+    // The top-level elements of markup that came from the server, parsed in a document of its own -
+    // where parsing loads and runs nothing - with its scripts kept: a grid's embed blocks carry them.
+    // One document serves every parse; the nodes are only read or moved out of it.
+    var inert_document = null;
+    function parse_inert(markup){
+        if(!inert_document) inert_document = document.implementation.createHTMLDocument("");
+        var nodes = $.parseHTML($.trim(String(markup)), inert_document, true) || [];
+        return $(nodes).filter(function(){ return this.nodeType === 1; });
+    }
+
+    // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too.
+    function report_failure(key, english){
+        $.fn.alert({type: "error", title: I18n("grid_editor."+key, english)});
+    }
+    function import_failed(){ report_failure("import_failed", "The template could not be loaded."); }
+
     // The templates modal swaps its content for what its requests return: the list, or the template
     // form. A signed-out or refused request is redirected and comes back as a 200 carrying the login
     // or dashboard page, so the views check a response is one of those panels before showing it.
     $.fn.gridEditor_is_templates_panel = function(res){
-        var inert_document = document.implementation.createHTMLDocument("");
-        var nodes = $.parseHTML($.trim(String(res)), inert_document, true) || [];
-        return $(nodes).filter("#grid_table_list, #grid_template_form").length > 0;
+        return parse_inert(res).filter("#grid_table_list, #grid_template_form").length > 0;
     };
-    // for those requests when they fail or return something else; $.fn.alert lifts the loading overlay
+    // for those requests when they fail or return something else
     $.fn.gridEditor_request_failed = function(){
-        $.fn.alert({type: "error", title: I18n("grid_editor.request_failed", "The request was not completed. Reload the page and try again.")});
+        report_failure("request_failed", "The request was not completed. Reload the page and try again.");
     };
 
     // Opens the panel a templates menu link points at - the list, the template form - in a modal.
@@ -83,7 +97,7 @@ jQuery(function(){
         // empty grid, its first change would be auto-saved over the content nobody got to see.
         var saved_body = $.fn.isGridEditorContent(textarea.val()) ? parse_grid_body(textarea.val()) : null;
         if($.fn.isGridEditorContent(textarea.val()) && !saved_body && !textarea.prev().hasClass("panel_grid_editor")){
-            $.fn.alert({type: "error", title: I18n("grid_editor.content_unreadable", "This content is marked as a grid but could not be read as a grid, so it stays in the text editor.")});
+            report_failure("content_unreadable", "This content is marked as a grid but could not be read as a grid, so it stays in the text editor.");
             return textarea;
         }
         gridEditor_id ++;
@@ -107,6 +121,11 @@ jQuery(function(){
         var can_manage_templates = window.cama_grid_editor_can_manage_templates;
         // only the two literals are a declaration; null, 1 or "true" from a hand-written page is not one
         if(can_manage_templates !== true && can_manage_templates !== false) can_manage_templates = undefined;
+        // declared a manager: the entry; declared not one: no entry; not declared: the entry, held back
+        var save_template_entry = "";
+        if(can_manage_templates !== false){
+            save_template_entry = '<li class="'+(can_manage_templates ? '' : 'hidden')+'"><a class="new_template" title="New Template" href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl")+'</a></li >';
+        }
 
         // template grid editor
         var editor = $("<div class='panel_grid_editor' id='"+editor_id+"'>"+
@@ -118,7 +137,7 @@ jQuery(function(){
             '<a class="dropdown-toggle" href="#" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+I18n("grid_editor.templates")+' <span class="caret"></span> </a>'+
             '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1"> ' +
             '<li><a class="list_templates" title="Grid Templates" href = "'+root_url+'admin/plugins/camaleon_editor/grid_editor" >'+I18n("grid_editor.list")+'</a></li >'+
-            (can_manage_templates !== false ? '<li class="'+(can_manage_templates === true ? '' : 'hidden')+'"><a class="new_template" title="New Template" href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl")+'</a></li >' : '')+
+            save_template_entry+
             "<li><a class='grid_style_settings' title='Style Settings' href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
             '</ul> ' +
             '</li>'+
@@ -158,12 +177,8 @@ jQuery(function(){
         // The grid body in a fetched template or in saved post content, or null when there is none. A refused or signed
         // out request is redirected, and the request follows it to a 200: without this check the
         // dashboard or login page would be written into the grid and auto-saved over the post content.
-        // Parsed in a document of its own, where nothing loads or runs, and with its scripts kept: a
-        // template's embed blocks carry them, and they belong to the grid as much as the markup does.
         function parse_grid_body(res){
-            var inert_document = document.implementation.createHTMLDocument("");
-            var nodes = $.parseHTML($.trim($.fn.skipGridEditorLibraries(String(res))), inert_document, true) || [];
-            var elements = $(nodes).filter(function(){ return this.nodeType === 1; });
+            var elements = parse_inert($.fn.skipGridEditorLibraries(String(res)));
             var body = elements.filter(".panel_grid_body").first();
             // A template stored by other means may wrap its columns in a plain div, or hold its grid body
             // inside the editor's own wrapper. A page is told apart by its head, which leaves title, meta,
@@ -177,8 +192,14 @@ jQuery(function(){
         }
 
         // the style of the whole grid (Templates > Settings) lives on the grid's root, not inside it
+        var GRID_STYLE_ATTRIBUTES = ["style", "data-style"];
+        function grid_style(root){
+            var style = {};
+            $.each(GRID_STYLE_ATTRIBUTES, function(_index, name){ style[name] = root.attr(name); });
+            return style;
+        }
         function set_grid_style(grid, style){
-            $.each(["style", "data-style"], function(_index, name){
+            $.each(GRID_STYLE_ATTRIBUTES, function(_index, name){
                 if(style[name] === undefined) grid.removeAttr(name); else grid.attr(name, style[name]);
             });
         }
@@ -189,17 +210,20 @@ jQuery(function(){
         function keep_root_attributes(grid, root){
             $.each(root[0].attributes, function(_index, attribute){
                 if(attribute.name === "class") grid.addClass(attribute.value);
-                else if(attribute.name !== "style" && attribute.name !== "data-style") grid.attr(attribute.name, attribute.value);
+                else if($.inArray(attribute.name, GRID_STYLE_ATTRIBUTES) < 0) grid.attr(attribute.name, attribute.value);
             });
         }
 
         // Fills the grid from a parsed grid root: the root's style when it has one, then its markup. A
         // root without a style - a template saved from a grid nobody styled - says nothing about the
-        // style of the grid it goes into, which stays. The markup goes in inertly (gridEditorInertHtml).
+        // style of the grid it goes into, which stays.
         function fill_grid(grid, root){
-            var style = {"style": root.attr("style"), "data-style": root.attr("data-style")};
+            var style = grid_style(root);
             if(style["style"] !== undefined || style["data-style"] !== undefined) set_grid_style(grid, style);
-            grid.gridEditorInertHtml(root.html());
+            // The parsed nodes are moved in natively rather than serialised and parsed a second time.
+            // Their scripts stay inert: the parser marked them as started, and no jQuery insertion, which
+            // would evaluate them, is involved. The grid is empty here: a new editor, or contents set aside.
+            while(root[0].firstChild) grid[0].appendChild(root[0].firstChild);
         }
 
         // grid editor parser to recover from saved content
@@ -301,17 +325,13 @@ jQuery(function(){
 
             // modal with available templates
             open_templates_modal_on_click(editor.find(".grid_editor_menu .list_templates"), function(modal){
-                modal.on("click", ".import_item", function(e){
-                    // the template url is request data, never a place to go: leaving the page drops the unsaved post
-                    e.preventDefault();
+                // The link goes nowhere (its url travels as data) and every path returns false. A failure
+                // leaves the list open, so another template can be picked.
+                modal.on("click", ".import_item", function(){
                     // one apply at a time: the overlay below stops the mouse, not Enter on the link that keeps the focus
                     if(modal.data("applying_template") || !confirm($(this).attr("data-message"))) return false;
                     modal.data("applying_template", true);
                     showLoading();
-                    // the list stays open on a failure, so another template can be picked
-                    var import_failed = function(){
-                        $.fn.alert({type: "error", title: I18n("grid_editor.import_failed", "The template could not be loaded.")});
-                    };
                     $.get($(this).attr("data-url"), function(res){
                         var grid = editor.find(".panel_grid_body"), previous = null;
                         // everything from reading the response on runs under the finally that lifts the overlay
@@ -319,7 +339,7 @@ jQuery(function(){
                             var template_body = parse_grid_body(res);
                             if(!template_body) return import_failed();
                             // the current grid is set aside as nodes, handlers included, in case the rebuild fails
-                            previous = {contents: grid.contents().detach(), style: {"style": grid.attr("style"), "data-style": grid.attr("data-style")}};
+                            previous = {contents: grid.contents().detach(), grid_style: grid_style(grid)};
                             fill_grid(grid, template_body);
                             parse_content(editor); // recover saved content
                             editor.trigger("auto_save");
@@ -333,7 +353,7 @@ jQuery(function(){
                             // back is guarded too: whatever it hits, the failure still gets reported.
                             try {
                                 if(previous){
-                                    set_grid_style(grid, previous.style);
+                                    set_grid_style(grid, previous.grid_style);
                                     grid.empty().append(previous.contents);
                                     editor.trigger("auto_save");
                                 }

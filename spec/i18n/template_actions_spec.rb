@@ -31,7 +31,7 @@ RSpec.describe 'the template apply action strings', type: :model do
   # string: it has to say the same thing.
   it 'keeps the English defaults in the editor script equal to the English locale strings' do
     script = Rails.root.join('../../app/assets/javascripts/plugins/camaleon_editor/admin/grid-editor.js').read
-    defaults = script.scan(/I18n\("grid_editor\.(\w+)", "([^"]+)"\)/).to_h
+    defaults = script.scan(/report_failure\("(\w+)", "([^"]+)"\)/).to_h
 
     expect(defaults.keys).to include('import_failed', 'request_failed', 'content_unreadable')
     defaults.each do |key, text|

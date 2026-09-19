@@ -261,7 +261,7 @@ RSpec.describe 'importing a grid template', :js do
   # the failure message must not depend on it going right.
   it 'reports a response it fails to read and lifts the overlay' do
     find('#grid_table_list .import_item') # the list has arrived
-    page.execute_script("document.implementation.createHTMLDocument = function(){ throw new Error('parser broke'); };")
+    page.execute_script("jQuery.fn.skipGridEditorLibraries = function(){ throw new Error('reader broke'); };")
 
     apply_listed_template
 
