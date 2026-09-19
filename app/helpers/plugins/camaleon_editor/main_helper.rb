@@ -40,6 +40,11 @@ module Plugins::CamaleonEditor::MainHelper
     append_asset_libraries({ admin_grid_editor: { js: ['plugins/camaleon_editor/admin/editor-manifest.js'],
                                                   css: [plugin_gem_asset('admin/grid-editor-manifest.css',
                                                                          'camaleon_editor')] } })
+    # The editor builds its menu in the browser, so it has to be told whether to offer the actions
+    # the server would refuse this user: a refusal is a redirect, which the menu's modal would
+    # render as the dashboard page. Literal true/false only - nothing user-supplied reaches the script.
+    can_manage = can?(:manage, PERMISSION_MANAGE) ? 'true' : 'false'
+    append_asset_content("<script>var cama_grid_editor_can_manage_templates = #{can_manage};</script>")
   end
 
   # registers the plugin's two permissions in the admin roles form (Users > Roles). Both are off by

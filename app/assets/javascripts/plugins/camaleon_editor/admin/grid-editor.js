@@ -38,6 +38,9 @@ jQuery(function(){
         var tpl_options = "";
         $.each($.fn.gridEditor_options, function(key, item){ tpl_options += '<div class="" data-kind="'+key+'" title="'+item["description"]+'"><div class="grid_item_content grid_item_'+key+'"></div></div>'; });
 
+        // saving a template needs the template-management permission; the post form says who holds it
+        var can_manage_templates = window.cama_grid_editor_can_manage_templates === true;
+
         // template grid editor
         var editor = $("<div class='panel_grid_editor' id='"+editor_id+"'>"+
             "<div class='grid_editor_menu'>"+
@@ -48,7 +51,7 @@ jQuery(function(){
             '<a class="dropdown-toggle" href="#" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+I18n("grid_editor.templates")+' <span class="caret"></span> </a>'+
             '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1"> ' +
             '<li><a class="list_templates" title="Grid Templates" href = "'+root_url+'admin/plugins/camaleon_editor/grid_editor" >'+I18n("grid_editor.list")+'</a></li >'+
-            '<li><a class="new_template" title="New Template" href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl")+'</a></li >'+
+            (can_manage_templates ? '<li><a class="new_template" title="New Template" href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl")+'</a></li >' : '')+
             "<li><a class='grid_style_settings' title='Style Settings' href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
             '</ul> ' +
             '</li>'+
