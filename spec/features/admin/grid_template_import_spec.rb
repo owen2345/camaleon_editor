@@ -64,15 +64,17 @@ RSpec.describe 'importing a grid template', :js do
 
   # A template the way the editor stores a real one: a column holding an Editor content block whose
   # markup carries an embed script.
-  def store_template_with_embed
+  def store_template_with_embed(script: 'window.__cama_widget_loaded = true;')
     block = '<div class="" data-kind="editor"><div class="grid_item_content grid_item_editor">' \
-            '<p>embedded widget</p><script>window.__cama_widget_loaded = true;</script></div></div>'
+            "<p>embedded widget</p><script>#{script}</script></div></div>"
     column = '<div class="col-md-6" data-col="6" data-col_title="50%">' \
              "<div class=\"grid_sortable_items\">#{block}</div></div>"
     @template.update!(description: %(<div class="panel_grid_body row">#{column}</div>))
   end
 
-  it 'applies a template complete with the scripts of its content blocks' do
+  # An embed script is content for the public page, where the theme has loaded what it calls. The
+  # editor keeps it in the grid and does not run it.
+  it 'applies a template complete with its scripts, without running them' do
     store_template_with_embed
 
     accept_confirm { find('#grid_table_list .import_item').click }
@@ -80,6 +82,17 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
     expect(saved_grid_content).to include('<p>embedded widget</p>')
     expect(saved_grid_content).to include('<script>window.__cama_widget_loaded = true;</script>')
+    expect(page.evaluate_script('window.__cama_widget_loaded')).to be_nil
+  end
+
+  it 'applies a template whose script could not run in the admin page' do
+    store_template_with_embed(script: 'startTheThemeSlider();')
+
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
+    expect(page).to have_no_css('#cama_alert_modal')
+    expect(saved_grid_content).to include('<script>startTheThemeSlider();</script>')
   end
 
   # Templates > Settings styles the grid as a whole, and the editor keeps that on the grid's root

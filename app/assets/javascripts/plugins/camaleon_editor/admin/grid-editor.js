@@ -107,6 +107,23 @@ jQuery(function(){
             return body.length ? body : null;
         }
 
+        // the style of the whole grid (Templates > Settings) lives on the grid's root, not inside it
+        function set_grid_style(grid, style){
+            $.each(["style", "data-style"], function(_index, name){
+                if(style[name] === undefined) grid.removeAttr(name); else grid.attr(name, style[name]);
+            });
+        }
+
+        // Fills the grid from a parsed grid root: the root's style, then its markup. The markup goes in
+        // through innerHTML, which keeps script elements and never runs them: an embed block's script
+        // belongs to the public page, where the theme has loaded what it calls. Run here it would act in
+        // the administrator's session, and one that throws would take the whole grid down with it.
+        function fill_grid(grid, root){
+            set_grid_style(grid, {"style": root.attr("style"), "data-style": root.attr("data-style")});
+            grid.empty();
+            grid[0].innerHTML = root.html();
+        }
+
         // grid editor parser to recover from saved content
         function parse_content(editor){
             editor.find(".panel_grid_body").children("div").each(function(){ var col = parse_content_column($(this)); });
@@ -220,23 +237,16 @@ jQuery(function(){
                         if(!template_body) return import_failed();
                         modal.modal("hide");
                         var grid = editor.find(".panel_grid_body");
-                        // the style of the whole grid (Templates > Settings) lives on the root, not inside it
-                        var set_grid_style = function(style){
-                            $.each(style, function(name, value){
-                                if(value === undefined) grid.removeAttr(name); else grid.attr(name, value);
-                            });
-                        };
                         // the current grid is set aside as nodes, handlers included, in case the rebuild fails
                         var previous = {contents: grid.contents().detach(), style: {"style": grid.attr("style"), "data-style": grid.attr("data-style")}};
                         try {
-                            set_grid_style({"style": template_body.attr("style"), "data-style": template_body.attr("data-style")});
-                            grid.html(template_body.html());
+                            fill_grid(grid, template_body);
                             parse_content(editor); // recover saved content
                             editor.trigger("auto_save");
                         } catch(error) {
                             // A parser or an auto_save listener threw part-way: a half-built grid that the post content
                             // may not match is worse than no template, so the grid goes back to what it was.
-                            set_grid_style(previous.style);
+                            set_grid_style(grid, previous.style);
                             grid.empty().append(previous.contents);
                             try { editor.trigger("auto_save"); } catch(resync_error) {}
                             if(window.console) console.error(error);
