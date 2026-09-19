@@ -6,100 +6,132 @@
 RSpec.describe 'the grid editor templates menu', :js do
   init_site
 
-  def open_templates_menu
-    accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
-    find('.grid_editor_menu a.dropdown-toggle', text: 'Templates').click
+  def open_editor_and_templates_menu
+    open_grid_editor
+    open_templates_menu
   end
 
-  def open_post_editor_as_use_only_author
-    store_current_site(@site)
-    plugin_install('camaleon_editor')
-    post_type = @site.post_types.first
-    author = user_with_manager_grants({ Plugins::CamaleonEditor::MainHelper::PERMISSION_USE => 1 },
-                                      'grid-author', post_type_meta: { edit: [post_type.id.to_s] })
-    admin_sign_in(author.username, '12345678')
-    visit "#{cama_root_relative_path}/admin/post_type/#{post_type.id}/posts/new"
+  def use_only_author
+    user_with_manager_grants({ Plugins::CamaleonEditor::MainHelper::PERMISSION_USE => 1 }, 'grid-author',
+                             post_type_meta: { edit: [@site.post_types.first.id.to_s] })
   end
 
   it 'offers Save as template to an administrator' do
     install_plugin_and_open_post_editor
-    open_templates_menu
+    open_editor_and_templates_menu
 
     expect(page).to have_css('.grid_editor_menu .list_templates')
     expect(page).to have_css('.grid_editor_menu .new_template')
   end
 
+  it 'offers only the list to a user who may use the editor but not manage templates' do
+    install_plugin_and_open_post_editor(as: use_only_author)
+    open_editor_and_templates_menu
+
+    expect(page).to have_css('.grid_editor_menu .list_templates')
+    expect(page).to have_no_css('.grid_editor_menu .new_template')
+  end
+
   # A host app or another plugin can load the editor's assets from a page of its own, which says
   # nothing about the user. The editor then asks the server, and offers the entry only on a yes.
   context 'when the page does not say who may manage templates' do
-    def forget_the_declaration
-      page.execute_script('window.cama_grid_editor_can_manage_templates = undefined;')
+    # Records every abilities request the page sends, and every answer it gets.
+    def forget_the_declaration(value = 'undefined')
+      page.execute_script(<<~JS)
+        window.cama_grid_editor_can_manage_templates = #{value};
+        window.__cama_abilities = {urls: [], answers: []};
+        jQuery(document).ajaxSend(function(_event, _xhr, options){
+          if(/camaleon_editor\\/abilities/.test(options.url)) window.__cama_abilities.urls.push(options.url);
+        }).ajaxComplete(function(_event, xhr, options){
+          if(/camaleon_editor\\/abilities/.test(options.url)) window.__cama_abilities.answers.push(xhr.responseText);
+        });
+      JS
+    end
+
+    def abilities(what)
+      page.evaluate_script("window.__cama_abilities.#{what}")
     end
 
     it 'offers Save as template to an administrator once the server confirms' do
       install_plugin_and_open_post_editor
       forget_the_declaration
-      open_templates_menu
+      open_editor_and_templates_menu
 
       expect(page).to have_css('.grid_editor_menu .new_template')
     end
 
     it 'asks the server as well when the page declares something other than true or false' do
       install_plugin_and_open_post_editor
-      page.execute_script('window.cama_grid_editor_can_manage_templates = null;')
+      forget_the_declaration('null')
+      open_editor_and_templates_menu
+
+      expect(page).to have_css('.grid_editor_menu .new_template')
+    end
+
+    # The entry starts hidden, so "still hidden" says nothing until the server has answered: the
+    # example waits for the answer before it looks.
+    it 'keeps Save as template from a user who may not manage templates' do
+      install_plugin_and_open_post_editor(as: use_only_author)
+      forget_the_declaration
+      open_editor_and_templates_menu
+      wait_for_ajax
+
+      expect(abilities('answers')).to eq(['{"manage_templates":false}'])
+      expect(page).to have_css('.grid_editor_menu .list_templates')
+      expect(page).to have_no_css('.grid_editor_menu .new_template')
+    end
+
+    # The answer only matters once the menu is looked at, and the request is a whole admin page
+    # request - sidebar menus and all - unless it says it is an ajax one.
+    it 'asks when the Templates menu is first opened, as an ajax request' do
+      install_plugin_and_open_post_editor
+      forget_the_declaration
+      open_grid_editor
+      find('.grid_editor_menu')
+      expect(abilities('urls')).to be_empty
+
       open_templates_menu
 
       expect(page).to have_css('.grid_editor_menu .new_template')
+      expect(abilities('urls')).to contain_exactly(a_string_including('cama_ajax_request=true'))
     end
 
     # A post in several languages has one editor field per language, each able to switch to the grid.
     it 'asks once for all the editors of the page' do
       install_plugin_and_open_post_editor
       forget_the_declaration
-      page.execute_script(<<~'JS')
-        window.__cama_abilities_requests = 0;
-        jQuery(document).ajaxSend(function(_event, _xhr, options){
-          if(/camaleon_editor\/abilities/.test(options.url)) window.__cama_abilities_requests++;
-        });
+      open_editor_and_templates_menu
+      page.execute_script(<<~JS)
+        jQuery('<textarea></textarea>').appendTo('#form-post').gridEditor(tinymce.activeEditor);
+        jQuery('.grid_editor_menu .dropdown-toggle').last().click();
       JS
-      open_templates_menu
-      page.execute_script("jQuery('<textarea></textarea>').appendTo('#form-post').gridEditor(tinymce.activeEditor);")
 
-      # the second editor's menu is closed, so its entry is matched by not being held back, not by sight
+      # the second editor is not on show, so its entry is matched by not being held back, not by sight
       expect(page).to have_css('.grid_editor_menu li:not(.hidden) > .new_template', count: 2, visible: :all)
-      expect(page.evaluate_script('window.__cama_abilities_requests')).to eq(1)
+      expect(abilities('urls').size).to eq(1)
     end
 
-    # The entry starts hidden, so "still hidden" says nothing until the server has answered: the
-    # example waits for the answer before it looks.
-    it 'keeps Save as template from a user who may not manage templates' do
-      open_post_editor_as_use_only_author
+    it 'asks again after a request that failed' do
+      install_plugin_and_open_post_editor
       forget_the_declaration
-      page.execute_script(<<~'JS')
-        window.__cama_abilities_answers = [];
-        jQuery(document).ajaxComplete(function(_event, xhr, options){
-          if(/camaleon_editor\/abilities/.test(options.url)) window.__cama_abilities_answers.push(xhr.responseText);
+      page.execute_script(<<~JS)
+        jQuery.ajaxPrefilter(function(options, _original, xhr){
+          if(/camaleon_editor\\/abilities/.test(options.url) && !window.__cama_abilities_failed_once){
+            window.__cama_abilities_failed_once = true;
+            xhr.abort();
+          }
         });
       JS
+      open_editor_and_templates_menu
+      wait_for_ajax
+      expect(page).to have_no_css('.grid_editor_menu .new_template')
+
+      open_templates_menu # closes the menu
       open_templates_menu
 
-      answers = page.document.synchronize do
-        found = page.evaluate_script('window.__cama_abilities_answers')
-        raise Capybara::ElementNotFound, 'no abilities answer yet' if found.empty?
-
-        found
-      end
-      expect(answers).to eq(['{"manage_templates":false}'])
-      expect(page).to have_css('.grid_editor_menu .list_templates')
-      expect(page).to have_no_css('.grid_editor_menu .new_template')
+      # the first request was aborted before it left, so the one on record is the second
+      expect(page).to have_css('.grid_editor_menu .new_template')
+      expect(abilities('urls').size).to eq(1)
     end
-  end
-
-  it 'offers only the list to a user who may use the editor but not manage templates' do
-    open_post_editor_as_use_only_author
-    open_templates_menu
-
-    expect(page).to have_css('.grid_editor_menu .list_templates')
-    expect(page).to have_no_css('.grid_editor_menu .new_template')
   end
 end
