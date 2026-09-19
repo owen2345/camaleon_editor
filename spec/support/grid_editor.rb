@@ -31,6 +31,13 @@ def store_post_content(post, content)
   CamaleonCms::Post.where(id: post.id).update_all(content: content)
 end
 
+# Same for a template: with no signed-in author behind the write, the model's markup gate would
+# refuse what these specs need stored (scripts, handlers).
+def store_template_markup(template, markup)
+  # rubocop:disable-next Rails/SkipsModelValidations
+  Plugins::CamaleonEditor::GridTemplate.where(id: template.id).update_all(description: markup)
+end
+
 def open_post_in_editor(post)
   store_current_site(@site)
   plugin_install('camaleon_editor')

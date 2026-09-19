@@ -69,7 +69,7 @@ RSpec.describe 'importing a grid template', :js do
             "<p>embedded widget</p><script>#{script}</script></div></div>"
     column = '<div class="col-md-6" data-col="6" data-col_title="50%">' \
              "<div class=\"grid_sortable_items\">#{block}</div></div>"
-    @template.update!(description: %(<div class="panel_grid_body row">#{column}</div>))
+    store_template_markup(@template, %(<div class="panel_grid_body row">#{column}</div>))
   end
 
   # An embed script is content for the public page, where the theme has loaded what it calls. The
