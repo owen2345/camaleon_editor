@@ -20,6 +20,14 @@ jQuery(function(){
     };
     //********************** end editor content options **********************//
 
+    // What the server says the user may do with the template library. A page can hold several
+    // editors (one per language of a post): they share one request, and its answer.
+    var abilities_request = null;
+    function ask_abilities(){
+        if(!abilities_request) abilities_request = $.getJSON(root_url+"admin/plugins/camaleon_editor/abilities");
+        return abilities_request;
+    }
+
     // grid editor plugin
     var gridEditor_id = 0;
     $.fn.gridEditor = function(tinyEditor){
@@ -266,7 +274,7 @@ jQuery(function(){
             }});
 
             // anything but a plain yes - a refusal, a redirect to the login page, a failed request - leaves it hidden
-            if(can_manage_templates === undefined) $.getJSON(root_url+"admin/plugins/camaleon_editor/abilities", function(abilities){
+            if(can_manage_templates === undefined) ask_abilities().done(function(abilities){
                 if(abilities && abilities.manage_templates === true) editor.find(".grid_editor_menu .new_template").parent().removeClass("hidden");
             });
 

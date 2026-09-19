@@ -52,6 +52,24 @@ RSpec.describe 'the grid editor templates menu', :js do
       expect(page).to have_css('.grid_editor_menu .new_template')
     end
 
+    # A post in several languages has one editor field per language, each able to switch to the grid.
+    it 'asks once for all the editors of the page' do
+      install_plugin_and_open_post_editor
+      forget_the_declaration
+      page.execute_script(<<~'JS')
+        window.__cama_abilities_requests = 0;
+        jQuery(document).ajaxSend(function(_event, _xhr, options){
+          if(/camaleon_editor\/abilities/.test(options.url)) window.__cama_abilities_requests++;
+        });
+      JS
+      open_templates_menu
+      page.execute_script("jQuery('<textarea></textarea>').appendTo('#form-post').gridEditor(tinymce.activeEditor);")
+
+      # the second editor's menu is closed, so its entry is matched by not being held back, not by sight
+      expect(page).to have_css('.grid_editor_menu li:not(.hidden) > .new_template', count: 2, visible: :all)
+      expect(page.evaluate_script('window.__cama_abilities_requests')).to eq(1)
+    end
+
     it 'keeps Save as template from a user who may not manage templates' do
       open_post_editor_as_use_only_author
       forget_the_declaration
