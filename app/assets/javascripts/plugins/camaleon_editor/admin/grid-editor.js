@@ -46,10 +46,17 @@ jQuery(function(){
     // grid editor plugin
     var gridEditor_id = 0;
     $.fn.gridEditor = function(tinyEditor){
+        var textarea = $(this);
+        // Content marked as a grid that cannot be read as one stays in the text editor: shown as an
+        // empty grid, its first change would be auto-saved over the content nobody got to see.
+        var saved_body = $.fn.isGridEditorContent(textarea.val()) ? parse_grid_body(textarea.val()) : null;
+        if($.fn.isGridEditorContent(textarea.val()) && !saved_body && !textarea.prev().hasClass("panel_grid_editor")){
+            $.fn.alert({type: "error", title: I18n("grid_editor.content_unreadable", "This content is marked as a grid but could not be read as a grid, so it stays in the text editor.")});
+            return textarea;
+        }
         gridEditor_id ++;
         var tinymce_panel = $(tinyEditor.editorContainer).hide();
         var editor_id = "grid_editor_"+gridEditor_id;
-        var textarea = $(this);
         if(textarea.prev().hasClass("panel_grid_editor")){ textarea.prev().show(); return textarea; }
         var tpl_rows = "";
         $.each({6: 50, 4: 33, 3: 25, 2: 16, 8: 66, 9: 75, 12: 100}, function(k, val){ tpl_rows += '<div class="" data-col="'+k+'" title="Insert a column block with '+val+'% of width." data-col_title="'+val+'%"><div class="grid_sortable_items"></div></div>'; });
@@ -306,7 +313,6 @@ jQuery(function(){
             editor.find(".grid_editor_menu .drg_item, .grid_editor_menu .drg_column").tooltip();
 
             // if saved content is a grid_editor content, then rebuilt or recover this content
-            var saved_body = $.fn.isGridEditorContent(textarea.val()) ? parse_grid_body(textarea.val()) : null;
             if(saved_body){
                 // filled rather than swapped in as live nodes, which would run the saved content's scripts
                 fill_grid(editor.find(".panel_grid_body"), saved_body);

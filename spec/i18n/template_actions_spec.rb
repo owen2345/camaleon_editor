@@ -16,7 +16,7 @@ RSpec.describe 'the template apply action strings', type: :model do
 
   # Strings the editor's script reads reach the browser only from the camaleon_cms.admin.js tree.
   it 'ships the failure messages where the admin layout exports them, in every locale' do
-    keys = %i[import_failed request_failed]
+    keys = %i[import_failed request_failed content_unreadable]
     %i[en es it].each do |locale|
       keys.each do |key|
         value = I18n.t("camaleon_cms.admin.js.grid_editor.#{key}", locale: locale)

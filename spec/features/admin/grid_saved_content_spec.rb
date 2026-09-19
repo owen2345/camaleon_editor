@@ -16,4 +16,17 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     trigger_grid_auto_save
     expect(saved_grid_content).to include('Steps: [done]')
   end
+
+  # Content carrying the grid marker that does not hold a grid (hand-edited, damaged, produced by
+  # something else) must not be shown as an empty grid, whose first change would overwrite it.
+  it 'keeps content it cannot read as a grid in the text editor, and says so' do
+    content = grid_post_content('<p>legacy paragraph</p>')
+    store_post_content(@post, content)
+    open_post_in_editor(@post)
+
+    expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
+    expect(page).to have_css('.mce-tinymce')
+    expect(page).to have_no_css('.panel_grid_editor')
+    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
+  end
 end
