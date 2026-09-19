@@ -184,10 +184,12 @@ jQuery(function(){
 
             // modal with available templates
             editor.find(".grid_editor_menu .list_templates").ajax_modal({callback: function(modal){
-                modal.on("click", ".import_item", function(){
+                modal.on("click", ".import_item", function(e){
+                    // the template url is request data, never a place to go: leaving the page drops the unsaved post
+                    e.preventDefault();
                     if(!confirm($(this).attr("data-message"))) return false;
                     showLoading();
-                    $.get($(this).attr("href"), function(res){
+                    $.get($(this).attr("data-url"), function(res){
                         modal.modal("hide");
                         //editor.children(".panel_grid_body").html(res);
                         editor.find(".panel_grid_body").html($($.fn.skipGridEditorLibraries(res)).html());

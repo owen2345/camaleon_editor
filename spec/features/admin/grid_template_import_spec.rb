@@ -17,6 +17,15 @@ RSpec.describe 'importing a grid template', :js do
     find('.grid_editor_menu .list_templates').click
   end
 
+  # Whatever becomes of the click handler (a script error before it cancels the click, a modified
+  # click opening a new tab), the link itself must have nowhere to go.
+  it 'keeps the template URL out of the link target' do
+    link = find('#grid_table_list .import_item')
+
+    expect(link[:href]).to end_with('#')
+    expect(link['data-url']).to match(%r{/grid_editor/\d+\z})
+  end
+
   it 'stays on the post editor when the confirm is declined' do
     editor_url = page.current_url
 
