@@ -148,9 +148,14 @@ jQuery(function(){
             var nodes = $.parseHTML($.trim($.fn.skipGridEditorLibraries(String(res))), inert_document, true) || [];
             var elements = $(nodes).filter(function(){ return this.nodeType === 1; });
             var body = elements.filter(".panel_grid_body").first();
-            // A template stored by other means may wrap its columns in a plain div. A page never parses to
-            // a lone div: its head leaves title, meta and link elements at the top level.
-            if(!body.length && elements.length === 1 && elements.is("div")) body = elements;
+            // A template stored by other means may wrap its columns in a plain div, or hold its grid body
+            // inside the editor's own wrapper. A page is told apart by its head, which leaves title, meta,
+            // link and base elements at the top level: a template has none, whatever trails its div.
+            if(!body.length && !elements.filter("title, meta, link, base").length){
+                var wrapper = elements.filter("div").first();
+                body = wrapper.find(".panel_grid_body").first();
+                if(!body.length) body = wrapper;
+            }
             return body.length ? body : null;
         }
 

@@ -209,6 +209,28 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_no_css('#grid_table_list')
   end
 
+  # The editor's own markup wraps the grid body in a panel_grid_body_w div; a template copied with
+  # that wrapper holds its grid body one level down.
+  it 'finds the grid body inside a wrapper, style and all' do
+    body = grid_body_markup(attributes: 'style="background-color: rgb(255, 204, 0);"')
+    @template.update!(description: %(<div class="panel_grid_body_w">#{body}</div>))
+
+    apply_listed_template
+
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+    expect(page).to have_css('.panel_grid_body', count: 1)
+    expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)')
+  end
+
+  it 'applies a plain-wrapper template that is followed by stray markup' do
+    @template.update!(description: "<div>#{grid_column_markup}</div><p></p>")
+
+    apply_listed_template
+
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+    expect(page).to have_no_css('#grid_table_list')
+  end
+
   it 'refuses a stored template that is not a grid body' do
     @template.update!(description: 'plain text, not a grid')
 
