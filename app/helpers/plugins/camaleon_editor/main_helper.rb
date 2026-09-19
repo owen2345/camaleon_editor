@@ -9,6 +9,7 @@ module Plugins::CamaleonEditor::MainHelper
   # PERMISSION_MANAGE: curate the shared template library (create/edit/delete).
   PERMISSION_USE = :camaleon_editor
   PERMISSION_MANAGE = :camaleon_editor_templates
+  EDITOR_ASSETS_APPENDED = 'camaleon_editor.editor_assets_appended'
 
   # here all actions on going to active
   # you can run sql commands like this:
@@ -44,13 +45,18 @@ module Plugins::CamaleonEditor::MainHelper
   # a host app or another plugin that wants the editor on its own TinyMCE fields calls it too, so
   # the editor always arrives together with what it needs to know about the user.
   def camaleon_editor_append_editor_assets
+    # once per request, whoever calls: the hook runs in the controller, a host page may call from a
+    # view, and the request is what the two share
+    return if request.env[EDITOR_ASSETS_APPENDED]
+
+    request.env[EDITOR_ASSETS_APPENDED] = true
     append_asset_libraries({ admin_grid_editor: { js: ['plugins/camaleon_editor/admin/editor-manifest.js'],
                                                   css: [plugin_gem_asset('admin/grid-editor-manifest.css',
                                                                          'camaleon_editor')] } })
     # The editor builds its menu in the browser, so it has to be told which actions the server
     # would refuse this user: a refusal is a redirect, which the menu's modal would render as the
-    # dashboard page. Literal true/false only - nothing user-supplied reaches the script.
-    can_manage = can?(:manage, PERMISSION_MANAGE) ? 'true' : 'false'
+    # dashboard page. A boolean's to_s: nothing but a literal true or false reaches the script.
+    can_manage = (can?(:manage, PERMISSION_MANAGE) == true).to_s
     append_asset_content("<script>var cama_grid_editor_can_manage_templates = #{can_manage};</script>")
   end
 
