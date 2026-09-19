@@ -44,6 +44,38 @@ RSpec.describe 'the grid editor admin' do
     expect(response.body).to include('title="Aplicar plantilla"')
   end
 
+  # Applying a template overwrites the grid and auto-saves, so the action has to look like an apply
+  # and its prompt has to say what is about to be lost. Whatever becomes of the click handler (a
+  # script error, a modified click opening a new tab), the link itself must have nowhere to go: the
+  # template URL travels as data.
+  it 'renders the apply action as a green check that warns, on a link that goes nowhere' do
+    template = @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
+
+    get '/admin/plugins/camaleon_editor/grid_editor'
+
+    link = Nokogiri::HTML5.fragment(response.body).at_css('#grid_table_list a.import_item')
+    expect(link['href']).to eq('#')
+    expect(link['data-url']).to eq("/admin/plugins/camaleon_editor/grid_editor/#{template.id}")
+    expect(link['title']).to eq('Apply template')
+    expect(link['data-message']).to eq('Apply this template? It replaces the current content of the grid.')
+    expect(link.at_css('i.fa-check-circle.text-success')).to be_present
+  end
+
+  # The editor shows a response in its templates modal only when the list or the template form is
+  # its top-level element, which holds as long as these actions render without a layout.
+  it 'answers with the bare panel, no layout around it' do
+    template = @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
+
+    { '' => '#grid_table_list', '/new' => '#grid_template_form',
+      "/#{template.id}/edit" => '#grid_template_form' }.each do |suffix, panel|
+      get "/admin/plugins/camaleon_editor/grid_editor#{suffix}"
+
+      fragment = Nokogiri::HTML5.fragment(response.body)
+      expect(fragment.children.find(&:element?)).to eq(fragment.at_css(panel))
+      expect(response.body).not_to match(/<html|<body|<head/i)
+    end
+  end
+
   it 'lists the grid templates of the current site' do
     @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
 

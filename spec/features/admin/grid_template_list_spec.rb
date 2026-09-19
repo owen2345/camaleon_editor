@@ -10,9 +10,8 @@ RSpec.describe 'managing grid templates after the session is gone', :js do
     install_plugin_and_open_post_editor
     @template = @site.grid_templates.create!(name: 'Half column', slug: 'half-column',
                                              description: '<div class="panel_grid_body row"></div>')
-    accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
-    find('.grid_editor_menu a.dropdown-toggle', text: 'Templates').click
-    find('.grid_editor_menu .list_templates').click
+    open_grid_editor
+    open_templates_list
     find('#grid_table_list .destroy_item') # waits for the list
   end
 
