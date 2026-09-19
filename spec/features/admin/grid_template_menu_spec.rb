@@ -19,6 +19,16 @@ RSpec.describe 'the grid editor templates menu', :js do
     expect(page).to have_css('.grid_editor_menu .new_template')
   end
 
+  # A host app or another plugin can load the editor's assets from a page of its own, which says
+  # nothing about the user. The server still refuses what it must; the menu stays whole.
+  it 'keeps Save as template when the page does not say who may manage templates' do
+    install_plugin_and_open_post_editor
+    page.execute_script('window.cama_grid_editor_can_manage_templates = undefined;')
+    open_templates_menu
+
+    expect(page).to have_css('.grid_editor_menu .new_template')
+  end
+
   it 'offers only the list to a user who may use the editor but not manage templates' do
     store_current_site(@site)
     plugin_install('camaleon_editor')

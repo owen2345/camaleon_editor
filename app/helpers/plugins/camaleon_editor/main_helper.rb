@@ -37,12 +37,19 @@ module Plugins::CamaleonEditor::MainHelper
     # admin endpoints that refuse the user anyway, so they get the plain editor instead.
     return unless can?(:manage, PERMISSION_USE)
 
+    camaleon_editor_append_editor_assets
+  end
+
+  # Loads the grid editor into the current admin page. The post-form hooks call it; an admin page of
+  # a host app or another plugin that wants the editor on its own TinyMCE fields calls it too, so
+  # the editor always arrives together with what it needs to know about the user.
+  def camaleon_editor_append_editor_assets
     append_asset_libraries({ admin_grid_editor: { js: ['plugins/camaleon_editor/admin/editor-manifest.js'],
                                                   css: [plugin_gem_asset('admin/grid-editor-manifest.css',
                                                                          'camaleon_editor')] } })
-    # The editor builds its menu in the browser, so it has to be told whether to offer the actions
-    # the server would refuse this user: a refusal is a redirect, which the menu's modal would
-    # render as the dashboard page. Literal true/false only - nothing user-supplied reaches the script.
+    # The editor builds its menu in the browser, so it has to be told which actions the server
+    # would refuse this user: a refusal is a redirect, which the menu's modal would render as the
+    # dashboard page. Literal true/false only - nothing user-supplied reaches the script.
     can_manage = can?(:manage, PERMISSION_MANAGE) ? 'true' : 'false'
     append_asset_content("<script>var cama_grid_editor_can_manage_templates = #{can_manage};</script>")
   end

@@ -38,8 +38,10 @@ jQuery(function(){
         var tpl_options = "";
         $.each($.fn.gridEditor_options, function(key, item){ tpl_options += '<div class="" data-kind="'+key+'" title="'+item["description"]+'"><div class="grid_item_content grid_item_'+key+'"></div></div>'; });
 
-        // saving a template needs the template-management permission; the post form says who holds it
-        var can_manage_templates = window.cama_grid_editor_can_manage_templates === true;
+        // Saving a template needs the template-management permission, and the page says who lacks it.
+        // A page that loaded the editor without saying keeps the entry: hiding it is a courtesy, the
+        // server is what refuses, and an administrator must not lose the action to a missing variable.
+        var can_manage_templates = window.cama_grid_editor_can_manage_templates !== false;
 
         // template grid editor
         var editor = $("<div class='panel_grid_editor' id='"+editor_id+"'>"+
