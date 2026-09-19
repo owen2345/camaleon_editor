@@ -26,11 +26,22 @@ RSpec.describe 'importing a grid template', :js do
     expect(link['data-url']).to match(%r{/grid_editor/\d+\z})
   end
 
-  it 'stays on the post editor when the confirm is declined' do
+  # Polling the page right after the dialog closes could pass before a regressed handler's effects
+  # land. The script evaluated below is queued behind the click handler's own task, so by then the
+  # handler has either sent its request or not, and a reloaded page would have lost the marker.
+  it 'leaves the editor untouched when the confirm is declined' do
     editor_url = page.current_url
+    page.execute_script(<<~'JS')
+      window.__cama_same_page = true;
+      window.__cama_import_requests = 0;
+      jQuery(document).ajaxSend(function(_event, _xhr, options){
+        if(/grid_editor\/\d+$/.test(options.url)) window.__cama_import_requests++;
+      });
+    JS
 
     dismiss_confirm { find('#grid_table_list .import_item').click }
 
+    expect(page.evaluate_script('[window.__cama_same_page, window.__cama_import_requests]')).to eq([true, 0])
     expect(page).to have_current_path(URI(editor_url).path)
     expect(page).to have_css('#grid_table_list .import_item')
     expect(page).to have_no_css('.panel_grid_body .drg_column')
