@@ -29,4 +29,20 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page).to have_no_css('.panel_grid_editor')
     expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
   end
+
+  # A host page can build its field first and attach it later; jQuery's before() quietly did
+  # nothing for a detached field, and its native replacement must not throw instead.
+  it 'does not break on a text field that is not in the page yet' do
+    open_post_in_editor(@post)
+    find('.mce-tinymce')
+
+    error = page.evaluate_script(<<~JS)
+      (function(){
+        try { jQuery('<textarea></textarea>').gridEditor(tinymce.activeEditor); return null; }
+        catch(e){ return e.message; }
+      })()
+    JS
+
+    expect(error).to be_nil
+  end
 end

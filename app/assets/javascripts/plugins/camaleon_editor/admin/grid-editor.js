@@ -408,7 +408,8 @@ jQuery(function(){
 
         do_editor_menus(editor);
         // inserted natively: jQuery's before() would run the scripts of the grid just rebuilt from saved content
-        textarea[0].parentNode.insertBefore(editor[0], textarea[0]);
+        // like jQuery's before(), nothing to do for a field that is not in a document yet
+        if(textarea[0].parentNode) textarea[0].parentNode.insertBefore(editor[0], textarea[0]);
 
         // drag columns
         jQuery(".grid_editor_menu .drg_column", editor).draggable({
