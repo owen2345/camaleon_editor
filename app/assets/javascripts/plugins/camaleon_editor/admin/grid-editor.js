@@ -3,7 +3,9 @@ jQuery(function(){
 
     $.fn.fadeDestroy = function(speed){ $(this).fadeOut(speed, function(){ $(this).remove(); }) }
     $.fn.isGridEditorContent = function(str){ return str.match(/^\<div\>\[grid_editor/); } // verify is text is a content for grid editor
-    $.fn.skipGridEditorLibraries = function(str){ return str.replace(/^\<div\>\[grid_editor (.*)\]\<\/div\>/, ""); } // remove libraries shortcode text from grid editor
+    // remove libraries shortcode text from grid editor: the marker only, up to ITS closing bracket - a greedy
+    // match would run on to the last "]</div>" of the content and take the grid along
+    $.fn.skipGridEditorLibraries = function(str){ return str.replace(/^\<div\>\[grid_editor [^\]]*\]\<\/div\>/, ""); }
     $.fn.gridEditor_extra_rows = [];
     $.fn.gridEditor_libraries = [];
     //********************** editor content options **********************//
