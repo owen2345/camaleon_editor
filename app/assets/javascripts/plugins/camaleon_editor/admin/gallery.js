@@ -128,7 +128,7 @@ window.grid_gallery_builder = function(panel, editor){
               </div>`;
     });
 
-    panel.html(res);
+    panel.gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

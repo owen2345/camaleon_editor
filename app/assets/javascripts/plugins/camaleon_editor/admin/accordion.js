@@ -160,7 +160,7 @@ window.grid_accordion_builder = function (panel, editor) {
             </div> \
             </div>`);
     });
-    panel.addClass("panel-group").html(res);
+    panel.addClass("panel-group").gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

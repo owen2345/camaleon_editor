@@ -105,7 +105,7 @@ window.grid_tab_builder = function(panel, editor){
               '</div>';
     });
     const res = '<ul class="nav nav-tabs" role="tablist">'+res1+'</ul><div class="tab-content"> '+res2+' </div>';
-    panel.addClass("panel-group").html(res);
+    panel.addClass("panel-group").gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

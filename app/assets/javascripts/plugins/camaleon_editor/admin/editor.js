@@ -5,7 +5,7 @@ function grid_editor_builder(panel, editor){
         setTimeout(function(){ modal.find("textarea").tinymce(cama_get_tinymce_settings({height: 120})); }, 500);
     }, on_submit: function(modal){
         var area = modal.find("textarea");
-        panel.html(area.tinymce().getContent());
+        panel.gridEditorInertHtml(area.tinymce().getContent());
         modal.modal("hide");
         editor.trigger("auto_save");
     }});

@@ -127,7 +127,7 @@ window.grid_slider_builder = function(panel, editor){
     });
     const res = '<ol class="carousel-indicators">'+res1+'</ol>' +
                 '<div class="carousel-inner" role="listbox"> '+res2+' </div>' + controls;
-    panel.addClass("carousel slide").attr("data-ride", "carousel").html(res);
+    panel.addClass("carousel slide").attr("data-ride", "carousel").gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

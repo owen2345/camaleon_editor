@@ -45,7 +45,7 @@ window.grid_video_builder = function(panel, editor){
       }
     }
 
-    panel.html(res);
+    panel.gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

@@ -28,7 +28,7 @@ window.grid_image_builder = function(panel, editor){
         if (url) {
             res = '<img src="'+url+'" style="width: 100%;">';
         }
-        panel.html(res);
+        panel.gridEditorInertHtml(res);
         modal.modal("hide");
         editor.trigger("auto_save");
     };

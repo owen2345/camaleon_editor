@@ -29,7 +29,7 @@ window.grid_audio_builder = function(panel, editor){
     if (url) {
         res = '<audio width="100%" controls src="'+url+'"></audio>';
       }
-    panel.html(res);
+    panel.gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

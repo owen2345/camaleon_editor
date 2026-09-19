@@ -33,4 +33,17 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     expect(page.evaluate_script('window.__cama_sort_started')).to be(true)
     expect(script_ran).to be_nil
   end
+
+  it 'does not run a block script when the block is edited and saved' do
+    store_post_content(@post, grid_post_content(grid_with_block("<p>widget</p>#{script}")))
+    open_post_in_editor(@post)
+    find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+    page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+    find('#ow_inline_modal .modal_submit').click
+
+    expect(page).to have_no_css('#ow_inline_modal')
+    expect(saved_grid_content).to include(script)
+    expect(script_ran).to be_nil
+  end
 end
