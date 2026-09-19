@@ -102,4 +102,18 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_no_css('#cama_custom_loading')
     expect(page).to have_css('#grid_table_list .import_item')
   end
+
+  # Rebuilding the grid runs the column and content parsers and every auto_save listener, any of
+  # which can throw on markup it does not expect; the list is closed by then, so a lingering
+  # overlay would leave no way back to the post.
+  it 'lifts the loading overlay even when rebuilding the grid throws' do
+    page.execute_script(<<~JS)
+      jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
+    JS
+
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_css('.panel_grid_body .drg_column')
+    expect(page).to have_no_css('#cama_custom_loading')
+  end
 end

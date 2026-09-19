@@ -206,10 +206,14 @@ jQuery(function(){
                         var template_body = template_grid_body(res);
                         if(!template_body) return import_failed();
                         modal.modal("hide");
-                        editor.find(".panel_grid_body").html(template_body.html());
-                        parse_content(editor); // recover saved content
-                        editor.trigger("auto_save");
-                        hideLoading();
+                        // the list is gone by now, so nothing thrown while rebuilding the grid may keep the overlay up
+                        try {
+                            editor.find(".panel_grid_body").html(template_body.html());
+                            parse_content(editor); // recover saved content
+                            editor.trigger("auto_save");
+                        } finally {
+                            hideLoading();
+                        }
                     }).fail(import_failed);
                     return false;
                 });
