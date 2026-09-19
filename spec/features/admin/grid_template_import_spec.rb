@@ -33,4 +33,21 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
     expect(page).to have_no_css('#grid_table_list')
   end
+
+  # The request can fail - the template deleted by another manager meanwhile, an expired session, a
+  # dropped connection - and the editor must come back usable. The dummy app re-raises server errors
+  # into the example, so the failure is produced in the browser: the request is aborted as it leaves.
+  it 'reports a failed import and releases the editor' do
+    page.execute_script(<<~'JS')
+      jQuery.ajaxPrefilter(function(options, _original, xhr){
+        if(/grid_editor\/\d+$/.test(options.url)) xhr.abort();
+      });
+    JS
+
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
+    expect(page).to have_no_css('#cama_custom_loading')
+    expect(page).to have_css('#grid_table_list .import_item')
+  end
 end

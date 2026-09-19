@@ -186,14 +186,17 @@ jQuery(function(){
             editor.find(".grid_editor_menu .list_templates").ajax_modal({callback: function(modal){
                 modal.on("click", ".import_item", function(){
                     if(!confirm($(this).attr("data-message"))) return false;
-                    modal.modal("hide");
                     showLoading();
                     $.get($(this).attr("href"), function(res){
+                        modal.modal("hide");
                         //editor.children(".panel_grid_body").html(res);
                         editor.find(".panel_grid_body").html($($.fn.skipGridEditorLibraries(res)).html());
                         parse_content(editor); // recover saved content
                         editor.trigger("auto_save");
                         hideLoading();
+                    }).fail(function(){
+                        // the list stays open, so another template can be picked
+                        $.fn.alert({type: "error", title: I18n("grid_editor.import_failed", "The template could not be loaded.")});
                     });
                     return false;
                 });
