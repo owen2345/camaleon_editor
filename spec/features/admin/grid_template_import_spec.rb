@@ -110,6 +110,21 @@ RSpec.describe 'importing a grid template', :js do
     expect(saved_grid_content).to include('data-style="{&quot;b-c&quot;:&quot;#ffcc00&quot;}"')
   end
 
+  # A template saved from a grid nobody styled carries no style of its own: applying it replaces
+  # the columns, not the style the current grid was given through Templates > Settings.
+  it 'leaves the style of the current grid alone when the template carries none' do
+    @template.update!(description: grid_body_markup(attributes: 'style="background-color: rgb(255, 204, 0);"'))
+    apply_listed_template
+    expect(page).to have_css('.panel_grid_body[style*="background-color"] .drg_column')
+
+    @template.update!(description: grid_body_markup(grid_column_markup(col: 12, title: '100%')))
+    open_templates_list
+    apply_listed_template
+
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '100%')
+    expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)')
+  end
+
   it 'loads the template into the grid when the confirm is accepted' do
     accept_confirm { find('#grid_table_list .import_item').click }
 

@@ -156,14 +156,13 @@ jQuery(function(){
             });
         }
 
-        // Fills the grid from a parsed grid root: the root's style, then its markup. The markup goes in
-        // through innerHTML, which keeps script elements and never runs them: an embed block's script
-        // belongs to the public page, where the theme has loaded what it calls. Run here it would act in
-        // the administrator's session, and one that throws would take the whole grid down with it.
+        // Fills the grid from a parsed grid root: the root's style when it has one, then its markup. A
+        // root without a style - a template saved from a grid nobody styled - says nothing about the
+        // style of the grid it goes into, which stays. The markup goes in inertly (gridEditorInertHtml).
         function fill_grid(grid, root){
-            set_grid_style(grid, {"style": root.attr("style"), "data-style": root.attr("data-style")});
-            grid.empty();
-            grid[0].innerHTML = root.html();
+            var style = {"style": root.attr("style"), "data-style": root.attr("data-style")};
+            if(style["style"] !== undefined || style["data-style"] !== undefined) set_grid_style(grid, style);
+            grid.gridEditorInertHtml(root.html());
         }
 
         // grid editor parser to recover from saved content
