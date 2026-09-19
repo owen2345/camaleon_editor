@@ -8,7 +8,7 @@
                     <%= link_to("<i class='fa fa-trash'></i>".html_safe, admin_plugins_camaleon_editor_grid_editor_path(item), class: "destroy_item", title: t("camaleon_cms.admin.button.delete"), "data-message" => t("camaleon_cms.admin.message.delete_item")) %>
                     <%= link_to("<i class='fa fa-pencil'></i>".html_safe, edit_admin_plugins_camaleon_editor_grid_editor_path(item), class: "edit_item", title: t("camaleon_cms.admin.button.edit")) %>
                 <% end %>
-                <%= link_to("<i class='fa fa-check-circle text-success'></i>".html_safe, "#", class: "import_item", "data-url" => admin_plugins_camaleon_editor_grid_editor_path(item), title: t("camaleon_editor.templates.apply"), "data-message" => t("camaleon_editor.templates.apply_confirm")) %>
+                <%= link_to("<i class='fa fa-check-circle text-success'></i>".html_safe, "#", class: "import_item", "data-url" => admin_plugins_camaleon_editor_grid_editor_path(item), title: t("camaleon_editor.templates.apply", default: "Apply template"), "data-message" => t("camaleon_editor.templates.apply_confirm", default: "Apply this template? It replaces the current content of the grid.")) %>
             </td>
         </tr>
     <% end %>

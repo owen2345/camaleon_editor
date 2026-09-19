@@ -21,6 +21,20 @@ RSpec.describe 'the grid editor admin' do
     expect(response).to have_http_status(:redirect)
   end
 
+  # The plugin ships fewer locales than the admin panel offers. Without locale fallbacks a missing
+  # key renders as translation-missing markup, which would land in the tooltip and - through the
+  # data-message attribute - in the browser's confirm dialog.
+  it 'falls back to the English apply strings in an admin language the plugin does not ship' do
+    @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
+    @site.set_admin_language('fr')
+
+    get '/admin/plugins/camaleon_editor/grid_editor'
+
+    expect(response.body).to include('title="Apply template"')
+    expect(response.body).to include('data-message="Apply this template? It replaces the current content of the grid."')
+    expect(response.body).not_to match(/translation[ _]missing/i)
+  end
+
   it 'lists the grid templates of the current site' do
     @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
 
