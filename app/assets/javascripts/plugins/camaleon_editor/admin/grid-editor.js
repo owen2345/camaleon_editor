@@ -96,7 +96,11 @@ jQuery(function(){
         function template_grid_body(res){
             var inert_document = document.implementation.createHTMLDocument("");
             var nodes = $.parseHTML($.trim($.fn.skipGridEditorLibraries(String(res))), inert_document, true) || [];
-            var body = $(nodes).filter(".panel_grid_body").first();
+            var elements = $(nodes).filter(function(){ return this.nodeType === 1; });
+            var body = elements.filter(".panel_grid_body").first();
+            // A template stored by other means may wrap its columns in a plain div. A page never parses to
+            // a lone div: its head leaves title, meta and link elements at the top level.
+            if(!body.length && elements.length === 1 && elements.is("div")) body = elements;
             return body.length ? body : null;
         }
 

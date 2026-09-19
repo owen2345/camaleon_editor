@@ -120,6 +120,18 @@ RSpec.describe 'importing a grid template', :js do
     expect(page.evaluate_script("jQuery('.panel_grid_body').children().length")).to eq(0)
   end
 
+  # Templates seeded by a host app or copied from another site do not always carry the editor's own
+  # root class; their columns sit in a plain wrapper.
+  it 'applies a template whose columns sit in a plain wrapper' do
+    column = '<div class="col-md-6" data-col="6" data-col_title="50%"><div class="grid_sortable_items"></div></div>'
+    @template.update!(description: "<div>#{column}</div>")
+
+    accept_confirm { find('#grid_table_list .import_item').click }
+
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+    expect(page).to have_no_css('#grid_table_list')
+  end
+
   it 'refuses a stored template that is not a grid body' do
     @template.update!(description: 'plain text, not a grid')
 
