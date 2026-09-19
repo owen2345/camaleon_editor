@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-### Fix: cancelling a template import no longer leaves the post editor
+### Fix: applying a grid template can no longer lose the unsaved post
 
-Declining the "Are you sure you want to import?" prompt in the templates list let the browser follow the Import link to the raw template markup, dropping the unsaved post. Cancel now leaves the list and the editor untouched. The Import action also gets a download icon instead of the exchange arrows, and the Delete and Edit icons get tooltips. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
+In the templates list, cancelling the confirm followed the link away from the post editor, and a failed request left the editor behind the loading overlay. Both now leave the editor and the list usable. The action is a green check titled "Apply template", its prompt warns that the grid is replaced, and Delete and Edit show only to template managers. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
 
 ### Tooling: RuboCop runs with its default formatter in CI
 
