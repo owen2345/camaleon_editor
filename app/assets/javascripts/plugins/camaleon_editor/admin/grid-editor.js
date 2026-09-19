@@ -43,6 +43,8 @@ jQuery(function(){
         // server is asked, so nobody is offered an action they would be refused and nobody entitled
         // to it loses it to a missing variable.
         var can_manage_templates = window.cama_grid_editor_can_manage_templates;
+        // only the two literals are a declaration; null, 1 or "true" from a hand-written page is not one
+        if(can_manage_templates !== true && can_manage_templates !== false) can_manage_templates = undefined;
 
         // template grid editor
         var editor = $("<div class='panel_grid_editor' id='"+editor_id+"'>"+

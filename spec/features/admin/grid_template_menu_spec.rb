@@ -44,6 +44,14 @@ RSpec.describe 'the grid editor templates menu', :js do
       expect(page).to have_css('.grid_editor_menu .new_template')
     end
 
+    it 'asks the server as well when the page declares something other than true or false' do
+      install_plugin_and_open_post_editor
+      page.execute_script('window.cama_grid_editor_can_manage_templates = null;')
+      open_templates_menu
+
+      expect(page).to have_css('.grid_editor_menu .new_template')
+    end
+
     it 'keeps Save as template from a user who may not manage templates' do
       open_post_editor_as_use_only_author
       forget_the_declaration
