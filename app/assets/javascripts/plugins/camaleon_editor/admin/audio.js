@@ -27,9 +27,9 @@ window.grid_audio_builder = function(panel, editor){
     const url = modal.find(".url_file").val();
     let res = '';
     if (url) {
-        res = '<audio width="100%" controls src="'+url+'"></audio>';
+        res = '<audio width="100%" controls src="'+$.fn.gridEditorEscapeHtml(url)+'"></audio>';
       }
-    panel.html(res);
+    panel.gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

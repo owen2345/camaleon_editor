@@ -48,14 +48,15 @@ window.grid_gallery_builder = function(panel, editor){
 
   // update info for a row
   let update_item = function(tr, title, text){
-    tr.find("td.name").html(title);
+    // listed as text, which shows a label and runs nothing (see $.fn.gridEditorLabelSource)
+    tr.find("td.name").text(title);
     tr.find(".url").val(text);
     return tr;
   };
 
   // recover current items
   panel.children(".gallery-item").each( function() {
-    add_item($(this).children(".g-title").text(), $(this).attr("data-url"));
+    add_item($.fn.gridEditorLabelSource($(this).children(".g-title")), $(this).attr("data-url"));
   });
 
   // show form for each accordion
@@ -72,7 +73,7 @@ window.grid_gallery_builder = function(panel, editor){
               </div> \
               </div>`+
         '</form>');
-    form.find(".name").val(tr.find("td.name").html());
+    form.find(".name").val(tr.find("td.name").text());
     form.find(".url_file").val(tr.find(".url").val());
 
     const form_callback = () => form.find(".btn_upload").click(function() {
@@ -106,9 +107,11 @@ window.grid_gallery_builder = function(panel, editor){
   const submit_callback = function(modal){
     let res = "";
     tpl.find("tbody tr").each(function() {
-      const u = $(this).find(".url").val();
+      const url = $(this).find(".url").val();
+      // the extension is read from the url as typed; what goes into a quoted attribute is escaped
+      const u = $.fn.gridEditorEscapeHtml(url);
       let media = "";
-      switch ($.file_formats[u.split(".").pop().toLowerCase()]) {
+      switch ($.file_formats[url.split(".").pop().toLowerCase()]) {
         case "image":
           media = "<img src='"+u+"'>";
           break;
@@ -120,15 +123,15 @@ window.grid_gallery_builder = function(panel, editor){
           break;
       }
 
-      res += '<div class="gallery-item" data-url="'+($(this).find(".url").val()) +`"> \
+      res += '<div class="gallery-item" data-url="'+ u +`"> \
                 <div class="g-title">\
-                  `+ ($(this).find(".name").text()) +`\
+                  `+ $.fn.gridEditorLabelMarkup($(this).find(".name").text()) +`\
                 </div> \
                 <div class="g-content">`+ media +`</div> \
               </div>`;
     });
 
-    panel.html(res);
+    panel.gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

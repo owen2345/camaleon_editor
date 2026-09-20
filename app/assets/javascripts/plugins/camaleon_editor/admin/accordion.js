@@ -63,7 +63,8 @@ window.grid_accordion_builder = function (panel, editor) {
 
   // update info for a row
   let update_item = function (tr, title, text) {
-    tr.find("td.name").html(title);
+    // listed as text, which shows a label and runs nothing (see $.fn.gridEditorLabelSource)
+    tr.find("td.name").text(title);
     tr.find(".descr").val(text);
 
     return tr;
@@ -71,8 +72,13 @@ window.grid_accordion_builder = function (panel, editor) {
 
   // recover current items
   panel.children(".panel").each(function () {
+    // the label's source, without the chevron the block puts after it
+    const label = $(this).find("> .panel-heading .panel-title > a").first().clone();
+    label.children("i.glyphicon.pull-right").remove();
+    // a heading without the link is read for its text alone: its markup is the block's, not the label's
+    const heading = $("<span>").text($(this).children(".panel-heading").text());
     add_item(
-      $(this).children(".panel-heading").text(),
+      $.fn.gridEditorLabelSource(label.length ? label : heading),
       $(this).find("> div > .panel-body").html(),
     );
   });
@@ -92,7 +98,7 @@ window.grid_accordion_builder = function (panel, editor) {
         "</div>" +
         "</form>",
     );
-    form.find(".name").val(tr.find("td.name").html());
+    form.find(".name").val(tr.find("td.name").text());
     form.find(".descr").val(tr.find(".descr").val());
 
     const form_callback = () => {
@@ -142,7 +148,7 @@ window.grid_accordion_builder = function (panel, editor) {
         index +
         `" aria-expanded="false" aria-controls="collapseOne" class="collapsed">\
             ` +
-        $(this).find(".name").text() +
+        $.fn.gridEditorLabelMarkup($(this).find(".name").text()) +
         `\
             <i class="glyphicon glyphicon-chevron-up pull-right"></i> \
             </a> \
@@ -160,7 +166,7 @@ window.grid_accordion_builder = function (panel, editor) {
             </div> \
             </div>`);
     });
-    panel.addClass("panel-group").html(res);
+    panel.addClass("panel-group").gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

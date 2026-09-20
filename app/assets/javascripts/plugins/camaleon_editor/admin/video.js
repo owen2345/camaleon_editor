@@ -34,18 +34,18 @@ window.grid_video_builder = function(panel, editor){
       switch ($.cama_check_video_url(url)) {
         case "youtube":
           res = '<iframe width="100%" ' +
-                  'src="https://www.youtube.com/embed/'+$.cama_youtube_key(url)+'" frameborder="0" allowfullscreen>' +
+                  'src="https://www.youtube.com/embed/'+$.fn.gridEditorEscapeHtml($.cama_youtube_key(url))+'" frameborder="0" allowfullscreen>' +
                 '</iframe>';
           break;
         case false:
-          res = '<video width="100%" controls><source src="'+url+'" type="video/mp4"></video>';
+          res = '<video width="100%" controls><source src="'+$.fn.gridEditorEscapeHtml(url)+'" type="video/mp4"></video>';
           break;
         default:
-          res = '<iframe width="100%" src="'+url+'" frameborder="0" allowfullscreen></iframe>';
+          res = '<iframe width="100%" src="'+$.fn.gridEditorEscapeHtml(url)+'" frameborder="0" allowfullscreen></iframe>';
       }
     }
 
-    panel.html(res);
+    panel.gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

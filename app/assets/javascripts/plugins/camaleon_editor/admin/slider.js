@@ -45,14 +45,16 @@ window.grid_slider_builder = function(panel, editor){
 
   // update info for a row
   var update_item = function(tr, media, caption){
-    tr.find("td.name").html(media);
+    // the url is text: read from stored content, it goes in as text and never as markup
+    tr.find("td.name").text(media);
     tr.find(".descr").val(caption);
     return tr;
   };
 
   // recover current items
   panel.find(" > .carousel-inner > .item").each( function(index, item){
-    add_item($(this).children("img").attr("src"), panel.find("> .carousel-caption").html());
+    // the slide's own caption: it sits in the slide, not under the block
+    add_item($(this).children("img").attr("src"), $(this).children(".carousel-caption").html());
   });
 
   // show form for each accordion
@@ -70,7 +72,7 @@ window.grid_slider_builder = function(panel, editor){
             <textarea class="form-control descr"></textarea> \
           </div>'+
         '</form>');
-    form.find(".url_file").val(tr.find("td.name").html());
+    form.find(".url_file").val(tr.find("td.name").text());
     form.find(".descr").val(tr.find(".descr").val());
 
     const form_callback = function(modal){
@@ -121,13 +123,13 @@ window.grid_slider_builder = function(panel, editor){
       res1 += '<li data-target="#'+id_accor+'" data-slide-to="'+index+'" class="'+(index === 0 ? "active" : "") +'">' +
               '</li>';
       res2 += '<div class="item '+(index === 0 ? "active" : "")+'">' +
-                '<img src="'+$(this).find("td.name").html()+'" alt=""/> ' +
+                '<img src="'+$.fn.gridEditorEscapeHtml($(this).find("td.name").text())+'" alt=""/> ' +
                 '<div class="carousel-caption">'+$(this).find("textarea").val()+'</div>' +
               '</div>';
     });
     const res = '<ol class="carousel-indicators">'+res1+'</ol>' +
                 '<div class="carousel-inner" role="listbox"> '+res2+' </div>' + controls;
-    panel.addClass("carousel slide").attr("data-ride", "carousel").html(res);
+    panel.addClass("carousel slide").attr("data-ride", "carousel").gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

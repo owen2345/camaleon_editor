@@ -21,6 +21,99 @@ RSpec.describe 'the grid editor admin' do
     expect(response).to have_http_status(:redirect)
   end
 
+  # The plugin ships fewer languages than the admin panel offers, and core ships them all: where
+  # the plugin has no string, a core string that says the same keeps the admin in their language.
+  # No core string warns that the grid's content is replaced, so the prompt falls back to the
+  # plugin's English rather than to a core prompt that leaves the warning out.
+  it 'words the apply action in an admin language the plugin does not ship without losing the warning' do
+    @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
+    @site.set_admin_language('fr')
+
+    get '/admin/plugins/camaleon_editor/grid_editor'
+
+    link = Nokogiri::HTML5.fragment(response.body).at_css('#grid_table_list a.import_item')
+    expect(link['title']).to eq(I18n.t('camaleon_cms.admin.table.import', locale: :fr))
+    expect(link['data-message']).to eq('Apply this template? It replaces the current content of the grid.')
+    expect(response.body).not_to match(/translation[ _]missing/i)
+  end
+
+  # A host with locale fallbacks answers a missing French string in English before anyone is asked
+  # for another: the plugin's string is looked up without them, so the core string still gets its turn.
+  context 'when the host app falls back to English for missing translations' do
+    around do |example|
+      backend = I18n.backend
+      fallbacks = I18n.fallbacks
+      I18n.backend = Class.new(I18n::Backend::Simple) { include I18n::Backend::Fallbacks }.new
+      I18n.fallbacks = I18n::Locale::Fallbacks.new(:en)
+      example.run
+    ensure
+      I18n.backend = backend
+      I18n.fallbacks = fallbacks
+    end
+
+    it 'still words the apply action with the core string of an unshipped admin language' do
+      @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
+      @site.set_admin_language('ru')
+
+      get '/admin/plugins/camaleon_editor/grid_editor'
+
+      link = Nokogiri::HTML5.fragment(response.body).at_css('#grid_table_list a.import_item')
+      expect(I18n.t('camaleon_editor.templates.apply', locale: :ru)).to eq('Apply template') # the fallback at work
+      expect(link['title']).to eq('Импортировать')
+    end
+  end
+
+  it 'words the apply action with its own strings in a language the plugin ships' do
+    @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
+    @site.set_admin_language('es')
+
+    get '/admin/plugins/camaleon_editor/grid_editor'
+
+    expect(response.body).to include('title="Aplicar plantilla"')
+  end
+
+  # Applying a template overwrites the grid and auto-saves, so the action has to look like an apply
+  # and its prompt has to say what is about to be lost. Whatever becomes of the click handler (a
+  # script error, a modified click opening a new tab), the link itself must have nowhere to go: the
+  # template URL travels as data.
+  it 'renders the apply action as a green check that warns, on a link that goes nowhere' do
+    template = @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
+
+    get '/admin/plugins/camaleon_editor/grid_editor'
+
+    link = Nokogiri::HTML5.fragment(response.body).at_css('#grid_table_list a.import_item')
+    expect(link['href']).to eq('#')
+    expect(link['data-url']).to eq("/admin/plugins/camaleon_editor/grid_editor/#{template.id}")
+    expect(link['title']).to eq('Apply template')
+    expect(link['data-message']).to eq('Apply this template? It replaces the current content of the grid.')
+    expect(link.at_css('i.fa-check-circle.text-success')).to be_present
+  end
+
+  # The editor shows a response in its templates modal only when the list or the template form is
+  # its top-level element, which holds as long as these actions render without a layout.
+  it 'answers with the bare panel, no layout around it' do
+    template = @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
+
+    { '' => '#grid_table_list', '/new' => '#grid_template_form',
+      "/#{template.id}/edit" => '#grid_template_form' }.each do |suffix, panel|
+      get "/admin/plugins/camaleon_editor/grid_editor#{suffix}"
+
+      fragment = Nokogiri::HTML5.fragment(response.body)
+      expect(fragment.children.find(&:element?)).to eq(fragment.at_css(panel))
+      expect(response.body).not_to match(/<html|<body|<head/i)
+    end
+  end
+
+  # The editor tells a template from a redirected page by the head a page carries: the template
+  # itself has to arrive with nothing around it, or every apply would be refused.
+  it 'answers a template with its markup and nothing else' do
+    template = @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: grid_body_markup)
+
+    get "/admin/plugins/camaleon_editor/grid_editor/#{template.id}"
+
+    expect(response.body).to eq(grid_body_markup)
+  end
+
   it 'lists the grid templates of the current site' do
     @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
 

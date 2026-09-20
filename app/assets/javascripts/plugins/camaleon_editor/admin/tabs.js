@@ -43,14 +43,17 @@ window.grid_tab_builder = function(panel, editor){
 
   // update info for a row
   var update_item = function(tr, title, text){
-    tr.find("td.name").html(title);
+    // listed as text, which shows a label and runs nothing (see $.fn.gridEditorLabelSource)
+    tr.find("td.name").text(title);
     tr.find(".descr").val(text);
     return tr;
   };
 
   // recover current items
   panel.find("> .nav-tabs > li").each( function(index, item){
-    add_item($(this).text(), panel.find("> .tab-content > .tab-pane").eq(index).html());
+    // the label sits in the tab's link; an empty label is an empty label, not the link's own markup
+    const link = $(this).children("a");
+    add_item($.fn.gridEditorLabelSource(link.length ? link : this), panel.find("> .tab-content > .tab-pane").eq(index).html());
   });
 
   // show form for each accordion
@@ -65,7 +68,7 @@ window.grid_tab_builder = function(panel, editor){
                      '<textarea class="form-control descr"></textarea>' +
                    '</div>' +
                  '</form>');
-    form.find(".name").val(tr.find("td.name").html());
+    form.find(".name").val(tr.find("td.name").text());
     form.find(".descr").val(tr.find(".descr").val());
 
     const form_callback = () => setTimeout(
@@ -98,14 +101,14 @@ window.grid_tab_builder = function(panel, editor){
       res1 +=
           '<li role="presentation" class="'+_in+'">' +
             '<a href="#'+id_accor+index+'" ' +
-               'aria-controls="home" role="tab" data-toggle="tab">'+($(this).find(".name").text()) +
+               'aria-controls="home" role="tab" data-toggle="tab">'+$.fn.gridEditorLabelMarkup($(this).find(".name").text()) +
             '</a>' +
           '</li>';
       res2 += '<div role="tabpanel" class="tab-pane '+_in+'" id="'+id_accor+index+'">'+($(this).find("textarea").val())+
               '</div>';
     });
     const res = '<ul class="nav nav-tabs" role="tablist">'+res1+'</ul><div class="tab-content"> '+res2+' </div>';
-    panel.addClass("panel-group").html(res);
+    panel.addClass("panel-group").gridEditorInertHtml(res);
     modal.modal("hide");
     editor.trigger("auto_save");
   };

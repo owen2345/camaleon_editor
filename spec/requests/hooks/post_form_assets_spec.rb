@@ -25,6 +25,12 @@ RSpec.describe 'the post-form hook' do
       expect(response.body).to include('grid-editor-manifest')
     end
 
+    it 'tells the editor that an administrator may manage templates' do
+      get "/admin/post_type/#{post_type.id}/posts/new"
+
+      expect(response.body).to include('var cama_grid_editor_can_manage_templates = true;')
+    end
+
     it 'does not load the editor libraries on unrelated admin pages' do
       get '/admin/dashboard'
 
@@ -61,6 +67,12 @@ RSpec.describe 'the post-form hook' do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include('editor-manifest')
+    end
+
+    it 'tells the editor that a use-only author may not manage templates' do
+      get "/admin/post_type/#{post_type.id}/posts/new"
+
+      expect(response.body).to include('var cama_grid_editor_can_manage_templates = false;')
     end
   end
 end

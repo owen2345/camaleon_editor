@@ -18,8 +18,40 @@ The plugin adds two role permissions under **Admin > Users > Roles**, both off b
   gets the plain post editor.
 - **Grid templates** — create, edit and delete the site's shared grid templates.
 
+A template is markup the editor puts into the page of whoever applies it. From a **Grid templates**
+holder, markup that core refuses as post content (scripts, event handlers, embedded objects) is
+refused when the template is saved; it is never rewritten. The editor's own blocks are accepted,
+the frame a Video block embeds YouTube or Vimeo in included. Administrators are not scanned, nor is a role core
+trusts with unfiltered HTML (**Allow unfiltered HTML in post content**, for any post type). Server-side
+code that owns its markup (a seed, an import) opts out with `template.unfiltered_description!`
+before saving; without a signed-in author a template is scanned.
+
+Only a template whose markup changes is scanned, so templates stored before the scan existed stay as
+they are. To list the stored templates the scan would refuse today (read-only):
+
+```bash
+bundle exec rake camaleon_editor:security:scan_templates
+```
+
 Plugin settings stay under the core **plugins** permission. A role holding neither editor permission
 is refused the grid-template endpoints.
+
+## Loading the editor on another admin page
+
+The plugin loads the grid editor into the post form by itself. To offer it on a TinyMCE field of
+another admin page (a theme settings page, another plugin's form), call the plugin's helper from
+that page's controller or view, after checking the user may use the editor:
+
+```ruby
+camaleon_editor_append_editor_assets if can?(:manage, Plugins::CamaleonEditor::MainHelper::PERMISSION_USE)
+```
+
+The helper appends the editor's scripts and stylesheet, and tells the editor whether the user holds
+the **Grid templates** permission, which decides whether **Templates > Save as template** is
+offered. A page that appends the asset library directly still works: each time the Templates menu
+is opened the editor asks `GET /admin/plugins/camaleon_editor/abilities`, which answers `{"manage_templates": true|false}`
+to any user holding either editor permission, and offers the entry only on a `true`. The answer is
+not kept, so a permission granted or taken away since shows without a reload.
 
 ## Development
 

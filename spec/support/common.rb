@@ -54,11 +54,22 @@ end
 
 # Install the editor plugin, sign in, and open the admin post editor - the page whose manifest
 # loads the grid editor's JS. Shared by the feature specs that drive the editor's builders.
-def install_plugin_and_open_post_editor
+# as: a user built by the :user factory (whose password the instance still holds) instead of
+# the site's administrator. post: an existing post to edit instead of a new one.
+def install_plugin_and_open_post_editor(as: nil, post: nil)
   store_current_site(@site)
   plugin_install('camaleon_editor')
-  admin_sign_in
-  visit "#{cama_root_relative_path}/admin/post_type/#{@site.post_types.first.id}/posts/new"
+  as ? admin_sign_in(as.username, as.password) : admin_sign_in
+  post_type = post ? post.post_type : @site.post_types.first
+  visit "#{cama_root_relative_path}/admin/post_type/#{post_type.id}/posts/#{post ? "#{post.id}/edit" : 'new'}"
+end
+
+# Wait until the page has no jQuery request in flight (adapted from camaleon_cms's
+# spec/support/wait_for_ajax.rb).
+def wait_for_ajax
+  Timeout.timeout(Capybara.default_max_wait_time) do
+    sleep 0.05 until page.evaluate_script('jQuery.active').zero?
+  end
 end
 
 # Accept the native JS confirm() dialog a destructive admin action raises. The dialog can lag a beat
