@@ -156,6 +156,8 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
 
     expect(page).to have_css('.mce-tinymce')
     expect(page).to have_no_css('.panel_grid_editor')
+    # the author confirmed a switch that did not happen, and is told so
+    expect(page).to have_css('#cama_alert_modal', text: 'The grid editor could not be opened')
   end
 
   # A theme hook or a hand edit can leave an id or a class of its own on the grid root; the public

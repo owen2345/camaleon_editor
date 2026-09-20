@@ -107,6 +107,9 @@ jQuery(function(){
     function content_unreadable(){
         report_failure("content_unreadable", "This content is marked as a grid but could not be read as a grid, so it stays in the text editor.");
     }
+    function editor_failed(){
+        report_failure("editor_failed", "The grid editor could not be opened, so the content stays in the text editor.");
+    }
 
     // The templates modal swaps its content for what its requests return: the list, or the template
     // form. A signed-out or refused request is redirected and comes back as a 200 carrying the login
@@ -606,12 +609,13 @@ jQuery(function(){
         try {
             do_editor_menus(editor);
         } catch(error) {
-            // either way the half-built editor goes and the text editor comes back
+            // Either way the half-built editor goes, the text editor comes back, and the author is told:
+            // thrown on, the error would reach only the text editor's button, which shows nothing to the
+            // author who has just confirmed the switch. Over ordinary content it is none of the content's doing.
             editor.remove();
             tinymce_panel.show();
-            if(!saved_body) throw error; // nothing of the content's doing: the error is the caller's to see
             if(window.console) console.error(error);
-            content_unreadable();
+            if(saved_body) content_unreadable(); else editor_failed();
             return textarea;
         }
         // inserted natively: jQuery's before() would run the scripts of the grid just rebuilt from saved content

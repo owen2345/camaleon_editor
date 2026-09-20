@@ -8,6 +8,7 @@ en:
           import_failed: "The template could not be loaded."
           request_failed: "The request was not completed. Reload the page and try again."
           content_unreadable: "This content is marked as a grid but could not be read as a grid, so it stays in the text editor."
+          editor_failed: "The grid editor could not be opened, so the content stays in the text editor."
   camaleon_editor:
     permission:
       label: "Grid Editor"
@@ -42,6 +43,7 @@ es:
           import_failed: "No se pudo cargar la plantilla."
           request_failed: "La solicitud no se completó. Recargue la página e inténtelo de nuevo."
           content_unreadable: "Este contenido está marcado como rejilla pero no se pudo leer como tal, por lo que permanece en el editor de texto."
+          editor_failed: "No se pudo abrir el editor de rejilla, por lo que el contenido permanece en el editor de texto."
   camaleon_editor:
     permission:
       label: "Grid Editor"
@@ -76,6 +78,7 @@ it:
           import_failed: "Impossibile caricare il modello."
           request_failed: "La richiesta non è stata completata. Ricarica la pagina e riprova."
           content_unreadable: "Questo contenuto è contrassegnato come griglia ma non è leggibile come tale, quindi resta nell'editor di testo."
+          editor_failed: "Impossibile aprire l'editor a griglia, quindi il contenuto resta nell'editor di testo."
   camaleon_editor:
     permission:
       label: "Grid Editor"
