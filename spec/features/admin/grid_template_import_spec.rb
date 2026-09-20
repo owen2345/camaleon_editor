@@ -314,7 +314,9 @@ RSpec.describe 'importing a grid template', :js do
 
     expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
     expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
-    expect(saved_grid_content).to include('<script>window.__cama_widget_loaded = true;</script>')
+    # read from the grid: the alert takes the focus, and the text editor losing it rewrites the field
+    expect(page.evaluate_script("jQuery('.panel_grid_body .drg_item script').text()"))
+      .to eq('window.__cama_widget_loaded = true;')
     expect(page.evaluate_script('window.__cama_widget_loaded')).to be_nil
   end
 end
