@@ -6,11 +6,12 @@ class Plugins::CamaleonEditor::GridTemplate < CamaleonCms::TermTaxonomy
   default_scope { where(taxonomy: :grid_template) }
 
   # What the editor's own Tabs, Accordion, Slider, Video and Audio blocks write beyond core's post
-  # content allowlist, none of which runs script: ARIA roles, and media elements whose urls the scan
-  # holds to the same schemes as an image's. Without them the scan would refuse the stock blocks of
-  # the editor the template was built in. An iframe stays an embed: refused from an untrusted author.
-  GRID_EXTRA_TAGS = %w[audio video source].freeze
-  GRID_EXTRA_ATTRIBUTES = %w[role controls type].freeze
+  # content allowlist: ARIA roles, media elements, and the frame a Video block embeds YouTube or Vimeo
+  # in. None of it runs script in the page that holds it: the scan holds a frame's or a media
+  # element's url to the same schemes as an image's, and srcdoc stays off the list. Whoever may save
+  # a template holds the template permission, which is what a frame is allowed on.
+  GRID_EXTRA_TAGS = %w[audio video source iframe].freeze
+  GRID_EXTRA_ATTRIBUTES = %w[role controls type frameborder allowfullscreen].freeze
 
   validate :reject_untrusted_dangerous_description
 

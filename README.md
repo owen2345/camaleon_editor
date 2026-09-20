@@ -19,9 +19,9 @@ The plugin adds two role permissions under **Admin > Users > Roles**, both off b
 - **Grid templates** — create, edit and delete the site's shared grid templates.
 
 A template is markup the editor puts into the page of whoever applies it. From a **Grid templates**
-holder, markup that core refuses as post content (scripts, event handlers, embeds) is refused when
-the template is saved; it is never rewritten. The editor's own blocks are accepted, except a Video
-block that embeds a frame (YouTube, Vimeo). Administrators are not scanned, nor is a role core
+holder, markup that core refuses as post content (scripts, event handlers, embedded objects) is
+refused when the template is saved; it is never rewritten. The editor's own blocks are accepted,
+the frame a Video block embeds YouTube or Vimeo in included. Administrators are not scanned, nor is a role core
 trusts with unfiltered HTML (**Allow unfiltered HTML in post content**, for any post type). Server-side
 code that owns its markup (a seed, an import) opts out with `template.unfiltered_description!`
 before saving; without a signed-in author a template is scanned.

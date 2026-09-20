@@ -42,6 +42,8 @@ RSpec.describe 'Security: grid template markup from a non-admin manager' do
                   '</div> </div><a class="left carousel-control" href="#c" role="button" data-slide="prev">' \
                   '<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span></a>',
       'Video' => '<video width="100%" controls><source src="/v.mp4" type="video/mp4"></video>',
+      'YouTube Video' => '<iframe width="100%" src="https://www.youtube.com/embed/abc" frameborder="0" ' \
+                         'allowfullscreen></iframe>',
       'Audio' => '<audio width="100%" controls src="/a.mp3"></audio>'
     }.each do |block, markup|
       it "stores a template holding the editor's own #{block} block" do
@@ -56,9 +58,11 @@ RSpec.describe 'Security: grid template markup from a non-admin manager' do
         .not_to(change { @site.grid_templates.count })
     end
 
-    it 'refuses an embedded frame' do
-      expect { create_template(grid_with_block('<iframe src="https://www.youtube.com/embed/abc"></iframe>')) }
-        .not_to(change { @site.grid_templates.count })
+    it 'refuses a frame whose url runs script, or that carries its own document' do
+      ['<iframe src="javascript:alert(1)"></iframe>',
+       '<iframe srcdoc="&lt;script&gt;alert(1)&lt;/script&gt;"></iframe>'].each do |frame|
+        expect { create_template(grid_with_block(frame)) }.not_to(change { @site.grid_templates.count })
+      end
     end
 
     it 'refuses an inline event handler and stores nothing' do
@@ -89,7 +93,7 @@ RSpec.describe 'Security: grid template markup from a non-admin manager' do
       post_type_meta: { post_content_unfiltered_html: [@site.post_types.first.id.to_s] }
     )
     sign_in_as(trusted, site: @site)
-    markup = grid_with_block('<iframe src="https://www.youtube.com/embed/abc"></iframe>')
+    markup = grid_with_block('<object data="https://example.com/widget.swf"></object>')
 
     create_template(markup)
 

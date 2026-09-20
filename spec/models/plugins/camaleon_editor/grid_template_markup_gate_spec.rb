@@ -5,7 +5,7 @@
 RSpec.describe Plugins::CamaleonEditor::GridTemplate do
   init_site
 
-  let(:embed) { grid_with_block('<iframe src="https://www.youtube.com/embed/abc"></iframe>') }
+  let(:embed) { grid_with_block('<object data="https://example.com/widget.swf"></object>') }
 
   before { CurrentRequest.reset }
 
