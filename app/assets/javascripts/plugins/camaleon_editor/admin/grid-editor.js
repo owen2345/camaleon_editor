@@ -276,7 +276,8 @@ jQuery(function(){
         // style of the grid it goes into, which stays.
         function fill_grid(grid, root){
             var style = grid_style(root);
-            if(style["style"] !== undefined || style["data-style"] !== undefined) set_grid_style(grid, style);
+            var styled = $.grep(GRID_STYLE_ATTRIBUTES, function(name){ return style[name] !== undefined; }).length > 0;
+            if(styled) set_grid_style(grid, style);
             // The parsed nodes are moved in natively rather than serialised and parsed a second time.
             // Their scripts stay inert: the parser marked them as started, and no jQuery insertion, which
             // would evaluate them, is involved. The grid is empty here: a new editor, or contents set aside.
