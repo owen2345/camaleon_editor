@@ -15,6 +15,10 @@ Grid scripts no longer run in the admin editor. A template holding scripts, even
 
 Cancelling, a failed or redirected request and an expired session now leave the post and its grid as they were. The action is a green "Apply template" check that warns the grid is replaced; a template brings its grid-wide style when it has one. Only template managers see Delete, Edit and "Save as template". Unreadable grid content stays in the text editor. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
 
+### Fix: editing a Slider block keeps its captions
+
+Each slide's caption is read from the slide; saving an edited Slider block used to empty them all. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
+
 ### Tooling: RuboCop runs with its default formatter in CI
 
 The CI RuboCop step runs without `-f github`, so the job log lists the offenses and the summary. Development tooling only. [#13](https://github.com/owen2345/camaleon_editor/pull/13).
