@@ -116,6 +116,24 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       expect(page).to have_no_css('.panel_grid_body .nav-tabs a a', visible: :all)
     end
 
+    # A label of plain text is listed as the text it is, and saved as it was.
+    %w[tab accordion].each do |kind|
+      it "lists a plain #{kind} label as its text, ampersand and all" do
+        block = blocks[kind].sub(payload, 'Q &amp; A')
+        store_post_content(@post, grid_post_content(grid_with_block(block, kind: kind)))
+        open_post_in_editor(@post)
+        find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+        page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+
+        expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'Q & A')
+        find('#ow_inline_modal .modal_submit').click
+        expect(page).to have_no_css('#ow_inline_modal')
+        expect(saved_grid_content).to include('Q &amp; A')
+        expect(saved_grid_content).not_to include('&amp;amp;')
+      end
+    end
+
     it 'keeps the markup of a label through an edit' do
       store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'], kind: 'tab')))
       @post.reload.update_column(:content, @post.content.sub(payload, '<b>Bold</b> tab')) # rubocop:disable Rails/SkipsModelValidations

@@ -48,8 +48,7 @@ window.grid_gallery_builder = function(panel, editor){
 
   // update info for a row
   let update_item = function(tr, title, text){
-    // A label is markup its author wrote. The form lists its source as text, which shows it and runs
-    // nothing; read back as source and written back as it was, it reaches the page unchanged.
+    // listed as text, which shows a label and runs nothing (see $.fn.gridEditorLabelSource)
     tr.find("td.name").text(title);
     tr.find(".url").val(text);
     return tr;
@@ -57,7 +56,7 @@ window.grid_gallery_builder = function(panel, editor){
 
   // recover current items
   panel.children(".gallery-item").each( function() {
-    add_item($.trim($(this).children(".g-title").html()), $(this).attr("data-url"));
+    add_item($.fn.gridEditorLabelSource($(this).children(".g-title")), $(this).attr("data-url"));
   });
 
   // show form for each accordion
@@ -126,7 +125,7 @@ window.grid_gallery_builder = function(panel, editor){
 
       res += '<div class="gallery-item" data-url="'+ u +`"> \
                 <div class="g-title">\
-                  `+ ($(this).find(".name").text()) +`\
+                  `+ $.fn.gridEditorLabelMarkup($(this).find(".name").text()) +`\
                 </div> \
                 <div class="g-content">`+ media +`</div> \
               </div>`;

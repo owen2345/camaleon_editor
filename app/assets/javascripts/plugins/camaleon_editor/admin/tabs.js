@@ -43,8 +43,7 @@ window.grid_tab_builder = function(panel, editor){
 
   // update info for a row
   var update_item = function(tr, title, text){
-    // A label is markup its author wrote. The form lists its source as text, which shows it and runs
-    // nothing; read back as source and written back as it was, it reaches the page unchanged.
+    // listed as text, which shows a label and runs nothing (see $.fn.gridEditorLabelSource)
     tr.find("td.name").text(title);
     tr.find(".descr").val(text);
     return tr;
@@ -54,7 +53,7 @@ window.grid_tab_builder = function(panel, editor){
   panel.find("> .nav-tabs > li").each( function(index, item){
     // the label sits in the tab's link; an empty label is an empty label, not the link's own markup
     const link = $(this).children("a");
-    add_item($.trim(link.length ? link.html() : $(this).html()), panel.find("> .tab-content > .tab-pane").eq(index).html());
+    add_item($.fn.gridEditorLabelSource(link.length ? link : this), panel.find("> .tab-content > .tab-pane").eq(index).html());
   });
 
   // show form for each accordion
@@ -102,7 +101,7 @@ window.grid_tab_builder = function(panel, editor){
       res1 +=
           '<li role="presentation" class="'+_in+'">' +
             '<a href="#'+id_accor+index+'" ' +
-               'aria-controls="home" role="tab" data-toggle="tab">'+($(this).find(".name").text()) +
+               'aria-controls="home" role="tab" data-toggle="tab">'+$.fn.gridEditorLabelMarkup($(this).find(".name").text()) +
             '</a>' +
           '</li>';
       res2 += '<div role="tabpanel" class="tab-pane '+_in+'" id="'+id_accor+index+'">'+($(this).find("textarea").val())+

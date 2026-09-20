@@ -23,6 +23,22 @@ jQuery(function(){
     };
     //********************** end editor content options **********************//
 
+    // A block item's label, as the block's form lists and edits it. A label of plain text reads as its
+    // text ("Q & A", not "Q &amp; A"). One that holds markup - an icon, a bold word - reads as its
+    // source, and so does text that spells a tag: decoded, an escaped "<img onerror=...>" would go back
+    // into the block as the element it only named.
+    $.fn.gridEditorLabelSource = function(element){
+        element = $(element);
+        if(!element.length) return "";
+        var text = element.text();
+        return $.trim(!element.children().length && text.indexOf("<") < 0 ? text : element.html());
+    };
+    // The other way: a label that holds a tag or a character reference is markup source and goes into
+    // the block as it is; any other is text, and is escaped like text.
+    $.fn.gridEditorLabelMarkup = function(label){
+        return /<|&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/i.test(label) ? label : $.fn.gridEditorEscapeHtml(label);
+    };
+
     // Markup parsed in a document of its own, where parsing loads and runs nothing, with its scripts
     // kept: a grid's embed blocks carry them. jQuery's parser, so markup gets what html() gave it: a
     // table row or a cell parsed as one, a self-closed <div/> expanded. One document serves every
