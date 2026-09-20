@@ -37,6 +37,32 @@ RSpec.describe 'the grid editor admin' do
     expect(response.body).not_to match(/translation[ _]missing/i)
   end
 
+  # A host with locale fallbacks answers a missing French string in English before anyone is asked
+  # for another: the plugin's string is looked up without them, so the core string still gets its turn.
+  context 'when the host app falls back to English for missing translations' do
+    around do |example|
+      backend = I18n.backend
+      fallbacks = I18n.fallbacks
+      I18n.backend = Class.new(I18n::Backend::Simple) { include I18n::Backend::Fallbacks }.new
+      I18n.fallbacks = I18n::Locale::Fallbacks.new(:en)
+      example.run
+    ensure
+      I18n.backend = backend
+      I18n.fallbacks = fallbacks
+    end
+
+    it 'still words the apply action with the core string of an unshipped admin language' do
+      @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
+      @site.set_admin_language('ru')
+
+      get '/admin/plugins/camaleon_editor/grid_editor'
+
+      link = Nokogiri::HTML5.fragment(response.body).at_css('#grid_table_list a.import_item')
+      expect(I18n.t('camaleon_editor.templates.apply', locale: :ru)).to eq('Apply template') # the fallback at work
+      expect(link['title']).to eq('Импортировать')
+    end
+  end
+
   it 'words the apply action with its own strings in a language the plugin ships' do
     @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
     @site.set_admin_language('es')
