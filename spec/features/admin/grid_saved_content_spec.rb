@@ -30,6 +30,25 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
   end
 
+  # Going to the text editor and back shows the editor built earlier: the content is not read again.
+  it 'shows the existing editor again without reading the content a second time' do
+    store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
+    open_post_in_editor(@post)
+    find('.panel_grid_editor .panel_grid_body .drg_item')
+
+    accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
+    expect(page).to have_css('.mce-tinymce')
+    page.execute_script(<<~JS)
+      window.__cama_parses = 0;
+      var parse = jQuery.parseHTML;
+      jQuery.parseHTML = function(){ window.__cama_parses++; return parse.apply(this, arguments); };
+    JS
+    open_grid_editor
+
+    expect(page).to have_css('.panel_grid_editor .panel_grid_body .drg_item', count: 1)
+    expect(page.evaluate_script('window.__cama_parses')).to eq(0)
+  end
+
   # A marker without a libraries list is still a marker: left in front of the content, its div would
   # be taken for the grid, and the real content behind it dropped at the first auto_save.
   it 'does not take a bare marker for the grid' do

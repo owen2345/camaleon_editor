@@ -112,17 +112,22 @@ jQuery(function(){
     var gridEditor_id = 0;
     $.fn.gridEditor = function(tinyEditor){
         var textarea = $(this);
+        // an editor built earlier for this field is only shown again: nothing to read, nothing to build
+        var existing_editor = textarea.prev().hasClass("panel_grid_editor");
         // Content marked as a grid that cannot be read as one stays in the text editor: shown as an
         // empty grid, its first change would be auto-saved over the content nobody got to see.
-        var saved_body = $.fn.isGridEditorContent(textarea.val()) ? parse_grid_body(textarea.val()) : null;
-        if($.fn.isGridEditorContent(textarea.val()) && !saved_body && !textarea.prev().hasClass("panel_grid_editor")){
-            content_unreadable();
-            return textarea;
+        var saved_body = null;
+        if(!existing_editor && $.fn.isGridEditorContent(textarea.val())){
+            saved_body = parse_grid_body(textarea.val());
+            if(!saved_body){
+                content_unreadable();
+                return textarea;
+            }
         }
         gridEditor_id ++;
         var tinymce_panel = $(tinyEditor.editorContainer).hide();
         var editor_id = "grid_editor_"+gridEditor_id;
-        if(textarea.prev().hasClass("panel_grid_editor")){ textarea.prev().show(); return textarea; }
+        if(existing_editor){ textarea.prev().show(); return textarea; }
         var tpl_rows = "";
         $.each({6: 50, 4: 33, 3: 25, 2: 16, 8: 66, 9: 75, 12: 100}, function(k, val){ tpl_rows += '<div class="" data-col="'+k+'" title="Insert a column block with '+val+'% of width." data-col_title="'+val+'%"><div class="grid_sortable_items"></div></div>'; });
 
