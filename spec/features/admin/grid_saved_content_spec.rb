@@ -60,6 +60,17 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
   end
 
+  it 'keeps content holding several grids inside a wrapper in the text editor' do
+    grids = grid_body_markup + grid_body_markup(grid_column_markup(col: 12, title: '100%'))
+    content = grid_post_content(%(<div class="panel_grid_body_w">#{grids}</div>))
+    store_post_content(@post, content)
+    open_post_in_editor(@post)
+
+    expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
+    expect(page).to have_no_css('.panel_grid_editor')
+    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
+  end
+
   # A marker without a libraries list is still a marker: left in front of the content, its div would
   # be taken for the grid, and the real content behind it dropped at the first auto_save.
   it 'does not take a bare marker for the grid' do

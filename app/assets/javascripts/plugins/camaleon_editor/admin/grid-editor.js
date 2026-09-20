@@ -240,7 +240,9 @@ jQuery(function(){
             // head leaves at the top level - a title, a base, the charset or the csrf token - and not by a
             // link or a meta of another kind, which a template may well start with.
             if(!body.length && !elements.filter("title, base, meta[charset], meta[name='csrf-token']").length){
-                body = elements.find(".panel_grid_body").first();
+                var nested = elements.find(".panel_grid_body");
+                if(nested.length > 1) return null; // several grids again, one level down
+                body = nested.first();
                 // a plain element counts as a grid by what it holds, columns: any other - a block of
                 // prose, an error message, a marker that was not taken off - is not one
                 if(!body.length) body = elements.filter(function(){ return $(this).children("[data-col]").length > 0; }).first();
