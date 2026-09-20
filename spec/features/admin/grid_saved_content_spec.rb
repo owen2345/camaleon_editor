@@ -30,6 +30,18 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
   end
 
+  # A marker without a libraries list is still a marker: left in front of the content, its div would
+  # be taken for the grid, and the real content behind it dropped at the first auto_save.
+  it 'does not take a bare marker for the grid' do
+    content = '<div>[grid_editor]</div><div><p>legacy paragraph</p></div>'
+    store_post_content(@post, content)
+    open_post_in_editor(@post)
+
+    expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
+    expect(page).to have_no_css('.panel_grid_editor')
+    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
+  end
+
   # Reading the content is one thing, rebuilding the grid from it another: the column and block
   # parsers, and the widgets they set up, can throw on a grid they do not expect. By then the text
   # editor is hidden and the grid editor is not in the page yet.

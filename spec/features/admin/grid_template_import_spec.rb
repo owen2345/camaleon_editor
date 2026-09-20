@@ -223,6 +223,17 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_no_css('#grid_table_list')
   end
 
+  # A plain wrapper is a grid by the columns it holds; any other div is just a div.
+  it 'refuses a stored template whose div holds no columns' do
+    fill_the_grid_and_reopen_the_list
+    @template.update!(description: '<div><p>not a grid</p></div>')
+
+    apply_listed_template
+
+    expect_the_grid_untouched
+    expect(page).to have_css('#grid_table_list .import_item')
+  end
+
   it 'refuses a stored template that is not a grid body' do
     @template.update!(description: 'plain text, not a grid')
 

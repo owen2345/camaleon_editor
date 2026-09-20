@@ -4,8 +4,9 @@ jQuery(function(){
     $.fn.fadeDestroy = function(speed){ $(this).fadeOut(speed, function(){ $(this).remove(); }) }
     $.fn.isGridEditorContent = function(str){ return str.match(/^\<div\>\[grid_editor/); } // verify is text is a content for grid editor
     // remove libraries shortcode text from grid editor: the marker only, up to ITS closing bracket - a greedy
-    // match would run on to the last "]</div>" of the content and take the grid along
-    $.fn.skipGridEditorLibraries = function(str){ return str.replace(/^\<div\>\[grid_editor [^\]]*\]\<\/div\>/, ""); }
+    // match would run on to the last "]</div>" of the content and take the grid along. Whatever isGridEditorContent
+    // takes for a marker comes off, with or without a libraries list: a marker left in would be read as the grid.
+    $.fn.skipGridEditorLibraries = function(str){ return str.replace(/^\<div\>\[grid_editor[^\]]*\]\<\/div\>/, ""); }
     $.fn.gridEditor_extra_rows = [];
     $.fn.gridEditor_libraries = [];
     //********************** editor content options **********************//
@@ -198,7 +199,9 @@ jQuery(function(){
             if(!body.length && !elements.filter("title, meta, link, base").length){
                 var wrapper = elements.filter("div").first();
                 body = wrapper.find(".panel_grid_body").first();
-                if(!body.length) body = wrapper;
+                // a plain div counts as a grid by what it holds, columns: any other div - a block of
+                // prose, an error message, a marker that was not taken off - is not one
+                if(!body.length && wrapper.children("[data-col]").length) body = wrapper;
             }
             return body.length ? body : null;
         }
