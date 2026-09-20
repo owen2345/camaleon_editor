@@ -28,7 +28,10 @@ class Plugins::CamaleonEditor::AdminController < CamaleonCms::Apps::PluginsAdmin
     # render would evaluate it as an ERB template, i.e. server-side Ruby execution. html_safe keeps
     # the pre-existing trust model (authored markup served unescaped to its authors), minus the
     # code execution.
-    render html: current_site.grid_templates.find(params[:id]).description.to_s.html_safe # rubocop:disable Rails/OutputSafety
+    # layout: false said out loud: the editor takes a response that carries a page's head for a
+    # redirected page, and refuses it.
+    template = current_site.grid_templates.find(params[:id])
+    render html: template.description.to_s.html_safe, layout: false # rubocop:disable Rails/OutputSafety
   end
 
   # return new grid editor template form

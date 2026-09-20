@@ -78,6 +78,16 @@ RSpec.describe 'the grid editor admin' do
     end
   end
 
+  # The editor tells a template from a redirected page by the head a page carries: the template
+  # itself has to arrive with nothing around it, or every apply would be refused.
+  it 'answers a template with its markup and nothing else' do
+    template = @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: grid_body_markup)
+
+    get "/admin/plugins/camaleon_editor/grid_editor/#{template.id}"
+
+    expect(response.body).to eq(grid_body_markup)
+  end
+
   it 'lists the grid templates of the current site' do
     @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
 
