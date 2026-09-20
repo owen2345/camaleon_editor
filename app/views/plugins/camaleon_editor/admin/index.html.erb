@@ -20,6 +20,8 @@
 <script>
     jQuery(function(){
         var table = $("#grid_table_list");
+        // the admin gives its titled links a tooltip when the page loads; these rows arrive later
+        table.find("a[title]").tooltip();
         // shows the panel a request returned, or reports the request when it returned anything else
         var show_panel = function(res){
             $.fn.gridEditor_show_templates_panel(res, function(panel){ table.parent().html(panel); });

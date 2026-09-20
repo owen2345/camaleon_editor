@@ -64,6 +64,12 @@ RSpec.describe 'managing grid templates after the session is gone', :js do
     expect(@template.reload.name).to eq('Half column')
   end
 
+  # Core gives the admin's titled links a Bootstrap tooltip when the page loads; the list arrives later.
+  it 'gives the actions of the list the tooltips the rest of the admin has' do
+    expect(page).to have_css('#grid_table_list .import_item[data-original-title="Apply template"]')
+    expect(page).to have_css('#grid_table_list .destroy_item[data-original-title]')
+  end
+
   # The overlay stops the mouse, not Enter on the button that keeps the focus: a second submit while
   # the first is under way would store the template twice.
   it 'saves a new template once when the form is submitted twice' do
