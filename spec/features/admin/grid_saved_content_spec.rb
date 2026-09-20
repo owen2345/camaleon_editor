@@ -104,6 +104,17 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(saved_grid_content).to match(/class="[^"]*\bhero\b/)
   end
 
+  it 'does not give a saved grid root back a class it was saved without' do
+    store_post_content(@post, grid_post_content(%(<div class="panel_grid_body hero">#{grid_column_markup}</div>)))
+    open_post_in_editor(@post)
+    find('.panel_grid_editor .panel_grid_body .drg_column')
+    trigger_grid_auto_save
+
+    root_classes = saved_grid_content[/<div class="([^"]*panel_grid_body[^"]*)"/, 1].split
+    expect(root_classes).to include('hero')
+    expect(root_classes).not_to include('row')
+  end
+
   # A host page can build its field first and attach it later; jQuery's before() quietly did
   # nothing for a detached field, and its native replacement must not throw instead.
   it 'does not break on a text field that is not in the page yet' do

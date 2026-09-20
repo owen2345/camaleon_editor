@@ -264,7 +264,9 @@ jQuery(function(){
         // save. Now that the editor keeps its own root, those are carried over to it.
         function keep_root_attributes(grid, root){
             $.each(root[0].attributes, function(_index, attribute){
-                if(attribute.name === "class") grid.addClass(attribute.value);
+                // the saved classes as they are - a root saved without "row" does not get it back - plus
+                // the one the editor finds its grid by
+                if(attribute.name === "class") grid.attr("class", attribute.value).addClass("panel_grid_body");
                 else if($.inArray(attribute.name, GRID_STYLE_ATTRIBUTES) < 0) grid.attr(attribute.name, attribute.value);
             });
         }
