@@ -75,8 +75,10 @@ window.grid_accordion_builder = function (panel, editor) {
     // the label's source, without the chevron the block puts after it
     const label = $(this).find("> .panel-heading .panel-title > a").first().clone();
     label.children("i.glyphicon.pull-right").remove();
+    // a heading without the link is read for its text alone: its markup is the block's, not the label's
+    const heading = $("<span>").text($(this).children(".panel-heading").text());
     add_item(
-      $.fn.gridEditorLabelSource(label.length ? label : $(this).children(".panel-heading")),
+      $.fn.gridEditorLabelSource(label.length ? label : heading),
       $(this).find("> div > .panel-body").html(),
     );
   });

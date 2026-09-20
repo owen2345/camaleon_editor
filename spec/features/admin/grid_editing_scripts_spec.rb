@@ -190,6 +190,23 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       expect(saved_grid_content).to include('data-toggle="tab">a &lt; b</a>')
     end
 
+    # An accordion item edited by hand may have no link in its heading. The heading's text is the
+    # label then - not its markup, which would go back inside the new heading, a title in a title.
+    it 'lists an accordion heading without a link by its text' do
+      block = blocks['accordion'].sub(%r{<a role="button"[^>]*>.*?</a>}, 'FAQ &amp; more')
+      store_post_content(@post, grid_post_content(grid_with_block(block, kind: 'accordion')))
+      open_post_in_editor(@post)
+      find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+
+      expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'FAQ & more')
+      find('#ow_inline_modal .modal_submit').click
+      expect(page).to have_no_css('#ow_inline_modal')
+      expect(saved_grid_content).to include('FAQ &amp; more')
+      expect(page).to have_no_css('.panel_grid_body .panel-title .panel-title', visible: :all)
+    end
+
     it 'keeps the markup of a label through an edit' do
       store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'], kind: 'tab')))
       @post.reload.update_column(:content, @post.content.sub(payload, '<b>Bold</b> tab')) # rubocop:disable Rails/SkipsModelValidations
