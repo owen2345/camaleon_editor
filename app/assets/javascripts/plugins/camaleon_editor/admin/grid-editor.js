@@ -32,6 +32,15 @@ jQuery(function(){
         });
     };
 
+    // Text on its way into a markup string, as element content or inside a quoted attribute. The block
+    // builders assemble their markup by concatenation: a label or a url that went in raw would come
+    // out as markup of its own.
+    $.fn.gridEditorEscapeHtml = function(text){
+        return String(text == null ? "" : text).replace(/[&<>"']/g, function(character){
+            return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[character];
+        });
+    };
+
     // The top-level elements of markup that came from the server, parsed in a document of its own -
     // where parsing loads and runs nothing - with its scripts kept: a grid's embed blocks carry them.
     // One document serves every parse; the nodes are only read or moved out of it.

@@ -48,7 +48,8 @@ window.grid_gallery_builder = function(panel, editor){
 
   // update info for a row
   let update_item = function(tr, title, text){
-    tr.find("td.name").html(title);
+    // a label is text: read from stored content, it goes in as text and never as markup
+    tr.find("td.name").text(title);
     tr.find(".url").val(text);
     return tr;
   };
@@ -72,7 +73,7 @@ window.grid_gallery_builder = function(panel, editor){
               </div> \
               </div>`+
         '</form>');
-    form.find(".name").val(tr.find("td.name").html());
+    form.find(".name").val(tr.find("td.name").text());
     form.find(".url_file").val(tr.find(".url").val());
 
     const form_callback = () => form.find(".btn_upload").click(function() {
@@ -122,7 +123,7 @@ window.grid_gallery_builder = function(panel, editor){
 
       res += '<div class="gallery-item" data-url="'+($(this).find(".url").val()) +`"> \
                 <div class="g-title">\
-                  `+ ($(this).find(".name").text()) +`\
+                  `+ $.fn.gridEditorEscapeHtml($(this).find(".name").text()) +`\
                 </div> \
                 <div class="g-content">`+ media +`</div> \
               </div>`;

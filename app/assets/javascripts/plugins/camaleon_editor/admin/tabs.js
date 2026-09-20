@@ -43,7 +43,8 @@ window.grid_tab_builder = function(panel, editor){
 
   // update info for a row
   var update_item = function(tr, title, text){
-    tr.find("td.name").html(title);
+    // a label is text: read from stored content, it goes in as text and never as markup
+    tr.find("td.name").text(title);
     tr.find(".descr").val(text);
     return tr;
   };
@@ -65,7 +66,7 @@ window.grid_tab_builder = function(panel, editor){
                      '<textarea class="form-control descr"></textarea>' +
                    '</div>' +
                  '</form>');
-    form.find(".name").val(tr.find("td.name").html());
+    form.find(".name").val(tr.find("td.name").text());
     form.find(".descr").val(tr.find(".descr").val());
 
     const form_callback = () => setTimeout(
@@ -98,7 +99,7 @@ window.grid_tab_builder = function(panel, editor){
       res1 +=
           '<li role="presentation" class="'+_in+'">' +
             '<a href="#'+id_accor+index+'" ' +
-               'aria-controls="home" role="tab" data-toggle="tab">'+($(this).find(".name").text()) +
+               'aria-controls="home" role="tab" data-toggle="tab">'+$.fn.gridEditorEscapeHtml($(this).find(".name").text()) +
             '</a>' +
           '</li>';
       res2 += '<div role="tabpanel" class="tab-pane '+_in+'" id="'+id_accor+index+'">'+($(this).find("textarea").val())+
