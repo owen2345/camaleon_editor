@@ -21,5 +21,8 @@ Gem::Specification.new do |s|
   # No test_files: RubyGems merges it into `files`, which would ship the test suite to users.
   s.files = Dir['{app,config,db,lib}/**/*', 'MIT-LICENSE', 'Rakefile', 'README.md']
 
+  # 2.9.3 brought the shared markup detector (CamaleonCms::UnsafeMarkup) and the post content
+  # allowlists the grid template scan is built on; on an older core there would be no scan.
+  s.add_dependency 'camaleon_cms', '>= 2.9.3'
   s.add_dependency 'rails'
 end

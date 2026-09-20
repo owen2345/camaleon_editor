@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     camaleon_editor (0.0.1)
+      camaleon_cms (>= 2.9.3)
       rails
 
 GEM

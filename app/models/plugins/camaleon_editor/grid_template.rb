@@ -52,10 +52,8 @@ class Plugins::CamaleonEditor::GridTemplate < CamaleonCms::TermTaxonomy
 
   def scan_description?
     return false unless new_record? || description_changed?
-    return false if description.blank? || description_author_trusted?
 
-    # a core without the shared detector has no gate to apply
-    defined?(CamaleonCms::UnsafeMarkup).present?
+    description.present? && !description_author_trusted?
   end
 
   # The authors core trusts with unfiltered post content: administrators, and a role granted
