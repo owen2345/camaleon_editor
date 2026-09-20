@@ -4,7 +4,7 @@
 
 ### Security: grid scripts stay inert in the editor, template markup is scanned
 
-Grid scripts no longer run in the admin editor, only on the public page. A template holding markup core refuses as post content is refused unless its author is an administrator or a role trusted with unfiltered HTML. **Notes for upgraders:** requires camaleon_cms >= 2.9.3; stored templates are untouched, `rake camaleon_editor:security:scan_templates` lists the ones now refused; seeds opt out with `unfiltered_description!`. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
+Grid scripts no longer run in the admin editor. A template holding scripts, event handlers or embedded objects is refused unless its author is an administrator or a role trusted with unfiltered HTML. **Notes for upgraders:** requires camaleon_cms >= 2.9.3; stored templates are untouched, `rake camaleon_editor:security:scan_templates` lists the ones now refused; seeds opt out with `unfiltered_description!`. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
 
 ### Fix: applying a grid template can no longer lose the unsaved post
 
