@@ -81,6 +81,21 @@ RSpec.describe 'Security: grid template markup from a non-admin manager' do
     end
   end
 
+  # Core's own escape hatch for post content: a role granted unfiltered HTML for a post type can
+  # already save this grid as a post, so it can save it as a template.
+  it 'lets a manager trusted with unfiltered HTML store an embed, verbatim' do
+    trusted = user_with_manager_grants(
+      { camaleon_editor: 1, camaleon_editor_templates: 1 }, 'trusted-manager',
+      post_type_meta: { post_content_unfiltered_html: [@site.post_types.first.id.to_s] }
+    )
+    sign_in_as(trusted, site: @site)
+    markup = grid_with_block('<iframe src="https://www.youtube.com/embed/abc"></iframe>')
+
+    create_template(markup)
+
+    expect(@site.grid_templates.find_by(name: 'Submitted')&.description).to eq(markup)
+  end
+
   it 'lets an administrator store a template with a script, verbatim' do
     sign_in_as(cama_admin_user, site: @site)
     markup = grid_with_block('<script>widget();</script>')

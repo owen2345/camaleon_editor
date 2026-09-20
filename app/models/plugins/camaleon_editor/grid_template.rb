@@ -14,6 +14,16 @@ class Plugins::CamaleonEditor::GridTemplate < CamaleonCms::TermTaxonomy
 
   validate :reject_untrusted_dangerous_description
 
+  # Opt-out for trusted server-side pipelines (seeds, imports, a site duplication), which run with
+  # no signed-in author and would otherwise be held to the scan. As on core's posts: a reader and a
+  # bang enabler, no writer, so mass assignment cannot reach it; sticky for the life of the instance.
+  attr_reader :unfiltered_description
+
+  def unfiltered_description!
+    @unfiltered_description = true
+    self
+  end
+
   private
 
   # Security (scan-and-reject policy): the description is markup the editor puts into the admin page
@@ -48,10 +58,20 @@ class Plugins::CamaleonEditor::GridTemplate < CamaleonCms::TermTaxonomy
     defined?(CamaleonCms::UnsafeMarkup).present?
   end
 
-  # Fails closed: no request context (a job, a rake task, the console) means no trusted author.
+  # The authors core trusts with unfiltered post content: administrators, and a role granted
+  # post_content_unfiltered_html. A template belongs to no post type, so holding the grant for any
+  # post type of the site counts - that author can already save the same grid as a post. Fails closed:
+  # no request context (a job, a rake task, the console) means no trusted author.
   def description_author_trusted?
-    user = CurrentRequest.user if defined?(CurrentRequest)
-    user.present? && user.admin?
+    return true if unfiltered_description
+
+    user = CurrentRequest.user
+    site = CurrentRequest.site
+    return false if user.blank? || site.blank?
+    return true if user.admin?
+
+    ability = CamaleonCms::Ability.new(user, site)
+    site.post_types.any? { |post_type| ability.can?(:post_content_unfiltered_html, post_type) }
   end
 
   # Core ships these messages in English only, while the locale follows the admin language.
