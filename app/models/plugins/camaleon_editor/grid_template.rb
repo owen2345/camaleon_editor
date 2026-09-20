@@ -53,9 +53,19 @@ class Plugins::CamaleonEditor::GridTemplate < CamaleonCms::TermTaxonomy
   end
 
   def scan_description?
-    return false unless new_record? || description_changed?
+    return false unless new_record? || description_markup_changed?
 
     description.present? && !description_author_trusted?
+  end
+
+  # The template form sends the description back on every save, and a textarea round trip turns each
+  # line break into CRLF: markup that differs by its line breaks alone was not changed by anyone, and
+  # a name-only edit of a template stored with LF (a seed, the console) must not bring on the scan.
+  def description_markup_changed?
+    return false unless description_changed?
+
+    before, after = description_change.map { |markup| markup.to_s.gsub("\r\n", "\n") }
+    before != after
   end
 
   # The authors core trusts with unfiltered post content: administrators, and a role granted
