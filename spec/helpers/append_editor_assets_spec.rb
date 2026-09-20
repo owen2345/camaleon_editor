@@ -33,6 +33,19 @@ RSpec.describe 'loading the editor assets', type: :model do
     expect(page.libraries.size).to eq(1)
   end
 
+  # Core runs a hook that raised a second time: the second run has to do what the first did not.
+  it 'declares the user on a second call when the first one raised' do
+    page = host.new(manager: true)
+    calls = 0
+    page.define_singleton_method(:can?) { |*| (calls += 1) == 1 ? raise('ability lookup broke') : true }
+
+    expect { page.camaleon_editor_append_editor_assets }.to raise_error('ability lookup broke')
+    page.camaleon_editor_append_editor_assets
+
+    expect(page.contents).to eq(['<script>var cama_grid_editor_can_manage_templates = true;</script>'])
+    expect(page.libraries.size).to eq(1)
+  end
+
   it 'declares anyone else with a literal false, whatever the ability check answers with' do
     page = host.new(manager: nil)
 
