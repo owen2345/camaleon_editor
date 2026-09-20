@@ -108,9 +108,11 @@ window.grid_gallery_builder = function(panel, editor){
   const submit_callback = function(modal){
     let res = "";
     tpl.find("tbody tr").each(function() {
-      const u = $(this).find(".url").val();
+      const url = $(this).find(".url").val();
+      // the extension is read from the url as typed; what goes into a quoted attribute is escaped
+      const u = $.fn.gridEditorEscapeHtml(url);
       let media = "";
-      switch ($.file_formats[u.split(".").pop().toLowerCase()]) {
+      switch ($.file_formats[url.split(".").pop().toLowerCase()]) {
         case "image":
           media = "<img src='"+u+"'>";
           break;
@@ -122,7 +124,7 @@ window.grid_gallery_builder = function(panel, editor){
           break;
       }
 
-      res += '<div class="gallery-item" data-url="'+($(this).find(".url").val()) +`"> \
+      res += '<div class="gallery-item" data-url="'+ u +`"> \
                 <div class="g-title">\
                   `+ ($(this).find(".name").text()) +`\
                 </div> \

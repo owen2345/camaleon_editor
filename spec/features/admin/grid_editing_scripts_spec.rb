@@ -47,6 +47,27 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     expect(script_ran).to be_nil
   end
 
+  # The Gallery block is not on offer, but its builder ships and a host can register it. It reads an
+  # item's url back from an attribute, decoded, and writes it into quoted attributes again.
+  it 'keeps a gallery url inside its attribute' do
+    url = %(x' onerror='window["__cama_script_ran"]=true' data-x='.png)
+    item = %(<div class="gallery-item" data-url="#{CGI.escapeHTML(url)}"><div class="g-title">One</div></div>)
+    store_post_content(@post, grid_post_content(grid_with_block(item, kind: 'gallery')))
+    open_post_in_editor(@post)
+    find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+    page.execute_script(<<~JS)
+      jQuery.fn.gridEditor_options.gallery = {title: 'Gallery', callback: grid_gallery_builder};
+      jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();
+    JS
+    find('#ow_inline_modal .modal_submit').click
+
+    expect(page).to have_no_css('#ow_inline_modal')
+    expect(page).to have_css('.panel_grid_body .gallery-item img', visible: :all)
+    expect(page).to have_no_css('.panel_grid_body .gallery-item img[onerror]', visible: :all)
+    expect(script_ran).to be_nil
+  end
+
   # html() parsed a table row or a cell as one wherever it went; set as innerHTML of a div, the same
   # markup loses its row and cells and keeps only their text.
   it 'keeps table rows written into a text block' do
