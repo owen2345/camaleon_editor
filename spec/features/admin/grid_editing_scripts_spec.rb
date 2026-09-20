@@ -176,6 +176,30 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'x<y')
     end
 
+    # A tag the label opens and never closes would stay open over the tabs behind it, as the stray "<"
+    # did: only a label that closes what it opens is markup.
+    it 'writes a typed label that leaves its tag open as text' do
+      second = '<li role="presentation"><a href="#t1" role="tab" data-toggle="tab">Two</a></li>'
+      two_tabs = blocks['tab'].sub(payload, 'One').sub('</li></ul>', "</li>#{second}</ul>")
+      store_post_content(@post, grid_post_content(grid_with_block(two_tabs, kind: 'tab')))
+      open_post_in_editor(@post)
+      find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      first('#ow_inline_modal a.edit_item').click
+      find('#cama_editor_modal2 input.name').set('<b>News')
+      find('#cama_editor_modal2 .modal_submit').click
+      expect(page).to have_no_css('#cama_editor_modal2')
+      find('#ow_inline_modal .modal_submit').click
+      expect(page).to have_no_css('#ow_inline_modal', visible: :all) # gone, not just hidden: it is opened again
+
+      expect(saved_grid_content).to include('data-toggle="tab">&lt;b&gt;News</a>')
+      expect(page).to have_no_css('.panel_grid_body .nav-tabs b', visible: :all)
+
+      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      expect(page).to have_css('#ow_inline_modal td.name', exact_text: '<b>News')
+    end
+
     it 'lists a label with a "<" that opens no tag as its text' do
       block = blocks['tab'].sub(payload, 'a &lt; b')
       store_post_content(@post, grid_post_content(grid_with_block(block, kind: 'tab')))

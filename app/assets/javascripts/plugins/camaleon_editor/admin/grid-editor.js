@@ -32,14 +32,17 @@ jQuery(function(){
     //
     // A "<" makes markup of a label only when it opens a tag of the label's own. The label is parsed
     // with an element behind it, in the inert document: "x<y" or "a < b" leaves no element but that
-    // one, or takes it along into a tag that never ends, as it would the markup of the block. Such a
-    // label is text the author typed, and is escaped like text.
+    // one, or takes it along into a tag that never ends or an element that is never closed, as it
+    // would the markup of the block. Such a label is text the author typed, and is escaped like text.
     function label_is_markup(label){
         label = String(label);
         if(label.indexOf("<") >= 0){
             var probe = inert().createElement("div");
             probe.innerHTML = label + "<i data-grid-label-end></i>";
-            if(!probe.querySelector("i[data-grid-label-end]")) return false;
+            // the element has to come out behind the label, not inside it: a tag the label opens and
+            // never closes ("<b>News") would hold it, as it would hold the tabs behind the label
+            var end = probe.lastElementChild;
+            if(!end || end.tagName !== "I" || !end.hasAttribute("data-grid-label-end")) return false;
             if(probe.getElementsByTagName("*").length > 1 || /<[!?]/.test(label)) return true;
         }
         return /&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/i.test(label);
