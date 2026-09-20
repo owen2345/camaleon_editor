@@ -136,6 +136,8 @@ jQuery(function(){
     // grid editor plugin
     var gridEditor_id = 0;
     $.fn.gridEditor = function(tinyEditor){
+        // one editor per field, as jQuery's before() gave each field of a set its own
+        if(this.length > 1) return this.each(function(){ $(this).gridEditor(tinyEditor); });
         var textarea = $(this);
         // an editor built earlier for this field is only shown again: nothing to read, nothing to build
         var existing_editor = textarea.prev().hasClass("panel_grid_editor");

@@ -104,6 +104,19 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(saved_grid_content).to match(/class="[^"]*\bhero\b/)
   end
 
+  # Called on several fields at once, jQuery's before() gave each its own editor; so does the editor.
+  it 'builds an editor for each field of a set' do
+    open_post_in_editor(@post)
+    find('.mce-tinymce')
+
+    page.execute_script(<<~JS)
+      jQuery('<div id="cama_two_fields"><textarea></textarea><textarea></textarea></div>').appendTo('#form-post');
+      jQuery('#cama_two_fields textarea').gridEditor(tinymce.activeEditor);
+    JS
+
+    expect(page).to have_css('#cama_two_fields .panel_grid_editor + textarea', count: 2, visible: :all)
+  end
+
   it 'does not give a saved grid root back a class it was saved without' do
     store_post_content(@post, grid_post_content(%(<div class="panel_grid_body hero">#{grid_column_markup}</div>)))
     open_post_in_editor(@post)
