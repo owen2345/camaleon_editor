@@ -201,6 +201,17 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_no_css('#grid_table_list')
   end
 
+  # The wrapper need not be a div, and a template may bring a stylesheet along in front of it: a
+  # link or a meta is not what tells a page from a template.
+  it 'applies a template whose columns sit in a section, behind a stylesheet link' do
+    store_template_markup(@template, %(<link rel="stylesheet" href="/x.css"><section>#{grid_column_markup}</section>))
+
+    apply_listed_template
+
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+    expect(page).to have_no_css('#grid_table_list')
+  end
+
   # The editor's own markup wraps the grid body in a panel_grid_body_w div; a template copied with
   # that wrapper holds its grid body one level down.
   it 'finds the grid body inside a wrapper, style and all' do

@@ -229,15 +229,15 @@ jQuery(function(){
         function parse_grid_body(res){
             var elements = parse_inert($.fn.skipGridEditorLibraries(String(res)));
             var body = elements.filter(".panel_grid_body").first();
-            // A template stored by other means may wrap its columns in a plain div, or hold its grid body
-            // inside the editor's own wrapper. A page is told apart by its head, which leaves title, meta,
-            // link and base elements at the top level: a template has none, whatever trails its div.
-            if(!body.length && !elements.filter("title, meta, link, base").length){
-                var wrapper = elements.filter("div").first();
-                body = wrapper.find(".panel_grid_body").first();
-                // a plain div counts as a grid by what it holds, columns: any other div - a block of
+            // A template stored by other means may wrap its columns in a plain element of any kind, or hold
+            // its grid body inside the editor's own wrapper. A page is told apart by what only a page's
+            // head leaves at the top level - a title, a base, the charset or the csrf token - and not by a
+            // link or a meta of another kind, which a template may well start with.
+            if(!body.length && !elements.filter("title, base, meta[charset], meta[name='csrf-token']").length){
+                body = elements.find(".panel_grid_body").first();
+                // a plain element counts as a grid by what it holds, columns: any other - a block of
                 // prose, an error message, a marker that was not taken off - is not one
-                if(!body.length && wrapper.children("[data-col]").length) body = wrapper;
+                if(!body.length) body = elements.filter(function(){ return $(this).children("[data-col]").length > 0; }).first();
             }
             return body.length ? body : null;
         }
