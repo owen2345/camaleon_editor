@@ -17,7 +17,11 @@ RSpec.describe 'loading the editor assets', type: :model do
         @request = Struct.new(:env).new({})
       end
 
-      def can?(*) = @manager
+      # answers for the template permission alone, so asking about another one shows
+      def can?(action, subject)
+        action == :manage && subject == Plugins::CamaleonEditor::MainHelper::PERMISSION_MANAGE && @manager
+      end
+
       def plugin_gem_asset(path, _plugin) = path
       def append_asset_libraries(libraries) = @libraries << libraries
       def append_asset_content(content) = @contents << content

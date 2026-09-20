@@ -51,9 +51,9 @@ module Plugins::CamaleonEditor::MainHelper
 
     # The editor builds its menu in the browser, so it has to be told which actions the server
     # would refuse this user: a refusal is a redirect, which the menu's modal would render as the
-    # dashboard page. Asked before anything is appended. A boolean's to_s: nothing but a literal
-    # true or false reaches the script.
-    can_manage = (can?(:manage, PERMISSION_MANAGE) == true).to_s
+    # dashboard page. Asked before anything is appended, and written as a literal: nothing but true
+    # or false reaches the script.
+    can_manage = can?(:manage, PERMISSION_MANAGE) ? 'true' : 'false'
     append_asset_libraries({ admin_grid_editor: { js: ['plugins/camaleon_editor/admin/editor-manifest.js'],
                                                   css: [plugin_gem_asset('admin/grid-editor-manifest.css',
                                                                          'camaleon_editor')] } })
