@@ -120,15 +120,16 @@ jQuery(function(){
     }
 
     // What the server says the user may do with the template library. A page can hold several
-    // editors (one per language of a post): they share one request, and its answer. A request that
-    // failed is forgotten, so the next look at the menu asks again. cama_ajax_request spares the
-    // server the sidebar menus it builds for a whole admin page.
+    // editors (one per language of a post): while a request is under way they share it, and its
+    // answer. The answer is not kept: a permission granted or taken away since is found out the next
+    // time a menu is opened. cama_ajax_request spares the server the sidebar menus it builds for a
+    // whole admin page.
     var abilities_request = null;
     function ask_abilities(){
         if(abilities_request) return abilities_request;
         var request = abilities_request = $.getJSON(root_url+"admin/plugins/camaleon_editor/abilities", {cama_ajax_request: true});
         // attached after the assignment: a request rejected before it left runs this at once
-        request.fail(function(){ if(abilities_request === request) abilities_request = null; });
+        request.always(function(){ if(abilities_request === request) abilities_request = null; });
         return request;
     }
 
@@ -423,12 +424,15 @@ jQuery(function(){
                 });
             });
 
-            // Asked when the Templates menu is opened, the first moment the answer matters. Anything but a
-            // plain yes - a refusal, a redirect to the login page, a failed request - leaves the entry hidden.
+            // Asked when the Templates menu is opened, the moment the answer matters. Anything but a plain
+            // yes - a refusal, a redirect to the login page, a failed request - hides the entry, or leaves it hidden.
             if(can_manage_templates === undefined) editor.find(".grid_editor_menu .dropdown-toggle").on("click", function(){
+                // this runs before Bootstrap's own handler: a menu still marked open is being closed
+                if($(this).parent().hasClass("open")) return;
+                var entry = editor.find(".grid_editor_menu .new_template").parent();
                 ask_abilities().done(function(abilities){
-                    if(abilities && abilities.manage_templates === true) editor.find(".grid_editor_menu .new_template").parent().removeClass("hidden");
-                });
+                    entry.toggleClass("hidden", !(abilities && abilities.manage_templates === true));
+                }).fail(function(){ entry.addClass("hidden"); });
             });
 
             // save as a new template

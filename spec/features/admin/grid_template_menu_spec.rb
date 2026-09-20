@@ -35,10 +35,15 @@ RSpec.describe 'the grid editor templates menu', :js do
   # A host app or another plugin can load the editor's assets from a page of its own, which says
   # nothing about the user. The editor then asks the server, and offers the entry only on a yes.
   context 'when the page does not say who may manage templates' do
-    # Records every abilities request the page sends, and every answer it gets.
+    # A page that loaded the editor without saying who the user is, or that said something else.
     def forget_the_declaration(value = 'undefined')
+      page.execute_script("window.cama_grid_editor_can_manage_templates = #{value};")
+      record_abilities_requests
+    end
+
+    # Records every abilities request the page sends, and every answer it gets.
+    def record_abilities_requests
       page.execute_script(<<~JS)
-        window.cama_grid_editor_can_manage_templates = #{value};
         window.__cama_abilities = {urls: [], answers: []};
         jQuery(document).ajaxSend(function(_event, _xhr, options){
           if(/camaleon_editor\\/abilities/.test(options.url)) window.__cama_abilities.urls.push(options.url);
@@ -97,18 +102,41 @@ RSpec.describe 'the grid editor templates menu', :js do
     end
 
     # A post in several languages has one editor field per language, each able to switch to the grid.
-    it 'asks once for all the editors of the page' do
+    # Menus opened while a request is under way share it.
+    it 'asks once for the editors of the page whose menus open together' do
       install_plugin_and_open_post_editor
       forget_the_declaration
-      open_editor_and_templates_menu
+      open_grid_editor
+      find('.grid_editor_menu')
       page.execute_script(<<~JS)
         jQuery('<textarea></textarea>').appendTo('#form-post').gridEditor(tinymce.activeEditor);
-        jQuery('.grid_editor_menu .dropdown-toggle').last().click();
+        jQuery('.grid_editor_menu .dropdown-toggle').click();
       JS
 
       # the second editor is not on show, so its entry is matched by not being held back, not by sight
       expect(page).to have_css('.grid_editor_menu li:not(.hidden) > .new_template', count: 2, visible: :all)
       expect(abilities('urls').size).to eq(1)
+    end
+
+    # The answer is not kept for the life of the page: a permission taken away since the menu was
+    # last opened takes the entry away the next time it is.
+    it 'asks again each time the menu is opened, and hides the entry on a no' do
+      install_plugin_and_open_post_editor
+      forget_the_declaration
+      open_editor_and_templates_menu
+      expect(page).to have_css('.grid_editor_menu .new_template')
+      open_templates_menu # closes the menu, which asks nothing
+      wait_for_ajax
+      expect(abilities('urls').size).to eq(1)
+
+      page.driver.browser.manage.delete_cookie('auth_token')
+      author = use_only_author
+      admin_sign_in(author.username, author.password)
+      open_templates_menu
+      wait_for_ajax
+
+      expect(abilities('answers').last).to eq('{"manage_templates":false}')
+      expect(page).to have_no_css('.grid_editor_menu .new_template')
     end
 
     it 'asks again after a request that failed' do
