@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Tooling: the suite can run against an unreleased camaleon_cms
+
+A callable **Core compatibility** workflow runs the suite against a given camaleon_cms commit; core calls it from its own pipeline, so a core change that breaks the plugin shows on the core pull request. Setting `CAMALEON_CMS_PATH` makes the Gemfile source the core from a local checkout; unset, nothing changes. Development tooling only. [#15](https://github.com/owen2345/camaleon_editor/pull/15).
+
 ### Security: grid scripts stay inert in the editor, template markup is scanned
 
 Grid scripts no longer run in the admin editor. A template holding scripts, event handlers or embedded objects is refused unless its author is an administrator or a role trusted with unfiltered HTML. [#14](https://github.com/owen2345/camaleon_editor/pull/14).
