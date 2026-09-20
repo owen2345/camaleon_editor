@@ -26,6 +26,13 @@ trusts with unfiltered HTML (**Allow unfiltered HTML in post content**, for any 
 code that owns its markup (a seed, an import) opts out with `template.unfiltered_description!`
 before saving; without a signed-in author a template is scanned.
 
+Only a template whose markup changes is scanned, so templates stored before the scan existed stay as
+they are. To list the stored templates the scan would refuse today (read-only):
+
+```bash
+bundle exec rake camaleon_editor:security:scan_templates
+```
+
 Plugin settings stay under the core **plugins** permission. A role holding neither editor permission
 is refused the grid-template endpoints.
 

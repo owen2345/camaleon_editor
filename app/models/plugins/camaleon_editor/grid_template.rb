@@ -14,6 +14,15 @@ class Plugins::CamaleonEditor::GridTemplate < CamaleonCms::TermTaxonomy
 
   validate :reject_untrusted_dangerous_description
 
+  # True when the scan would refuse this markup from an untrusted author. Also what the
+  # camaleon_editor:security:scan_templates task lists stored templates by.
+  def self.unsafe_description?(markup)
+    CamaleonCms::UnsafeMarkup.unsafe_html?(markup,
+                                           tags: CamaleonCms::Post::CONTENT_ALLOWED_TAGS + GRID_EXTRA_TAGS,
+                                           attributes: CamaleonCms::Post::CONTENT_ALLOWED_ATTRIBUTES +
+                                                       GRID_EXTRA_ATTRIBUTES)
+  end
+
   # Opt-out for trusted server-side pipelines (seeds, imports, a site duplication), which run with
   # no signed-in author and would otherwise be held to the scan. As on core's posts: a reader and a
   # bang enabler, no writer, so mass assignment cannot reach it; sticky for the life of the instance.
@@ -37,17 +46,9 @@ class Plugins::CamaleonEditor::GridTemplate < CamaleonCms::TermTaxonomy
 
     if CamaleonCms::UnsafeMarkup.too_large?(description)
       errors.add(:description, content_rejection_message('content_too_large'))
-    elsif CamaleonCms::UnsafeMarkup.unsafe_html?(description, tags: allowed_tags, attributes: allowed_attributes)
+    elsif self.class.unsafe_description?(description)
       errors.add(:description, content_rejection_message('content_rejected'))
     end
-  end
-
-  def allowed_tags
-    CamaleonCms::Post::CONTENT_ALLOWED_TAGS + GRID_EXTRA_TAGS
-  end
-
-  def allowed_attributes
-    CamaleonCms::Post::CONTENT_ALLOWED_ATTRIBUTES + GRID_EXTRA_ATTRIBUTES
   end
 
   def scan_description?

@@ -26,7 +26,7 @@ window.grid_image_builder = function(panel, editor){
         const url = modal.find(".url_file").val();
         let res = '';
         if (url) {
-            res = '<img src="'+url+'" style="width: 100%;">';
+            res = '<img src="'+$.fn.gridEditorEscapeHtml(url)+'" style="width: 100%;">';
         }
         panel.gridEditorInertHtml(res);
         modal.modal("hide");
