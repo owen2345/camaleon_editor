@@ -263,9 +263,16 @@ jQuery(function(){
             "<div class='panel_grid_body_w'><div class='panel_grid_body row'></div></div>"+
             "</div>");
 
+        // The editor's grid: the root its own wrapper holds, and that one alone. A block may hold grid
+        // markup of its own - pasted in, or applied with a template - which is that block's content:
+        // found by class anywhere under the editor, it would be parsed, styled, emptied and made
+        // sortable along with the grid, and saved with the editor's chrome in it.
+        var GRID_ROOT = "#"+editor_id+" > .panel_grid_body_w > .panel_grid_body"; // for the widgets that take a selector
+        function grid_root(editor){ return $(editor).children(".panel_grid_body_w").children(".panel_grid_body"); }
+
         // grid editor export
         function export_content(editor){
-            var container = $('.panel_grid_body', editor).clone();
+            var container = grid_root(editor).clone();
             container.children().each(function(){
                 var col = $(this).removeClass("drg_column grid-col-built btn-default btn ui-draggable ui-draggable-handle ui-draggable-dragging ui-sortable-handle");
                 col.children(".header_box").remove();
@@ -370,7 +377,7 @@ jQuery(function(){
 
         // grid editor parser to recover from saved content
         function parse_content(editor){
-            editor.find(".panel_grid_body").children("div").each(function(){ var col = parse_content_column($(this)); });
+            grid_root(editor).children("div").each(function(){ var col = parse_content_column($(this)); });
             return editor;
         }
 
@@ -392,9 +399,10 @@ jQuery(function(){
             column.addClass("drg_column btn btn-default");
             if(column.children(".header_box").length == 0) column.prepend(html);
             if(!skip_options){
-                column.find('.header_box').append(options);
-                grid_content_manager(column.find(".grid_sortable_items"));
-                column.find(".grid_sortable_items").children().each(function(){ //contents
+                // the column's own header, area and blocks: a block may hold grid markup of its own
+                column.children('.header_box').append(options);
+                grid_content_manager(column.children(".grid_sortable_items"));
+                column.children(".grid_sortable_items").children().each(function(){ //contents
                     parse_content_content($(this));
                 });
             }
@@ -422,7 +430,7 @@ jQuery(function(){
             content.addClass("drg_item btn btn-default");
             if(content.children(".header_box").length == 0) content.prepend(html);
             if(!skip_options){
-                content.find('.header_box').append(options);
+                content.children('.header_box').append(options);
             }
             // save used libraries
             $.fn.gridEditor_libraries = $.merge($.fn.gridEditor_libraries, $.fn.gridEditor_options[content.attr("data-kind")] || {})
@@ -441,7 +449,7 @@ jQuery(function(){
             });
             editor.find(".grid_editor_menu .clear").click(function(){
                 if(!confirm(I18n("grid_editor.clear_editor"))) return false;
-                editor.find(".panel_grid_body").html("");
+                grid_root(editor).html("");
                 editor.trigger("auto_save");
                 return false;
             });
@@ -454,7 +462,7 @@ jQuery(function(){
             });
             // main style
             editor.find(".grid_editor_menu .grid_style_settings").click(function(e){
-                grid_style_setting(editor.find(".panel_grid_body"), editor, editor.find(".panel_grid_body"));
+                grid_style_setting(grid_root(editor), editor, grid_root(editor));
                 e.preventDefault();
             });
             // toggle fullscreen
@@ -474,7 +482,7 @@ jQuery(function(){
                     // one apply at a time, and no prompt for one that would not be sent
                     if(modal.data("grid_editor_request") || !confirm($(this).attr("data-message"))) return false;
                     $.fn.gridEditor_one_request(modal, function(){ return $.get(url, function(res){
-                        var grid = editor.find(".panel_grid_body"), previous = null, applied = false;
+                        var grid = grid_root(editor), previous = null, applied = false;
                         // everything from reading the response on runs under the finally that lifts the overlay
                         try {
                             var template_body = parse_grid_body(res);
@@ -541,8 +549,8 @@ jQuery(function(){
             // if saved content is a grid_editor content, then rebuilt or recover this content
             if(saved_body){
                 // filled rather than swapped in as live nodes, which would run the saved content's scripts
-                keep_root_attributes(editor.find(".panel_grid_body"), saved_body);
-                fill_grid(editor.find(".panel_grid_body"), saved_body);
+                keep_root_attributes(grid_root(editor), saved_body);
+                fill_grid(grid_root(editor), saved_body);
                 parse_content(editor); // recover saved content
             }else{
                 editor.data("tiny_backup", tinyEditor.getContent())
@@ -556,7 +564,7 @@ jQuery(function(){
             });
 
             // content dropdown options
-            jQuery('.panel_grid_body ', editor).on("click", '.drg_item .grid_content_remove', function (e) {
+            grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
                 if(confirm(I18n("grid_editor.del_block"))) {
                     jQuery(this).closest(".drg_item").fadeDestroy();
                     editor.trigger("auto_save");
@@ -579,7 +587,7 @@ jQuery(function(){
             });
 
             // column dropdown options
-            jQuery('.panel_grid_body ', editor).on("click", '.grid_col_remove', function (e) {
+            grid_root(editor).on("click", '.grid_col_remove', function (e) {
                 if(confirm(I18n("grid_editor.del_block"))){
                     jQuery(this).closest(".drg_column").fadeDestroy();
                     editor.trigger("auto_save");
@@ -589,7 +597,7 @@ jQuery(function(){
                 var widget = jQuery(this).closest(".drg_column");
                 var widget_clone = widget.clone();
                 widget.after(widget_clone);
-                grid_content_manager(widget_clone.find(".grid_sortable_items"));
+                grid_content_manager(widget_clone.children(".grid_sortable_items"));
                 editor.trigger("auto_save");
                 e.preventDefault();
             });
@@ -624,7 +632,7 @@ jQuery(function(){
 
         // drag columns
         jQuery(".grid_editor_menu .drg_column", editor).draggable({
-            connectToSortable: "#"+editor_id+" .panel_grid_body",
+            connectToSortable: GRID_ROOT,
             cursor: 'move',          // sets the cursor apperance
             revert: 'invalid',       // makes the item to return if it isn't placed into droppable
             revertDuration: -1,     // duration while the item returns to its place
@@ -644,14 +652,14 @@ jQuery(function(){
         });
 
         // Sort the parents
-        jQuery(".panel_grid_body", editor).sortable({
+        grid_root(editor).sortable({
             tolerance: "pointer",
             cursor: "move",
             revert: false,
             delay: 150,
             dropOnEmpty: true,
             items: ".drg_column",
-            connectWith: "#"+editor_id+" .panel_grid_body",
+            connectWith: GRID_ROOT,
             placeholder: "placeholder",
             start: function (e, ui) {
                 ui.helper.css({'width': '' , 'height': ''}).addClass('col-md-' + jQuery(ui.helper).attr('data-col'));

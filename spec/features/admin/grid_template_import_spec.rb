@@ -319,6 +319,30 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('#grid_table_list .import_item')
   end
 
+  # Grid markup held by a block is that block's content. The grid being replaced is the editor's own
+  # root alone: taken together with a grid inside it, the way back would put every level of the old
+  # grid into both and fail half-way.
+  it 'puts back a previous grid whose block holds grid markup of its own' do
+    pasted = grid_with_block('pasted')
+    @template.update!(description: grid_with_block(pasted))
+    apply_listed_template
+    expect(page).to have_css('.panel_grid_body .drg_item .panel_grid_body', text: 'pasted', visible: :all)
+    expect(saved_grid_content).to include(pasted)
+
+    @template.update!(description: grid_body_markup(grid_column_markup(col: 12, title: '100%')))
+    page.execute_script(<<~JS)
+      jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
+    JS
+    open_templates_list
+    apply_listed_template
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
+    expect(page).to have_css('.panel_grid_body_w .drg_column', count: 1, visible: :all)
+    expect(page).to have_css('.panel_grid_body_w .drg_item', count: 1, visible: :all)
+    expect(page).to have_css('.panel_grid_body_w .panel_grid_body', count: 2, visible: :all)
+    expect(page).to have_css('.panel_grid_body .drg_item .panel_grid_body', text: 'pasted', count: 1, visible: :all)
+  end
+
   # The grid that goes back can hold embed scripts of its own, which must stay as inert on the way
   # back as they were on the way in.
   it 'puts a previous grid with a script back without running the script' do

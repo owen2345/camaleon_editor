@@ -82,6 +82,20 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page).to have_no_css('#cama_alert_modal')
   end
 
+  # The grid markup in a block is content, not a second grid of the editor's: it gets no column or
+  # block chrome, which the export would not take off again, and is saved as it was stored.
+  it 'saves grid markup held by a block as it was stored' do
+    pasted = grid_with_block('pasted')
+    store_post_content(@post, grid_post_content(grid_with_block(pasted)))
+    open_post_in_editor(@post)
+
+    expect(page).to have_css('.panel_grid_editor .drg_item .panel_grid_body', text: 'pasted', visible: :all)
+    expect(page).to have_no_css('.panel_grid_editor .drg_item .panel_grid_body .header_box', visible: :all)
+    expect(page).to have_no_css('.panel_grid_editor .drg_item .ui-sortable', visible: :all)
+    trigger_grid_auto_save
+    expect(saved_grid_content).to include(pasted)
+  end
+
   # The editor saves the grid and nothing else: content with more to it than the grid would lose the
   # rest at the first auto_save, so it is not opened as a grid.
   it 'keeps content with markup beside the grid in the text editor' do
