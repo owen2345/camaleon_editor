@@ -228,7 +228,11 @@ jQuery(function(){
         // dashboard or login page would be written into the grid and auto-saved over the post content.
         function parse_grid_body(res){
             var elements = parse_inert($.fn.skipGridEditorLibraries(String(res)));
-            var body = elements.filter(".panel_grid_body").first();
+            var bodies = elements.filter(".panel_grid_body");
+            // The editor holds one grid. Content with several would open as its first alone, and lose the
+            // rest at the next auto_save: it is not read at all, which leaves it where it is.
+            if(bodies.length > 1) return null;
+            var body = bodies.first();
             // A template stored by other means may wrap its columns in a plain element of any kind, or hold
             // its grid body inside the editor's own wrapper. A page is told apart by what only a page's
             // head leaves at the top level - a title, a base, the charset or the csrf token - and not by a
