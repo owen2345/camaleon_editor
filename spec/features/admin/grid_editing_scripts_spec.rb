@@ -47,6 +47,21 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     expect(script_ran).to be_nil
   end
 
+  # html() parsed a table row or a cell as one wherever it went; set as innerHTML of a div, the same
+  # markup loses its row and cells and keeps only their text.
+  it 'keeps table rows written into a text block' do
+    store_post_content(@post, grid_post_content(grid_with_block('<p>widget</p>')))
+    open_post_in_editor(@post)
+    find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+    page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+    find('#ow_inline_modal textarea').set('<tr><td>Q1</td><td>120</td></tr>')
+    find('#ow_inline_modal .modal_submit').click
+
+    expect(page).to have_no_css('#ow_inline_modal')
+    expect(saved_grid_content).to include('<tr><td>Q1</td><td>120</td></tr>')
+  end
+
   # The Tabs, Accordion and Slider forms list the block's items by label (or image url), read back
   # from the stored block. A label is text: shown as markup, an escaped payload would run here, in
   # the session of whoever edits the block, after passing every gate as the harmless text it is.

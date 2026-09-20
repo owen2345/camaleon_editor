@@ -23,13 +23,29 @@ jQuery(function(){
     };
     //********************** end editor content options **********************//
 
+    // Markup parsed in a document of its own, where parsing loads and runs nothing, with its scripts
+    // kept: a grid's embed blocks carry them. jQuery's parser, so markup gets what html() gave it: a
+    // table row or a cell parsed as one, a self-closed <div/> expanded. One document serves every
+    // parse; the nodes are only read or moved out of it.
+    var inert_document = null;
+    function parse_nodes(markup){
+        if(!inert_document) inert_document = document.implementation.createHTMLDocument("");
+        return $.parseHTML(String(markup), inert_document, true) || [];
+    }
+    // the top-level elements of markup that came from the server
+    function parse_inert(markup){
+        return $(parse_nodes($.trim(String(markup)))).filter(function(){ return this.nodeType === 1; });
+    }
+
     // Sets an element's markup without running the scripts in it. jQuery's html() evaluates every
     // inline script of what it inserts; a grid's scripts are content for the public page, where the
-    // theme has loaded what they call, and have no business in the administrator's session.
+    // theme has loaded what they call, and have no business in the administrator's session. The
+    // parsed nodes are moved in natively: the parser marked their scripts as started.
     $.fn.gridEditorInertHtml = function(markup){
         return this.each(function(){
-            $(this).empty();
-            this.innerHTML = markup;
+            var target = this;
+            $(target).empty();
+            $.each(parse_nodes(markup == null ? "" : markup), function(){ target.appendChild(this); });
         });
     };
 
@@ -41,16 +57,6 @@ jQuery(function(){
             return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[character];
         });
     };
-
-    // The top-level elements of markup that came from the server, parsed in a document of its own -
-    // where parsing loads and runs nothing - with its scripts kept: a grid's embed blocks carry them.
-    // One document serves every parse; the nodes are only read or moved out of it.
-    var inert_document = null;
-    function parse_inert(markup){
-        if(!inert_document) inert_document = document.implementation.createHTMLDocument("");
-        var nodes = $.parseHTML($.trim(String(markup)), inert_document, true) || [];
-        return $(nodes).filter(function(){ return this.nodeType === 1; });
-    }
 
     // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too.
     function report_failure(key, english){
