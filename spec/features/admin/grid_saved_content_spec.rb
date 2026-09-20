@@ -71,6 +71,17 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
   end
 
+  # Several grids are several grids side by side. Grid markup pasted into a block of the one grid is
+  # that block's content, and goes where the block goes.
+  it 'opens a wrapped grid whose block holds grid markup of its own' do
+    pasted = '<div class="panel_grid_body">pasted</div>'
+    store_post_content(@post, grid_post_content(%(<div class="panel_grid_body_w">#{grid_with_block(pasted)}</div>)))
+    open_post_in_editor(@post)
+
+    expect(page).to have_css('.panel_grid_editor .drg_item .panel_grid_body', text: 'pasted', visible: :all)
+    expect(page).to have_no_css('#cama_alert_modal')
+  end
+
   # The editor saves the grid and nothing else: content with more to it than the grid would lose the
   # rest at the first auto_save, so it is not opened as a grid.
   it 'keeps content with markup beside the grid in the text editor' do

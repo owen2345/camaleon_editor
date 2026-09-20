@@ -292,8 +292,10 @@ jQuery(function(){
             // head leaves at the top level - a title, a base, the charset or the csrf token - and not by a
             // link or a meta of another kind, which a template may well start with.
             if(!body.length && !elements.filter("title, base, meta[charset], meta[name='csrf-token']").length){
-                var nested = elements.find(".panel_grid_body");
-                if(nested.length > 1) return null; // several grids again, one level down
+                // the outermost ones: grid markup inside a grid's block is that block's content, as it
+                // is for a grid body at the top level
+                var nested = elements.find(".panel_grid_body").filter(function(){ return !$(this).parents(".panel_grid_body").length; });
+                if(nested.length > 1) return null; // several grids again, further down
                 body = nested.first();
                 // a plain element counts as a grid by what it holds, columns: any other - a block of
                 // prose, an error message, a marker that was not taken off - is not one
