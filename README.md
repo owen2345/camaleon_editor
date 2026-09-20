@@ -48,9 +48,10 @@ camaleon_editor_append_editor_assets if can?(:manage, Plugins::CamaleonEditor::M
 
 The helper appends the editor's scripts and stylesheet, and tells the editor whether the user holds
 the **Grid templates** permission, which decides whether **Templates > Save as template** is
-offered. A page that appends the asset library directly still works: when the Templates menu is
-first opened the editor asks `GET /admin/plugins/camaleon_editor/abilities`, which answers `{"manage_templates": true|false}`
-to any user holding either editor permission, and offers the entry only on a `true`.
+offered. A page that appends the asset library directly still works: each time the Templates menu
+is opened the editor asks `GET /admin/plugins/camaleon_editor/abilities`, which answers `{"manage_templates": true|false}`
+to any user holding either editor permission, and offers the entry only on a `true`. The answer is
+not kept, so a permission granted or taken away since shows without a reload.
 
 ## Development
 
