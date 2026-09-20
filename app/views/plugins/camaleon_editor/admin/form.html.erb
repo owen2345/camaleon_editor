@@ -20,9 +20,7 @@
                     form = $(form);
                     showLoading();
                     $.post(form.attr("action"), form.serialize(), function(res){
-                        if(!$.fn.gridEditor_is_templates_panel(res)) return $.fn.gridEditor_request_failed();
-                        form.replaceWith(res);
-                        hideLoading();
+                        $.fn.gridEditor_show_templates_panel(res, function(panel){ form.replaceWith(panel); });
                     }).fail($.fn.gridEditor_request_failed);
                     return false;
                 }

@@ -78,6 +78,18 @@ jQuery(function(){
         report_failure("request_failed", "The request was not completed. Reload the page and try again.");
     };
 
+    // What every request of the templates modal does with its answer: show it when it is one of the
+    // panels, report the request when it is anything else. show(res) puts the panel where it belongs.
+    $.fn.gridEditor_show_templates_panel = function(res, show){
+        if(!$.fn.gridEditor_is_templates_panel(res)){
+            $.fn.gridEditor_request_failed();
+            return false;
+        }
+        show(res);
+        hideLoading();
+        return true;
+    };
+
     // Opens the panel a templates menu link points at - the list, the template form - in a modal.
     // Core's ajax_modal would show whatever a 200 carries, and the menu is built from what the page
     // knew when it loaded: a session gone or a permission taken away since then comes back as the
@@ -88,9 +100,9 @@ jQuery(function(){
             var link = $(this);
             showLoading();
             $.get(link.attr("href")).done(function(res){
-                if(!$.fn.gridEditor_is_templates_panel(res)) return $.fn.gridEditor_request_failed();
-                hideLoading();
-                open_modal({title: link.attr("title"), content: res, callback: callback});
+                $.fn.gridEditor_show_templates_panel(res, function(panel){
+                    open_modal({title: link.attr("title"), content: panel, callback: callback});
+                });
             }).fail($.fn.gridEditor_request_failed);
         });
     }
