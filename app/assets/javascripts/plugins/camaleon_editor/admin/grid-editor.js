@@ -45,7 +45,12 @@ jQuery(function(){
             if(!end || end.tagName !== "I" || !end.hasAttribute("data-grid-label-end")) return false;
             if(probe.getElementsByTagName("*").length > 1 || /<[!?]/.test(label)) return true;
         }
-        return /&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/i.test(label);
+        // a character reference is one the parser decodes: "&T;" in "AT&T;" names nothing and stays text
+        return $.grep(label.match(/&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/ig) || [], function(reference){
+            var decoder = inert().createElement("div");
+            decoder.innerHTML = reference;
+            return decoder.textContent !== reference;
+        }).length > 0;
     }
     $.fn.gridEditorLabelSource = function(element){
         element = $(element);

@@ -176,6 +176,21 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'x<y')
     end
 
+    # "&T;" names no character: decoded it is what it was, so the label is text and reads back as typed.
+    it 'lists a label whose ampersand only looks like a character reference as it was typed' do
+      block = blocks['tab'].sub(payload, 'AT&amp;T; and more')
+      store_post_content(@post, grid_post_content(grid_with_block(block, kind: 'tab')))
+      open_post_in_editor(@post)
+      find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+
+      expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'AT&T; and more')
+      find('#ow_inline_modal .modal_submit').click
+      expect(page).to have_no_css('#ow_inline_modal')
+      expect(saved_grid_content).to include('data-toggle="tab">AT&amp;T; and more</a>')
+    end
+
     # A tag the label opens and never closes would stay open over the tabs behind it, as the stray "<"
     # did: only a label that closes what it opens is markup.
     it 'writes a typed label that leaves its tag open as text' do
