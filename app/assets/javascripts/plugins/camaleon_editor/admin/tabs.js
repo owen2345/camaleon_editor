@@ -52,7 +52,9 @@ window.grid_tab_builder = function(panel, editor){
 
   // recover current items
   panel.find("> .nav-tabs > li").each( function(index, item){
-    add_item($.trim($(this).children("a").html() || $(this).html()), panel.find("> .tab-content > .tab-pane").eq(index).html());
+    // the label sits in the tab's link; an empty label is an empty label, not the link's own markup
+    const link = $(this).children("a");
+    add_item($.trim(link.length ? link.html() : $(this).html()), panel.find("> .tab-content > .tab-pane").eq(index).html());
   });
 
   // show form for each accordion

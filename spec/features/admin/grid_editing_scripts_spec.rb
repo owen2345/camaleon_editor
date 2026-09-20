@@ -103,6 +103,19 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       }
     end
 
+    it 'reads an empty tab label as empty, not as the markup around it' do
+      store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'].sub(payload, ''), kind: 'tab')))
+      open_post_in_editor(@post)
+      find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      expect(page).to have_css('#ow_inline_modal td.name', exact_text: '')
+      find('#ow_inline_modal .modal_submit').click
+
+      expect(page).to have_no_css('#ow_inline_modal')
+      expect(page).to have_no_css('.panel_grid_body .nav-tabs a a', visible: :all)
+    end
+
     it 'keeps the markup of a label through an edit' do
       store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'], kind: 'tab')))
       @post.reload.update_column(:content, @post.content.sub(payload, '<b>Bold</b> tab')) # rubocop:disable Rails/SkipsModelValidations
