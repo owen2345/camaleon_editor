@@ -159,7 +159,19 @@ jQuery(function(){
         if(holder.data("grid_editor_request")) return;
         holder.data("grid_editor_request", true);
         showLoading();
-        send().always(function(){ holder.removeData("grid_editor_request"); });
+        // A prefilter or a beforeSend of the page's runs as the request leaves, and a throw there comes
+        // out of send() with no request to wait for: the holder is released and the request reported
+        // here, or it would stay busy under an overlay nothing lifts.
+        var request;
+        try {
+            request = send();
+        } catch(error) {
+            if(window.console) console.error(error);
+            holder.removeData("grid_editor_request");
+            $.fn.gridEditor_request_failed();
+            return;
+        }
+        request.always(function(){ holder.removeData("grid_editor_request"); });
     };
 
     // Opens the panel a templates menu link points at - the list, the template form - in a modal.

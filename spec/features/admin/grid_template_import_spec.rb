@@ -230,6 +230,27 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('#grid_table_list .import_item')
   end
 
+  # Code that is not the editor's runs as a request leaves - a prefilter, a beforeSend of the page's -
+  # and a throw there comes out of the send itself, with no request to wait for: the list must not
+  # stay busy under an overlay nothing will lift.
+  it 'reports a request that throws as it is sent, and takes the next one' do
+    page.execute_script(<<~'JS')
+      jQuery.ajaxPrefilter(function(options){
+        if(/grid_editor\/\d+$/.test(options.url) && !window.__cama_threw){ window.__cama_threw = true; throw new Error("prefilter broke"); }
+      });
+    JS
+
+    apply_listed_template
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The request was not completed')
+    expect(page).to have_no_css('#cama_custom_loading')
+    find('#cama_alert_modal .close').click
+    expect(page).to have_no_css('#cama_alert_modal')
+
+    apply_listed_template
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+  end
+
   # Several plain wrappers are several grids, as several grid bodies are: the editor holds one, and
   # applying the first alone would drop the rest without a word.
   it 'refuses a stored template of several plain wrappers that hold columns' do
