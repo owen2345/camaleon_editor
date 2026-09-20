@@ -303,7 +303,15 @@ jQuery(function(){
             // A template is applied for its grid, and what trails it is let go. Saved content is another
             // matter: the editor saves the grid alone, so anything beside it - a paragraph after the grid, a
             // stylesheet link before it - would go at the first auto_save. Such content is not read as a grid.
-            if(whole && $.grep(nodes, function(node){ return !holds(node, body[0]) && carries_content(node); }).length) return null;
+            // Beside it at any depth: a grid inside a wrapper has siblings there as well.
+            if(whole){
+                var level = nodes;
+                for(var within = body[0]; within; within = within.parentNode){
+                    if($.inArray(within, nodes) >= 0) break;
+                    level = level.concat($.makeArray(within.parentNode.childNodes));
+                }
+                if($.grep(level, function(node){ return !holds(node, body[0]) && carries_content(node); }).length) return null;
+            }
             return body;
         }
         function holds(node, element){ return node === element || (node.nodeType === 1 && $.contains(node, element)); }
