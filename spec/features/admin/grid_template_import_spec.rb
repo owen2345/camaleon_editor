@@ -259,6 +259,31 @@ RSpec.describe 'importing a grid template', :js do
     expect(page.evaluate_script('jQuery.hasData(window.__cama_replaced)')).to be(false)
   end
 
+  # Closing the list is the last step of an apply, after the replaced grid has been released: if it
+  # throws, there is nothing left to roll back to, and nothing that needs rolling back.
+  it 'keeps the applied template when closing the list throws' do
+    apply_listed_template
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+    @template.update!(description: grid_body_markup(grid_column_markup(col: 12, title: '100%')))
+    open_templates_list
+    find('#grid_table_list .import_item')
+    page.execute_script(<<~JS)
+      var modal = jQuery.fn.modal;
+      jQuery.fn.modal = function(action){
+        if(action !== 'hide') return modal.apply(this, arguments);
+        jQuery.fn.modal = modal;
+        throw new Error('hide broke');
+      };
+    JS
+
+    apply_listed_template
+
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '100%')
+    expect(page).to have_no_css('#cama_alert_modal')
+    expect(page).to have_no_css('#cama_custom_loading')
+    expect(saved_grid_content).to include('data-col="12"')
+  end
+
   # Reading the response is the first thing that can go wrong once it has arrived; the overlay and
   # the failure message must not depend on it going right.
   it 'reports a response it fails to read and lifts the overlay' do

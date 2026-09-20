@@ -348,7 +348,7 @@ jQuery(function(){
                     modal.data("applying_template", true);
                     showLoading();
                     $.get($(this).attr("data-url"), function(res){
-                        var grid = editor.find(".panel_grid_body"), previous = null;
+                        var grid = editor.find(".panel_grid_body"), previous = null, applied = false;
                         // everything from reading the response on runs under the finally that lifts the overlay
                         try {
                             var template_body = parse_grid_body(res);
@@ -358,10 +358,7 @@ jQuery(function(){
                             fill_grid(grid, template_body);
                             parse_content(editor); // recover saved content
                             editor.trigger("auto_save");
-                            // set aside with its handlers and widgets for a rollback that did not come: released
-                            // for good, or jQuery's data store would hold every replaced grid for the life of the page
-                            previous.contents.remove();
-                            modal.modal("hide"); // only now: every failure leaves the list open
+                            applied = true;
                         } catch(error) {
                             // A parser or an auto_save listener threw part-way: a half-built grid that the post content
                             // may not match is worse than no template, so the grid goes back to what it was. The way
@@ -379,6 +376,14 @@ jQuery(function(){
                             // whatever happened above, the overlay must not outlive it
                             hideLoading();
                         }
+                        if(!applied) return;
+                        // Past the guard, where nothing can send the applied template back any more. The grid set
+                        // aside with its handlers and widgets for a rollback that did not come is released for good,
+                        // or jQuery's data store would hold every replaced grid for the life of the page; and only
+                        // now does the list close: every failure leaves it open. A listener of the modal's that
+                        // throws is no failure of the apply.
+                        previous.contents.remove();
+                        try { modal.modal("hide"); } catch(error) { if(window.console) console.error(error); }
                     }).fail(import_failed).always(function(){ modal.removeData("applying_template"); });
                     return false;
                 });
