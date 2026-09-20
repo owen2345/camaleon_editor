@@ -49,9 +49,9 @@ jQuery(function(){
         });
     };
 
-    // Text on its way into a markup string, as element content or inside a quoted attribute. The block
-    // builders assemble their markup by concatenation: a label or a url that went in raw would come
-    // out as markup of its own.
+    // A value on its way into a quoted attribute of a markup string. The block builders assemble their
+    // markup by concatenation: a url holding a quote would end the attribute and go on as markup of
+    // its own. The browser reads the escaped value back as the same url, on the public page too.
     $.fn.gridEditorEscapeHtml = function(text){
         return String(text == null ? "" : text).replace(/[&<>"']/g, function(character){
             return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[character];

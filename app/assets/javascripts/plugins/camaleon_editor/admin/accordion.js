@@ -63,7 +63,8 @@ window.grid_accordion_builder = function (panel, editor) {
 
   // update info for a row
   let update_item = function (tr, title, text) {
-    // a label is text: read from stored content, it goes in as text and never as markup
+    // A label is markup its author wrote. The form lists its source as text, which shows it and runs
+    // nothing; read back as source and written back as it was, it reaches the page unchanged.
     tr.find("td.name").text(title);
     tr.find(".descr").val(text);
 
@@ -72,8 +73,11 @@ window.grid_accordion_builder = function (panel, editor) {
 
   // recover current items
   panel.children(".panel").each(function () {
+    // the label's source, without the chevron the block puts after it
+    const label = $(this).find("> .panel-heading .panel-title > a").first().clone();
+    label.children("i.glyphicon.pull-right").remove();
     add_item(
-      $(this).children(".panel-heading").text(),
+      $.trim(label.length ? label.html() : $(this).children(".panel-heading").text()),
       $(this).find("> div > .panel-body").html(),
     );
   });
@@ -143,7 +147,7 @@ window.grid_accordion_builder = function (panel, editor) {
         index +
         `" aria-expanded="false" aria-controls="collapseOne" class="collapsed">\
             ` +
-        $.fn.gridEditorEscapeHtml($(this).find(".name").text()) +
+        $(this).find(".name").text() +
         `\
             <i class="glyphicon glyphicon-chevron-up pull-right"></i> \
             </a> \

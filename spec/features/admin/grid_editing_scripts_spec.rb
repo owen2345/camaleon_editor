@@ -62,9 +62,9 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     expect(saved_grid_content).to include('<tr><td>Q1</td><td>120</td></tr>')
   end
 
-  # The Tabs, Accordion and Slider forms list the block's items by label (or image url), read back
-  # from the stored block. A label is text: shown as markup, an escaped payload would run here, in
-  # the session of whoever edits the block, after passing every gate as the harmless text it is.
+  # The Tabs and Accordion forms list the block's items by label, read back from the stored block. A
+  # label is markup its author wrote: the form shows its source as text, where nothing runs, and
+  # writes it back as it was, so the saved block - and the public page - keep it unchanged.
   context 'when a block lists its items by a label read from stored content' do
     let(:payload) { '&lt;img src=x onerror="window.__cama_script_ran = true"&gt;Label' }
     let(:blocks) do
@@ -82,15 +82,30 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       }
     end
 
+    it 'keeps the markup of a label through an edit' do
+      store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'], kind: 'tab')))
+      @post.reload.update_column(:content, @post.content.sub(payload, '<b>Bold</b> tab')) # rubocop:disable Rails/SkipsModelValidations
+      open_post_in_editor(@post)
+      find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+
+      expect(page).to have_css('#ow_inline_modal td.name', text: '<b>Bold</b> tab')
+      expect(page).to have_no_css('#ow_inline_modal td.name b')
+      find('#ow_inline_modal .modal_submit').click
+      expect(page).to have_no_css('#ow_inline_modal')
+      expect(saved_grid_content).to include('data-toggle="tab"><b>Bold</b> tab')
+    end
+
     %w[tab accordion].each do |kind|
-      it "lists a #{kind} label as text and saves it back as text" do
+      it "lists a #{kind} label's source as text and saves it back unchanged" do
         store_post_content(@post, grid_post_content(grid_with_block(blocks[kind], kind: kind)))
         open_post_in_editor(@post)
         find('.panel_grid_body .drg_item') # the grid is rebuilt
 
         page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
 
-        expect(page).to have_css('#ow_inline_modal td.name', text: '<img src=x onerror=')
+        expect(page).to have_css('#ow_inline_modal td.name', text: '&lt;img src=x onerror=')
         expect(page).to have_no_css('#ow_inline_modal td.name img')
         find('#ow_inline_modal .modal_submit').click
         expect(page).to have_no_css('#ow_inline_modal')

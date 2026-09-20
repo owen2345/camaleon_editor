@@ -43,7 +43,8 @@ window.grid_tab_builder = function(panel, editor){
 
   // update info for a row
   var update_item = function(tr, title, text){
-    // a label is text: read from stored content, it goes in as text and never as markup
+    // A label is markup its author wrote. The form lists its source as text, which shows it and runs
+    // nothing; read back as source and written back as it was, it reaches the page unchanged.
     tr.find("td.name").text(title);
     tr.find(".descr").val(text);
     return tr;
@@ -51,7 +52,7 @@ window.grid_tab_builder = function(panel, editor){
 
   // recover current items
   panel.find("> .nav-tabs > li").each( function(index, item){
-    add_item($(this).text(), panel.find("> .tab-content > .tab-pane").eq(index).html());
+    add_item($.trim($(this).children("a").html() || $(this).html()), panel.find("> .tab-content > .tab-pane").eq(index).html());
   });
 
   // show form for each accordion
@@ -99,7 +100,7 @@ window.grid_tab_builder = function(panel, editor){
       res1 +=
           '<li role="presentation" class="'+_in+'">' +
             '<a href="#'+id_accor+index+'" ' +
-               'aria-controls="home" role="tab" data-toggle="tab">'+$.fn.gridEditorEscapeHtml($(this).find(".name").text()) +
+               'aria-controls="home" role="tab" data-toggle="tab">'+($(this).find(".name").text()) +
             '</a>' +
           '</li>';
       res2 += '<div role="tabpanel" class="tab-pane '+_in+'" id="'+id_accor+index+'">'+($(this).find("textarea").val())+
