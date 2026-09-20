@@ -53,6 +53,33 @@ RSpec.describe 'Security: grid template markup from a non-admin manager' do
       end
     end
 
+    # What Templates > Settings and a block's Style Settings write, as the browser serializes it into
+    # the style attribute: a grid styled with the editor's own panel must save as a template.
+    it "stores a template styled with the editor's own Style Settings, background image included" do
+      style = 'background-image: url(&quot;/media/1/bg.jpg&quot;); background-position: center center; ' \
+              'background-repeat: no-repeat; background-size: cover; background-attachment: fixed; ' \
+              'background-color: rgb(255, 0, 0); border-style: solid; border-width: 2px; margin-top: 5px;'
+      data_style = '{&quot;b-img&quot;:&quot;/media/1/bg.jpg&quot;}'
+      markup = grid_body_markup(grid_column_markup(grid_block_markup('<p>hello</p>')),
+                                attributes: %(style="#{style}" data-style="#{data_style}"))
+
+      create_template(markup)
+
+      expect(@site.grid_templates.find_by(name: 'Submitted')&.description).to eq(markup)
+    end
+
+    # Only the declarations the panel writes are taken out of the scan: a url that runs script, a
+    # value the panel could not have written, or anything else beside them, is still refused.
+    it 'still refuses a style the Style Settings panel could not have written' do
+      ['style="background-image: url(&quot;javascript:alert(1)&quot;);"',
+       'style="background-image: url(&quot;/a.jpg&quot;), url(&quot;/b.jpg&quot;);"',
+       'style="background-repeat: no-repeat; behavior: url(/x.htc);"',
+       'style="background-size: cover;" onclick="alert(1)"'].each do |attributes|
+        expect { create_template(grid_body_markup(attributes: attributes)) }
+          .not_to(change { @site.grid_templates.count })
+      end
+    end
+
     it 'refuses a media element whose url runs script' do
       expect { create_template(grid_with_block('<video controls><source src="javascript:alert(1)"></video>')) }
         .not_to(change { @site.grid_templates.count })

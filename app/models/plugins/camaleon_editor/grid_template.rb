@@ -13,16 +13,51 @@ class Plugins::CamaleonEditor::GridTemplate < CamaleonCms::TermTaxonomy
   GRID_EXTRA_TAGS = %w[audio video source iframe].freeze
   GRID_EXTRA_ATTRIBUTES = %w[role controls type frameborder allowfullscreen].freeze
 
+  # What the editor's Style Settings panel writes into a style attribute beyond what core's css
+  # scrubber keeps: a background image and how it repeats, sizes and scrolls, in the values the panel
+  # offers and the form the browser serializes them in. The scrubber drops these declarations, which
+  # the scan reads as a removal, so a grid styled with the editor's own panel would be refused.
+  PANEL_STYLE_URL = /(?:&quot;|')?((?:[^"'()\\<>\s;&]|&amp;)+)(?:&quot;|')?/
+  PANEL_STYLE_DECLARATIONS = [
+    /\Abackground-image:\s*url\(#{PANEL_STYLE_URL}\)\z/,
+    /\Abackground-repeat:\s*(?:no-repeat|repeat)\z/,
+    /\Abackground-size:\s*(?:contain|cover)\z/,
+    /\Abackground-attachment:\s*fixed\z/
+  ].freeze
+  STYLE_ATTRIBUTE = /(\sstyle=")([^"]*)(")/
+  # the end of a declaration, not of the character reference a quote or an ampersand is exported as
+  DECLARATION_END = /(?<!&quot|&amp|&#39);/
+
   validate :reject_untrusted_dangerous_description
 
   # True when the scan would refuse this markup from an untrusted author. Also what the
   # camaleon_editor:security:scan_templates task lists stored templates by.
   def self.unsafe_description?(markup)
-    CamaleonCms::UnsafeMarkup.unsafe_html?(markup,
+    CamaleonCms::UnsafeMarkup.unsafe_html?(without_panel_style(markup),
                                            tags: CamaleonCms::Post::CONTENT_ALLOWED_TAGS + GRID_EXTRA_TAGS,
                                            attributes: CamaleonCms::Post::CONTENT_ALLOWED_ATTRIBUTES +
                                                        GRID_EXTRA_ATTRIBUTES)
   end
+
+  # The copy of the markup the scan reads: the declarations above taken out of its double-quoted
+  # style attributes, the way the editor exports them. Only the scan sees the copy - what is stored is
+  # what was written. It fails closed: a declaration that is not one of those to the letter, a url
+  # that runs script, a style attribute written any other way, stays in and is refused as before.
+  def self.without_panel_style(markup)
+    markup.to_s.gsub(STYLE_ATTRIBUTE) do
+      opening, style, closing = Regexp.last_match.captures
+      kept = style.split(DECLARATION_END).reject { |declaration| panel_style_declaration?(declaration.strip) }
+      "#{opening}#{kept.join(';')}#{closing}"
+    end
+  end
+
+  def self.panel_style_declaration?(declaration)
+    match = PANEL_STYLE_DECLARATIONS.lazy.filter_map { |pattern| pattern.match(declaration) }.first
+    return false unless match
+
+    match[1].nil? || !CamaleonCms::UnsafeMarkup.dangerous_uri?(CGI.unescapeHTML(match[1]))
+  end
+  private_class_method :without_panel_style, :panel_style_declaration?
 
   # Opt-out for trusted server-side pipelines (seeds, imports, a site duplication), which run with
   # no signed-in author and would otherwise be held to the scan. As on core's posts: a reader and a
