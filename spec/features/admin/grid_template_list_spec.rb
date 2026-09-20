@@ -15,10 +15,6 @@ RSpec.describe 'managing grid templates after the session is gone', :js do
     find('#grid_table_list .destroy_item') # waits for the list
   end
 
-  def sign_out_behind_the_page
-    page.driver.browser.manage.delete_cookie('auth_token')
-  end
-
   def expect_the_request_to_be_reported
     expect(page).to have_css('#cama_alert_modal', text: 'The request was not completed')
     expect(page).to have_no_css('#cama_custom_loading')

@@ -19,17 +19,13 @@ RSpec.describe 'importing a grid template', :js do
   # handler has either sent its request or not, and a reloaded page would have lost the marker.
   it 'leaves the editor untouched when the confirm is declined' do
     editor_url = page.current_url
-    page.execute_script(<<~'JS')
-      window.__cama_same_page = true;
-      window.__cama_import_requests = 0;
-      jQuery(document).ajaxSend(function(_event, _xhr, options){
-        if(/grid_editor\/\d+$/.test(options.url)) window.__cama_import_requests++;
-      });
-    JS
+    page.execute_script('window.__cama_same_page = true;')
+    watch_template_requests
 
     dismiss_confirm { find('#grid_table_list .import_item').click }
 
-    expect(page.evaluate_script('[window.__cama_same_page, window.__cama_import_requests]')).to eq([true, 0])
+    expect(page.evaluate_script('window.__cama_same_page')).to be(true)
+    expect(template_requests_sent).to eq(0)
     expect(page).to have_current_path(URI(editor_url).path)
     expect(page).to have_css('#grid_table_list .import_item')
     expect(page).to have_no_css('.panel_grid_body .drg_column')
@@ -98,19 +94,16 @@ RSpec.describe 'importing a grid template', :js do
   # the keyboard: Enter on the focused link would start a second apply over the first.
   it 'ignores a second apply while one is under way' do
     find('#grid_table_list .import_item') # the list has arrived
-    page.execute_script(<<~'JS')
+    watch_template_requests
+    page.execute_script(<<~JS)
       window.confirm = function(){ return true; };
-      window.__cama_import_requests = 0;
-      jQuery(document).ajaxSend(function(_event, _xhr, options){
-        if(/grid_editor\/\d+$/.test(options.url)) window.__cama_import_requests++;
-      });
       var link = jQuery('#grid_table_list .import_item').first();
       link.click();
       link.click();
     JS
 
     expect(page).to have_css('.panel_grid_body .drg_column')
-    expect(page.evaluate_script('window.__cama_import_requests')).to eq(1)
+    expect(template_requests_sent).to eq(1)
   end
 
   it 'loads the template into the grid when the confirm is accepted' do
@@ -124,11 +117,7 @@ RSpec.describe 'importing a grid template', :js do
   # dropped connection - and the editor must come back usable. The dummy app re-raises server errors
   # into the example, so the failure is produced in the browser: the request is aborted as it leaves.
   it 'reports a failed import and releases the editor' do
-    page.execute_script(<<~'JS')
-      jQuery.ajaxPrefilter(function(options, _original, xhr){
-        if(/grid_editor\/\d+$/.test(options.url)) xhr.abort();
-      });
-    JS
+    abort_template_requests
 
     apply_listed_template
 
@@ -149,11 +138,7 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('.panel_grid_body .drg_column', count: 1)
     open_templates_list
     find('#grid_table_list .import_item')
-    page.execute_script(<<~'JS')
-      jQuery(document).ajaxComplete(function(_event, xhr, options){
-        if(/grid_editor\/\d+$/.test(options.url)) window.__cama_import_response = xhr.responseText;
-      });
-    JS
+    watch_template_requests
   end
 
   def expect_the_grid_untouched
@@ -165,12 +150,12 @@ RSpec.describe 'importing a grid template', :js do
 
   it 'refuses a redirected response instead of writing that page into the grid' do
     fill_the_grid_and_reopen_the_list
-    page.driver.browser.manage.delete_cookie('auth_token')
+    sign_out_behind_the_page
 
     apply_listed_template
 
     expect_the_grid_untouched
-    expect(page.evaluate_script('window.__cama_import_response')).to include('type="password"')
+    expect(template_response).to include('type="password"')
   end
 
   # The other redirect core issues: a permission refused mid-session sends the request to the
@@ -179,13 +164,13 @@ RSpec.describe 'importing a grid template', :js do
     fill_the_grid_and_reopen_the_list
     # the list was opened by the administrator; the session now becomes one the editor refuses
     refused = user_with_manager_grants({}, 'no-grants')
-    page.driver.browser.manage.delete_cookie('auth_token')
+    sign_out_behind_the_page
     admin_sign_in(refused.username, refused.password)
 
     apply_listed_template
 
     expect_the_grid_untouched
-    response = page.evaluate_script('window.__cama_import_response')
+    response = template_response
     expect(response).to include('id="admin_content"')
     expect(response).not_to include('type="password"')
   end

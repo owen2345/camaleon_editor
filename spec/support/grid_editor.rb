@@ -39,10 +39,42 @@ def store_template_markup(template, markup)
 end
 
 def open_post_in_editor(post)
-  store_current_site(@site)
-  plugin_install('camaleon_editor')
-  admin_sign_in
-  visit "#{cama_root_relative_path}/admin/post_type/#{post.post_type.id}/posts/#{post.id}/edit"
+  install_plugin_and_open_post_editor(post: post)
+end
+
+# The session ends while the page stays open: what the page sends next is redirected to the login page.
+def sign_out_behind_the_page
+  page.driver.browser.manage.delete_cookie('auth_token')
+end
+
+# Counts the requests the page sends for a template's markup, and keeps the last answer.
+def watch_template_requests
+  page.execute_script(<<~'JS')
+    window.__cama_template_requests = {sent: 0, response: null};
+    jQuery(document).ajaxSend(function(_event, _xhr, options){
+      if(/grid_editor\/\d+$/.test(options.url)) window.__cama_template_requests.sent++;
+    }).ajaxComplete(function(_event, xhr, options){
+      if(/grid_editor\/\d+$/.test(options.url)) window.__cama_template_requests.response = xhr.responseText;
+    });
+  JS
+end
+
+def template_requests_sent
+  page.evaluate_script('window.__cama_template_requests.sent')
+end
+
+def template_response
+  page.evaluate_script('window.__cama_template_requests.response')
+end
+
+# The dummy app re-raises server errors into the example, so a failed request for a template's
+# markup is produced in the browser: aborted as it leaves.
+def abort_template_requests
+  page.execute_script(<<~'JS')
+    jQuery.ajaxPrefilter(function(options, _original, xhr){
+      if(/grid_editor\/\d+$/.test(options.url)) xhr.abort();
+    });
+  JS
 end
 
 def open_grid_editor

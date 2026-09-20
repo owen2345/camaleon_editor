@@ -129,7 +129,7 @@ RSpec.describe 'the grid editor templates menu', :js do
       wait_for_ajax
       expect(abilities('urls').size).to eq(1)
 
-      page.driver.browser.manage.delete_cookie('auth_token')
+      sign_out_behind_the_page
       author = use_only_author
       admin_sign_in(author.username, author.password)
       open_templates_menu
