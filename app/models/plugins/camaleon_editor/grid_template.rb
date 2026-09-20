@@ -5,6 +5,13 @@
 class Plugins::CamaleonEditor::GridTemplate < CamaleonCms::TermTaxonomy
   default_scope { where(taxonomy: :grid_template) }
 
+  # What the editor's own Tabs, Accordion, Slider, Video and Audio blocks write beyond core's post
+  # content allowlist, none of which runs script: ARIA roles, and media elements whose urls the scan
+  # holds to the same schemes as an image's. Without them the scan would refuse the stock blocks of
+  # the editor the template was built in. An iframe stays an embed: refused from an untrusted author.
+  GRID_EXTRA_TAGS = %w[audio video source].freeze
+  GRID_EXTRA_ATTRIBUTES = %w[role controls type].freeze
+
   validate :reject_untrusted_dangerous_description
 
   private
@@ -20,10 +27,17 @@ class Plugins::CamaleonEditor::GridTemplate < CamaleonCms::TermTaxonomy
 
     if CamaleonCms::UnsafeMarkup.too_large?(description)
       errors.add(:description, content_rejection_message('content_too_large'))
-    elsif CamaleonCms::UnsafeMarkup.unsafe_html?(description, tags: CamaleonCms::Post::CONTENT_ALLOWED_TAGS,
-                                                              attributes: CamaleonCms::Post::CONTENT_ALLOWED_ATTRIBUTES)
+    elsif CamaleonCms::UnsafeMarkup.unsafe_html?(description, tags: allowed_tags, attributes: allowed_attributes)
       errors.add(:description, content_rejection_message('content_rejected'))
     end
+  end
+
+  def allowed_tags
+    CamaleonCms::Post::CONTENT_ALLOWED_TAGS + GRID_EXTRA_TAGS
+  end
+
+  def allowed_attributes
+    CamaleonCms::Post::CONTENT_ALLOWED_ATTRIBUTES + GRID_EXTRA_ATTRIBUTES
   end
 
   def scan_description?

@@ -33,6 +33,34 @@ RSpec.describe 'Security: grid template markup from a non-admin manager' do
       expect(@site.grid_templates.find_by(name: 'Submitted').description).to eq(grid)
     end
 
+    # The markup the editor's own block builders write: a template built from stock blocks must save.
+    {
+      'Tabs' => '<ul class="nav nav-tabs" role="tablist"><li role="presentation" class="active">' \
+                '<a href="#t0" aria-controls="home" role="tab" data-toggle="tab">One</a></li></ul>' \
+                '<div class="tab-content"> <div role="tabpanel" class="tab-pane active" id="t0">x</div> </div>',
+      'Slider' => '<div class="carousel-inner" role="listbox"> <div class="item active"><img src="/a.png" alt=""> ' \
+                  '</div> </div><a class="left carousel-control" href="#c" role="button" data-slide="prev">' \
+                  '<span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span></a>',
+      'Video' => '<video width="100%" controls><source src="/v.mp4" type="video/mp4"></video>',
+      'Audio' => '<audio width="100%" controls src="/a.mp3"></audio>'
+    }.each do |block, markup|
+      it "stores a template holding the editor's own #{block} block" do
+        create_template(grid_with_block(markup))
+
+        expect(@site.grid_templates.find_by(name: 'Submitted')&.description).to eq(grid_with_block(markup))
+      end
+    end
+
+    it 'refuses a media element whose url runs script' do
+      expect { create_template(grid_with_block('<video controls><source src="javascript:alert(1)"></video>')) }
+        .not_to(change { @site.grid_templates.count })
+    end
+
+    it 'refuses an embedded frame' do
+      expect { create_template(grid_with_block('<iframe src="https://www.youtube.com/embed/abc"></iframe>')) }
+        .not_to(change { @site.grid_templates.count })
+    end
+
     it 'refuses an inline event handler and stores nothing' do
       expect { create_template(grid_with_block('<img src="x" onerror="alert(1)">')) }
         .not_to(change { @site.grid_templates.count })
