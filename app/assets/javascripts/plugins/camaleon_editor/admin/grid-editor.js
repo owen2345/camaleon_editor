@@ -85,7 +85,16 @@ jQuery(function(){
             $.fn.gridEditor_request_failed();
             return false;
         }
-        show(res);
+        // Showing the panel runs code that is not the editor's - core's modal, its listeners - inside the
+        // request's own callback. A throw there would go up through jQuery, which then skips every
+        // callback still to come: the overlay would stay, and whatever sent the request stay busy.
+        try {
+            show(res);
+        } catch(error) {
+            if(window.console) console.error(error);
+            $.fn.gridEditor_request_failed();
+            return false;
+        }
         hideLoading();
         return true;
     };

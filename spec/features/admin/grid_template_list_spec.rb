@@ -119,6 +119,24 @@ RSpec.describe 'managing grid templates after the session is gone', :js do
       expect(page).to have_no_css('#ow_inline_modal')
     end
 
+    # The panel is shown from inside the request's callback, by code that is not the editor's. A throw
+    # there must not leave the overlay up and the Templates menu dead until the page is reloaded.
+    it 'reports a panel that fails to show, and opens the next one' do
+      expect(page).to have_no_css('#ow_inline_modal')
+      page.execute_script(<<~JS)
+        var open = window.open_modal;
+        window.open_modal = function(){ window.open_modal = open; throw new Error('modal broke'); };
+      JS
+
+      open_templates_list
+      expect_the_request_to_be_reported
+      first('#cama_alert_modal .close, #cama_alert_modal [data-dismiss="modal"]').click
+      expect(page).to have_no_css('#cama_alert_modal')
+
+      open_templates_list
+      expect(page).to have_css('#ow_inline_modal #grid_table_list')
+    end
+
     it 'still opens the template form for a manager, filled with the current grid' do
       open_templates_menu
       find('.grid_editor_menu .new_template').click
