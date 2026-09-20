@@ -64,6 +64,22 @@ RSpec.describe 'managing grid templates after the session is gone', :js do
     expect(@template.reload.name).to eq('Half column')
   end
 
+  # The overlay stops the mouse, not Enter on the button that keeps the focus: a second submit while
+  # the first is under way would store the template twice.
+  it 'saves a new template once when the form is submitted twice' do
+    find('#ow_inline_modal .close').click
+    expect(page).to have_no_css('#ow_inline_modal')
+    open_templates_menu
+    find('.grid_editor_menu .new_template').click
+    fill_in 'grid_template[name]', with: 'Saved once'
+
+    page.execute_script("var form = jQuery('#grid_template_form'); form.submit(); form.submit();")
+
+    expect(page).to have_css('#grid_table_list td', text: 'Saved once')
+    wait_for_ajax
+    expect(@site.grid_templates.where(name: 'Saved once').count).to eq(1)
+  end
+
   it 'still swaps in the form and the list for a signed-in manager' do
     find('#grid_table_list .edit_item').click
     fill_in 'grid_template[name]', with: 'Renamed'

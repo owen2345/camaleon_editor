@@ -18,10 +18,12 @@
             form.validate({
                 submitHandler: function(form){
                     form = $(form);
-                    showLoading();
-                    $.post(form.attr("action"), form.serialize(), function(res){
-                        $.fn.gridEditor_show_templates_panel(res, function(panel){ form.replaceWith(panel); });
-                    }).fail($.fn.gridEditor_request_failed);
+                    // Enter twice on the focused button would otherwise save the template twice
+                    $.fn.gridEditor_one_request(form.closest(".modal"), function(){
+                        return $.post(form.attr("action"), form.serialize(), function(res){
+                            $.fn.gridEditor_show_templates_panel(res, function(panel){ form.replaceWith(panel); });
+                        }).fail($.fn.gridEditor_request_failed);
+                    });
                     return false;
                 }
             });

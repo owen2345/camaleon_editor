@@ -24,15 +24,21 @@
         var show_panel = function(res){
             $.fn.gridEditor_show_templates_panel(res, function(panel){ table.parent().html(panel); });
         };
+        // the modal outlives the panels swapped inside it, so it is what is busy during a request
+        var modal = table.closest(".modal");
         table.on("click", ".destroy_item", function(){
-            if(!confirm($(this).attr("data-message"))) return false;
-            showLoading();
-            $.ajax({type: "delete", url: $(this).attr("href")}).done(show_panel).fail($.fn.gridEditor_request_failed);
+            var url = $(this).attr("href");
+            if(modal.data("grid_editor_request") || !confirm($(this).attr("data-message"))) return false;
+            $.fn.gridEditor_one_request(modal, function(){
+                return $.ajax({type: "delete", url: url}).done(show_panel).fail($.fn.gridEditor_request_failed);
+            });
             return false;
         });
         table.on("click", ".edit_item", function(){
-            showLoading();
-            $.get($(this).attr("href"), show_panel).fail($.fn.gridEditor_request_failed);
+            var url = $(this).attr("href");
+            $.fn.gridEditor_one_request(modal, function(){
+                return $.get(url, show_panel).fail($.fn.gridEditor_request_failed);
+            });
             return false;
         });
     })

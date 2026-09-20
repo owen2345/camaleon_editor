@@ -90,6 +90,17 @@ jQuery(function(){
         return true;
     };
 
+    // One request at a time for whatever holds the control that sends it (the modal, the editor). The
+    // loading overlay stops the mouse, not Enter on the control that keeps the focus: a second apply
+    // over the first, a template saved twice. send() returns the request; nothing is sent while the
+    // holder is busy.
+    $.fn.gridEditor_one_request = function(holder, send){
+        if(holder.data("grid_editor_request")) return;
+        holder.data("grid_editor_request", true);
+        showLoading();
+        send().always(function(){ holder.removeData("grid_editor_request"); });
+    };
+
     // Opens the panel a templates menu link points at - the list, the template form - in a modal.
     // Core's ajax_modal would show whatever a 200 carries, and the menu is built from what the page
     // knew when it loaded: a session gone or a permission taken away since then comes back as the
@@ -98,12 +109,13 @@ jQuery(function(){
         links.click(function(e){
             e.preventDefault();
             var link = $(this);
-            showLoading();
-            $.get(link.attr("href")).done(function(res){
-                $.fn.gridEditor_show_templates_panel(res, function(panel){
-                    open_modal({title: link.attr("title"), content: panel, callback: callback});
-                });
-            }).fail($.fn.gridEditor_request_failed);
+            $.fn.gridEditor_one_request(link.closest(".panel_grid_editor"), function(){
+                return $.get(link.attr("href")).done(function(res){
+                    $.fn.gridEditor_show_templates_panel(res, function(panel){
+                        open_modal({title: link.attr("title"), content: panel, callback: callback});
+                    });
+                }).fail($.fn.gridEditor_request_failed);
+            });
         });
     }
 
@@ -366,11 +378,10 @@ jQuery(function(){
                 // The link goes nowhere (its url travels as data) and every path returns false. A failure
                 // leaves the list open, so another template can be picked.
                 modal.on("click", ".import_item", function(){
-                    // one apply at a time: the overlay below stops the mouse, not Enter on the link that keeps the focus
-                    if(modal.data("applying_template") || !confirm($(this).attr("data-message"))) return false;
-                    modal.data("applying_template", true);
-                    showLoading();
-                    $.get($(this).attr("data-url"), function(res){
+                    var url = $(this).attr("data-url");
+                    // one apply at a time, and no prompt for one that would not be sent
+                    if(modal.data("grid_editor_request") || !confirm($(this).attr("data-message"))) return false;
+                    $.fn.gridEditor_one_request(modal, function(){ return $.get(url, function(res){
                         var grid = editor.find(".panel_grid_body"), previous = null, applied = false;
                         // everything from reading the response on runs under the finally that lifts the overlay
                         try {
@@ -407,7 +418,7 @@ jQuery(function(){
                         // throws is no failure of the apply.
                         previous.contents.remove();
                         try { modal.modal("hide"); } catch(error) { if(window.console) console.error(error); }
-                    }).fail(import_failed).always(function(){ modal.removeData("applying_template"); });
+                    }).fail(import_failed); });
                     return false;
                 });
             });
