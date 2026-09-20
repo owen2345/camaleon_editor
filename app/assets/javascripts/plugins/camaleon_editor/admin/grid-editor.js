@@ -145,7 +145,7 @@ jQuery(function(){
         // empty grid, its first change would be auto-saved over the content nobody got to see.
         var saved_body = null;
         if(!existing_editor && $.fn.isGridEditorContent(textarea.val())){
-            saved_body = parse_grid_body(textarea.val());
+            saved_body = parse_grid_body(textarea.val(), true);
             if(!saved_body){
                 content_unreadable();
                 return textarea;
@@ -228,8 +228,10 @@ jQuery(function(){
         // The grid body in a fetched template or in saved post content, or null when there is none. A refused or signed
         // out request is redirected, and the request follows it to a 200: without this check the
         // dashboard or login page would be written into the grid and auto-saved over the post content.
-        function parse_grid_body(res){
-            var elements = parse_inert($.fn.skipGridEditorLibraries(String(res)));
+        // whole: for saved post content, which has to be the grid and nothing else - see below
+        function parse_grid_body(res, whole){
+            var nodes = parse_nodes($.trim($.fn.skipGridEditorLibraries(String(res))));
+            var elements = $(nodes).filter(function(){ return this.nodeType === 1; });
             var bodies = elements.filter(".panel_grid_body");
             // The editor holds one grid. Content with several would open as its first alone, and lose the
             // rest at the next auto_save: it is not read at all, which leaves it where it is.
@@ -247,7 +249,20 @@ jQuery(function(){
                 // prose, an error message, a marker that was not taken off - is not one
                 if(!body.length) body = elements.filter(function(){ return $(this).children("[data-col]").length > 0; }).first();
             }
-            return body.length ? body : null;
+            if(!body.length) return null;
+            // A template is applied for its grid, and what trails it is let go. Saved content is another
+            // matter: the editor saves the grid alone, so anything beside it - a paragraph after the grid, a
+            // stylesheet link before it - would go at the first auto_save. Such content is not read as a grid.
+            if(whole && $.grep(nodes, function(node){ return !holds(node, body[0]) && carries_content(node); }).length) return null;
+            return body;
+        }
+        function holds(node, element){ return node === element || (node.nodeType === 1 && $.contains(node, element)); }
+        // what TinyMCE leaves around a block counts for nothing: blank text, a comment, a br, an empty p, div or span
+        function carries_content(node){
+            if(node.nodeType === 3) return $.trim(node.nodeValue) !== "";
+            if(node.nodeType !== 1) return false;
+            if(node.tagName === "BR") return false;
+            return !(/^(P|DIV|SPAN)$/.test(node.tagName) && !node.children.length && $.trim(node.textContent) === "");
         }
 
         // the style of the whole grid (Templates > Settings) lives on the grid's root, not inside it
