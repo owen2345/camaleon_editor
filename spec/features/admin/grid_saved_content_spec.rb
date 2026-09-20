@@ -96,6 +96,19 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(saved_grid_content).to include(pasted)
   end
 
+  # The export takes the editor's chrome off the grid's own columns and blocks. What a block holds may
+  # carry the same names - a Bootstrap button, a header box of its own - and is not the editor's to strip.
+  it 'leaves the classes and boxes of grid markup held by a block alone at export' do
+    held = '<a class="btn btn-default" href="#"><span class="header_box">Buy</span> now</a>'
+    pasted = grid_body_markup(grid_column_markup(held))
+    store_post_content(@post, grid_post_content(grid_with_block(pasted)))
+    open_post_in_editor(@post)
+
+    expect(page).to have_css('.panel_grid_editor .drg_item .panel_grid_body', visible: :all)
+    trigger_grid_auto_save
+    expect(saved_grid_content).to include(pasted)
+  end
+
   # The editor saves the grid and nothing else: content with more to it than the grid would lose the
   # rest at the first auto_save, so it is not opened as a grid.
   it 'keeps content with markup beside the grid in the text editor' do

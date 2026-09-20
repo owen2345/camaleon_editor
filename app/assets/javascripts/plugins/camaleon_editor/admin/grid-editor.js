@@ -276,7 +276,8 @@ jQuery(function(){
             container.children().each(function(){
                 var col = $(this).removeClass("drg_column grid-col-built btn-default btn ui-draggable ui-draggable-handle ui-draggable-dragging ui-sortable-handle");
                 col.children(".header_box").remove();
-                col.find(".grid_sortable_items").removeClass("ui-sortable").children().each(function(){ //contents
+                // the column's own area and blocks: what a block holds is content, chrome-like names included
+                col.children(".grid_sortable_items").removeClass("ui-sortable").children().each(function(){ //contents
                     $(this).removeClass("drg_item btn-default grid-item-built btn ui-draggable ui-draggable-dragging ui-sortable-handle ui-draggable-handle").children(".header_box").remove();
                 });
             });
