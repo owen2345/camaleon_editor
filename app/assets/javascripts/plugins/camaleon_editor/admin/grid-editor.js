@@ -56,6 +56,9 @@ jQuery(function(){
         $.fn.alert({type: "error", title: I18n("grid_editor."+key, english)});
     }
     function import_failed(){ report_failure("import_failed", "The template could not be loaded."); }
+    function content_unreadable(){
+        report_failure("content_unreadable", "This content is marked as a grid but could not be read as a grid, so it stays in the text editor.");
+    }
 
     // The templates modal swaps its content for what its requests return: the list, or the template
     // form. A signed-out or refused request is redirected and comes back as a 200 carrying the login
@@ -106,7 +109,7 @@ jQuery(function(){
         // empty grid, its first change would be auto-saved over the content nobody got to see.
         var saved_body = $.fn.isGridEditorContent(textarea.val()) ? parse_grid_body(textarea.val()) : null;
         if($.fn.isGridEditorContent(textarea.val()) && !saved_body && !textarea.prev().hasClass("panel_grid_editor")){
-            report_failure("content_unreadable", "This content is marked as a grid but could not be read as a grid, so it stays in the text editor.");
+            content_unreadable();
             return textarea;
         }
         gridEditor_id ++;
@@ -463,7 +466,19 @@ jQuery(function(){
             //});
         }
 
-        do_editor_menus(editor);
+        // Rebuilding saved content runs the same parsers an applied template goes through, and the text
+        // editor is hidden by now with the grid editor not in the page yet: a throw here would leave
+        // neither. The content then stays in the text editor, like content that could not be read at all.
+        try {
+            do_editor_menus(editor);
+        } catch(error) {
+            if(!saved_body) throw error;
+            if(window.console) console.error(error);
+            editor.remove();
+            tinymce_panel.show();
+            content_unreadable();
+            return textarea;
+        }
         // inserted natively: jQuery's before() would run the scripts of the grid just rebuilt from saved content
         // like jQuery's before(), nothing to do for a field that is not in a document yet
         if(textarea[0].parentNode) textarea[0].parentNode.insertBefore(editor[0], textarea[0]);

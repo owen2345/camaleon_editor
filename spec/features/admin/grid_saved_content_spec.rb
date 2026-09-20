@@ -30,6 +30,25 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
   end
 
+  # Reading the content is one thing, rebuilding the grid from it another: the column and block
+  # parsers, and the widgets they set up, can throw on a grid they do not expect. By then the text
+  # editor is hidden and the grid editor is not in the page yet.
+  it 'keeps the content in the text editor when rebuilding the grid throws' do
+    open_post_in_editor(@post)
+    find('.mce-tinymce')
+    content = grid_post_content(grid_with_block('<p>kept</p>'))
+
+    page.execute_script(<<~JS, content)
+      jQuery.fn.sortable = function(){ throw new Error('widget broke'); };
+      jQuery('#form-post textarea.tinymce_textarea').first().val(arguments[0]).gridEditor(tinymce.activeEditor);
+    JS
+
+    expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
+    expect(page).to have_css('.mce-tinymce')
+    expect(page).to have_no_css('.panel_grid_editor')
+    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').first().val()")).to eq(content)
+  end
+
   # A theme hook or a hand edit can leave an id or a class of its own on the grid root; the public
   # page may style by them, so they have to survive the editor.
   it 'keeps the attributes the saved grid root carries' do
