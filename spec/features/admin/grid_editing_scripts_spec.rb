@@ -132,6 +132,23 @@ RSpec.describe 'working on a grid that holds scripts', :js do
         expect(saved_grid_content).to include('Q &amp; A')
         expect(saved_grid_content).not_to include('&amp;amp;')
       end
+
+      # Text that spells a character reference is source as well: read as its text and written back as
+      # that text reads, "&amp;amp;" would lose a level of escaping at every save of the block, and the
+      # public page would show another label each time.
+      it "saves a #{kind} label whose text spells a character reference as it was stored" do
+        block = blocks[kind].sub(payload, 'Use &amp;amp; here')
+        store_post_content(@post, grid_post_content(grid_with_block(block, kind: kind)))
+        open_post_in_editor(@post)
+        find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+        page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+
+        expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'Use &amp;amp; here')
+        find('#ow_inline_modal .modal_submit').click
+        expect(page).to have_no_css('#ow_inline_modal')
+        expect(saved_grid_content).to include('Use &amp;amp; here')
+      end
     end
 
     it 'keeps the markup of a label through an edit' do

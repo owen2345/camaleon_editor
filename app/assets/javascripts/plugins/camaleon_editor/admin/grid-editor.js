@@ -26,17 +26,20 @@ jQuery(function(){
     // A block item's label, as the block's form lists and edits it. A label of plain text reads as its
     // text ("Q & A", not "Q &amp; A"). One that holds markup - an icon, a bold word - reads as its
     // source, and so does text that spells a tag: decoded, an escaped "<img onerror=...>" would go back
-    // into the block as the element it only named.
+    // into the block as the element it only named. Text that spells a character reference is source
+    // for the same reason: "&amp;amp;" read as "&amp;" would go back as the ampersand it only named.
+    // The escaping is the form's alone: what the block stores, and the public page shows, stays as it was.
+    function label_is_markup(label){ return /<|&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/i.test(label); }
     $.fn.gridEditorLabelSource = function(element){
         element = $(element);
         if(!element.length) return "";
         var text = element.text();
-        return $.trim(!element.children().length && text.indexOf("<") < 0 ? text : element.html());
+        return $.trim(!element.children().length && !label_is_markup(text) ? text : element.html());
     };
-    // The other way: a label that holds a tag or a character reference is markup source and goes into
-    // the block as it is; any other is text, and is escaped like text.
+    // The other way, by the same rule: a label that holds a tag or a character reference is markup
+    // source and goes into the block as it is; any other is text, and is escaped like text.
     $.fn.gridEditorLabelMarkup = function(label){
-        return /<|&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/i.test(label) ? label : $.fn.gridEditorEscapeHtml(label);
+        return label_is_markup(label) ? label : $.fn.gridEditorEscapeHtml(label);
     };
 
     // Markup parsed in a document of its own, where parsing loads and runs nothing, with its scripts
