@@ -63,10 +63,10 @@ jQuery(function(){
     var inert_document = null;
     function inert(){ return inert_document || (inert_document = document.implementation.createHTMLDocument("")); }
     function parse_nodes(markup){ return $.parseHTML(String(markup), inert(), true) || []; }
+    // the elements among parsed nodes
+    function elements_of(nodes){ return $(nodes).filter(function(){ return this.nodeType === 1; }); }
     // the top-level elements of markup that came from the server
-    function parse_inert(markup){
-        return $(parse_nodes($.trim(String(markup)))).filter(function(){ return this.nodeType === 1; });
-    }
+    function parse_inert(markup){ return elements_of(parse_nodes($.trim(String(markup)))); }
 
     // Sets an element's markup without running the scripts in it. jQuery's html() evaluates every
     // inline script of what it inserts; a grid's scripts are content for the public page, where the
@@ -284,7 +284,7 @@ jQuery(function(){
         // whole: for saved post content, which has to be the grid and nothing else - see below
         function parse_grid_body(res, whole){
             var nodes = parse_nodes($.trim($.fn.skipGridEditorLibraries(String(res))));
-            var elements = $(nodes).filter(function(){ return this.nodeType === 1; });
+            var elements = elements_of(nodes);
             var bodies = elements.filter(".panel_grid_body");
             // The editor holds one grid. Content with several would open as its first alone, and lose the
             // rest at the next auto_save: it is not read at all, which leaves it where it is.
