@@ -151,6 +151,45 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       end
     end
 
+    # A "<" that opens no tag of the label's own is text the author typed. Written as it is, "x<y"
+    # would open a tag that runs on over the markup of the block behind it, and the next edit would
+    # find one tab where there were two.
+    it 'writes a typed label with a stray "<" as text, and lists it as it was typed' do
+      second = '<li role="presentation"><a href="#t1" role="tab" data-toggle="tab">Two</a></li>'
+      two_tabs = blocks['tab'].sub(payload, 'One').sub('</li></ul>', "</li>#{second}</ul>")
+      store_post_content(@post, grid_post_content(grid_with_block(two_tabs, kind: 'tab')))
+      open_post_in_editor(@post)
+      find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      first('#ow_inline_modal a.edit_item').click
+      find('#cama_editor_modal2 input.name').set('x<y')
+      find('#cama_editor_modal2 .modal_submit').click
+      expect(page).to have_no_css('#cama_editor_modal2')
+      find('#ow_inline_modal .modal_submit').click
+      expect(page).to have_no_css('#ow_inline_modal', visible: :all) # gone, not just hidden: it is opened again
+
+      expect(saved_grid_content).to include('data-toggle="tab">x&lt;y</a>')
+      expect(page).to have_css('.panel_grid_body .nav-tabs > li', count: 2, visible: :all)
+
+      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'x<y')
+    end
+
+    it 'lists a label with a "<" that opens no tag as its text' do
+      block = blocks['tab'].sub(payload, 'a &lt; b')
+      store_post_content(@post, grid_post_content(grid_with_block(block, kind: 'tab')))
+      open_post_in_editor(@post)
+      find('.panel_grid_body .drg_item') # the grid is rebuilt
+
+      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+
+      expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'a < b')
+      find('#ow_inline_modal .modal_submit').click
+      expect(page).to have_no_css('#ow_inline_modal')
+      expect(saved_grid_content).to include('data-toggle="tab">a &lt; b</a>')
+    end
+
     it 'keeps the markup of a label through an edit' do
       store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'], kind: 'tab')))
       @post.reload.update_column(:content, @post.content.sub(payload, '<b>Bold</b> tab')) # rubocop:disable Rails/SkipsModelValidations

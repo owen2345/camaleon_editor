@@ -29,7 +29,21 @@ jQuery(function(){
     // into the block as the element it only named. Text that spells a character reference is source
     // for the same reason: "&amp;amp;" read as "&amp;" would go back as the ampersand it only named.
     // The escaping is the form's alone: what the block stores, and the public page shows, stays as it was.
-    function label_is_markup(label){ return /<|&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/i.test(label); }
+    //
+    // A "<" makes markup of a label only when it opens a tag of the label's own. The label is parsed
+    // with an element behind it, in the inert document: "x<y" or "a < b" leaves no element but that
+    // one, or takes it along into a tag that never ends, as it would the markup of the block. Such a
+    // label is text the author typed, and is escaped like text.
+    function label_is_markup(label){
+        label = String(label);
+        if(label.indexOf("<") >= 0){
+            var probe = inert().createElement("div");
+            probe.innerHTML = label + "<i data-grid-label-end></i>";
+            if(!probe.querySelector("i[data-grid-label-end]")) return false;
+            if(probe.getElementsByTagName("*").length > 1 || /<[!?]/.test(label)) return true;
+        }
+        return /&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/i.test(label);
+    }
     $.fn.gridEditorLabelSource = function(element){
         element = $(element);
         if(!element.length) return "";
@@ -47,10 +61,8 @@ jQuery(function(){
     // table row or a cell parsed as one, a self-closed <div/> expanded. One document serves every
     // parse; the nodes are only read or moved out of it.
     var inert_document = null;
-    function parse_nodes(markup){
-        if(!inert_document) inert_document = document.implementation.createHTMLDocument("");
-        return $.parseHTML(String(markup), inert_document, true) || [];
-    }
+    function inert(){ return inert_document || (inert_document = document.implementation.createHTMLDocument("")); }
+    function parse_nodes(markup){ return $.parseHTML(String(markup), inert(), true) || []; }
     // the top-level elements of markup that came from the server
     function parse_inert(markup){
         return $(parse_nodes($.trim(String(markup)))).filter(function(){ return this.nodeType === 1; });
