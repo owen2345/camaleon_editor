@@ -286,4 +286,24 @@ RSpec.describe 'importing a grid template', :js do
     expect(saved_grid_content).not_to include('data-col="12"')
     expect(page).to have_css('#grid_table_list .import_item')
   end
+
+  # The grid that goes back can hold embed scripts of its own, which must stay as inert on the way
+  # back as they were on the way in.
+  it 'puts a previous grid with a script back without running the script' do
+    store_template_with_embed
+    apply_listed_template
+    expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
+
+    store_template_markup(@template, grid_body_markup(grid_column_markup(col: 12, title: '100%')))
+    page.execute_script(<<~JS)
+      jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
+    JS
+    open_templates_list
+    apply_listed_template
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
+    expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
+    expect(saved_grid_content).to include('<script>window.__cama_widget_loaded = true;</script>')
+    expect(page.evaluate_script('window.__cama_widget_loaded')).to be_nil
+  end
 end
