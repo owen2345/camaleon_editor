@@ -89,9 +89,19 @@ jQuery(function(){
         });
     };
 
-    // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too.
+    // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too. The
+    // alert is core's modal, often the very code whose throw is being reported, and the report runs
+    // inside a request's callback: thrown on from here it would make jQuery skip the callbacks still
+    // to come and leave whatever sent the request busy. The browser's own alert says it then.
     function report_failure(key, english){
-        $.fn.alert({type: "error", title: I18n("grid_editor."+key, english)});
+        var message = I18n("grid_editor."+key, english);
+        try {
+            $.fn.alert({type: "error", title: message});
+        } catch(error) {
+            if(window.console) console.error(error);
+            hideLoading();
+            window.alert(message);
+        }
     }
     function import_failed(){ report_failure("import_failed", "The template could not be loaded."); }
     function content_unreadable(){

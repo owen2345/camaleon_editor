@@ -137,6 +137,27 @@ RSpec.describe 'managing grid templates after the session is gone', :js do
       expect(page).to have_css('#ow_inline_modal #grid_table_list')
     end
 
+    # The report goes through the same modal code as the panel. When that code throws every time, not
+    # once, the report must not throw on out of the request's callback in its turn: the message
+    # still reaches the author, and the menu is free for the next request.
+    it 'reports through the browser when the alert cannot be shown either' do
+      expect(page).to have_no_css('#ow_inline_modal')
+      page.execute_script(<<~JS)
+        var open = window.open_modal, broken = 2;
+        window.open_modal = function(){
+          if(broken-- > 0) throw new Error('modal broke');
+          return open.apply(this, arguments);
+        };
+      JS
+
+      message = accept_alert { open_templates_list }
+      expect(message).to include('The request was not completed')
+      expect(page).to have_no_css('#cama_custom_loading')
+
+      open_templates_list
+      expect(page).to have_css('#ow_inline_modal #grid_table_list')
+    end
+
     it 'still opens the template form for a manager, filled with the current grid' do
       open_templates_menu
       find('.grid_editor_menu .new_template').click
