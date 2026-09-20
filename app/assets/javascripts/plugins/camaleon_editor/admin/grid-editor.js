@@ -553,10 +553,11 @@ jQuery(function(){
         try {
             do_editor_menus(editor);
         } catch(error) {
-            if(!saved_body) throw error;
-            if(window.console) console.error(error);
+            // either way the half-built editor goes and the text editor comes back
             editor.remove();
             tinymce_panel.show();
+            if(!saved_body) throw error; // nothing of the content's doing: the error is the caller's to see
+            if(window.console) console.error(error);
             content_unreadable();
             return textarea;
         }

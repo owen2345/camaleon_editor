@@ -122,6 +122,19 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').first().val()")).to eq(content)
   end
 
+  # The same goes for content that is no grid yet: when building the editor throws, the text editor
+  # must not stay hidden behind an editor that never arrived.
+  it 'brings the text editor back when building the editor over ordinary content throws' do
+    open_post_in_editor(@post)
+    find('.mce-tinymce')
+    page.execute_script("jQuery.fn.tooltip = function(){ throw new Error('widget broke'); };")
+
+    accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
+
+    expect(page).to have_css('.mce-tinymce')
+    expect(page).to have_no_css('.panel_grid_editor')
+  end
+
   # A theme hook or a hand edit can leave an id or a class of its own on the grid root; the public
   # page may style by them, so they have to survive the editor.
   it 'keeps the attributes the saved grid root carries' do
