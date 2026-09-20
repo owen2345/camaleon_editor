@@ -230,6 +230,19 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('#grid_table_list .import_item')
   end
 
+  # Several plain wrappers are several grids, as several grid bodies are: the editor holds one, and
+  # applying the first alone would drop the rest without a word.
+  it 'refuses a stored template of several plain wrappers that hold columns' do
+    fill_the_grid_and_reopen_the_list
+    wrapper = "<div>#{grid_column_markup(title: 'Other')}</div>"
+    @template.update!(description: wrapper * 2)
+
+    apply_listed_template
+
+    expect_the_grid_untouched
+    expect(page).to have_css('#grid_table_list .import_item')
+  end
+
   it 'refuses a stored template that is not a grid body' do
     @template.update!(description: 'plain text, not a grid')
 

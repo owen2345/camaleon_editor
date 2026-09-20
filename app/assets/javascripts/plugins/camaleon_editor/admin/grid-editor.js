@@ -318,7 +318,11 @@ jQuery(function(){
                 body = nested.first();
                 // a plain element counts as a grid by what it holds, columns: any other - a block of
                 // prose, an error message, a marker that was not taken off - is not one
-                if(!body.length) body = elements.filter(function(){ return $(this).children("[data-col]").length > 0; }).first();
+                if(!body.length){
+                    var wrappers = elements.filter(function(){ return $(this).children("[data-col]").length > 0; });
+                    if(wrappers.length > 1) return null; // several grids once more, in plain wrappers
+                    body = wrappers.first();
+                }
             }
             if(!body.length) return null;
             // A template is applied for its grid, and what trails it is let go. Saved content is another
