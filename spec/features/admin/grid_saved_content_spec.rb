@@ -106,7 +106,8 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   end
 
   it 'opens a grid that has only what the text editor leaves around a block beside it' do
-    store_post_content(@post, grid_post_content("\n#{grid_body_markup}\n<p>&nbsp;</p><br>"))
+    leftovers = '<p>&nbsp;</p><br><p><br></p><div><span> </span></div>'
+    store_post_content(@post, grid_post_content("\n#{grid_body_markup}\n#{leftovers}"))
     open_post_in_editor(@post)
 
     expect(page).to have_css('.panel_grid_editor .panel_grid_body .drg_column')

@@ -317,12 +317,14 @@ jQuery(function(){
             return body;
         }
         function holds(node, element){ return node === element || (node.nodeType === 1 && $.contains(node, element)); }
-        // what TinyMCE leaves around a block counts for nothing: blank text, a comment, a br, an empty p, div or span
+        // what a text editor leaves around a block counts for nothing: blank text, a comment, a br, and a
+        // p, div or span that holds nothing but those - "<p><br></p>" is an empty paragraph too
         function carries_content(node){
             if(node.nodeType === 3) return $.trim(node.nodeValue) !== "";
             if(node.nodeType !== 1) return false;
             if(node.tagName === "BR") return false;
-            return !(/^(P|DIV|SPAN)$/.test(node.tagName) && !node.children.length && $.trim(node.textContent) === "");
+            if(!/^(P|DIV|SPAN)$/.test(node.tagName)) return true;
+            return $.grep(node.childNodes, function(child){ return carries_content(child); }).length > 0;
         }
 
         // the style of the whole grid (Templates > Settings) lives on the grid's root, not inside it
