@@ -22,16 +22,18 @@ RSpec.describe 'the grid editor admin' do
   end
 
   # The plugin ships fewer languages than the admin panel offers, and core ships them all: where
-  # the plugin has no string, the core string that comes closest keeps the admin in their language.
-  it 'words the apply action with core strings in an admin language the plugin does not ship' do
+  # the plugin has no string, a core string that says the same keeps the admin in their language.
+  # No core string warns that the grid's content is replaced, so the prompt falls back to the
+  # plugin's English rather than to a core prompt that leaves the warning out.
+  it 'words the apply action in an admin language the plugin does not ship without losing the warning' do
     @site.grid_templates.create!(name: 'Two columns', slug: 'two-cols', description: '<div>x</div>')
     @site.set_admin_language('fr')
 
     get '/admin/plugins/camaleon_editor/grid_editor'
 
-    expect(response.body).to include(%(title="#{I18n.t('camaleon_cms.admin.table.import', locale: :fr)}"))
-    expect(CGI.unescapeHTML(response.body)).to include(I18n.t('camaleon_cms.admin.message.are_you_sure_to_import',
-                                                              locale: :fr))
+    link = Nokogiri::HTML5.fragment(response.body).at_css('#grid_table_list a.import_item')
+    expect(link['title']).to eq(I18n.t('camaleon_cms.admin.table.import', locale: :fr))
+    expect(link['data-message']).to eq('Apply this template? It replaces the current content of the grid.')
     expect(response.body).not_to match(/translation[ _]missing/i)
   end
 

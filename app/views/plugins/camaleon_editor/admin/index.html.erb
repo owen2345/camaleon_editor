@@ -1,4 +1,7 @@
 <% can_manage_templates = can?(:manage, Plugins::CamaleonEditor::MainHelper::PERMISSION_MANAGE) %>
+<% apply_title = camaleon_editor_t("templates.apply", "camaleon_cms.admin.table.import") %>
+<%# no core string warns that the grid's content is replaced, so this one takes no core stand-in %>
+<% apply_confirm = camaleon_editor_t("templates.apply_confirm") %>
 <table class="table table-striped" id="grid_table_list">
     <% @grid_templates.each do |item| %>
         <tr>
@@ -8,7 +11,7 @@
                     <%= link_to("<i class='fa fa-trash'></i>".html_safe, admin_plugins_camaleon_editor_grid_editor_path(item), class: "destroy_item", title: t("camaleon_cms.admin.button.delete"), "data-message" => t("camaleon_cms.admin.message.delete_item")) %>
                     <%= link_to("<i class='fa fa-pencil'></i>".html_safe, edit_admin_plugins_camaleon_editor_grid_editor_path(item), class: "edit_item", title: t("camaleon_cms.admin.button.edit")) %>
                 <% end %>
-                <%= link_to("<i class='fa fa-check-circle text-success'></i>".html_safe, "#", class: "import_item", "data-url" => admin_plugins_camaleon_editor_grid_editor_path(item), title: camaleon_editor_t("templates.apply", "camaleon_cms.admin.table.import"), "data-message" => camaleon_editor_t("templates.apply_confirm", "camaleon_cms.admin.message.are_you_sure_to_import")) %>
+                <%= link_to("<i class='fa fa-check-circle text-success'></i>".html_safe, "#", class: "import_item", "data-url" => admin_plugins_camaleon_editor_grid_editor_path(item), title: apply_title, "data-message" => apply_confirm) %>
             </td>
         </tr>
     <% end %>

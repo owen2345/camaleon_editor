@@ -61,14 +61,17 @@ module Plugins::CamaleonEditor::MainHelper
   end
 
   # A string of the plugin's own for the admin panel. The plugin ships fewer languages than core,
-  # which ships every admin language: where the plugin has no string for the current one, the core
-  # string that comes closest keeps the admin in their language, and the plugin's English is the last
-  # resort. The plugin's string is looked up without locale fallbacks, which would otherwise answer in
-  # English before the core string got its turn.
-  def camaleon_editor_t(key, core_key)
+  # which ships every admin language: where the plugin has no string for the current one, a core
+  # string that says the same keeps the admin in their language, and the plugin's English is the last
+  # resort. A string with no core equivalent - a warning core never gives - is called without a
+  # core_key and goes straight to the plugin's English: a prompt that says less is not a translation.
+  # The plugin's string is looked up without locale fallbacks, which would otherwise answer in English
+  # before the core string got its turn.
+  def camaleon_editor_t(key, core_key = nil)
     plugin_key = "camaleon_editor.#{key}"
     I18n.t(plugin_key, fallback: false, default: nil) ||
-      I18n.t(core_key, default: I18n.t(plugin_key, locale: :en))
+      (core_key && I18n.t(core_key, default: nil)) ||
+      I18n.t(plugin_key, locale: :en)
   end
 
   # registers the plugin's two permissions in the admin roles form (Users > Roles). Both are off by
