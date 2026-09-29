@@ -141,6 +141,18 @@ def saved_grid_content
   page.evaluate_script('window.__cama_grid_exports.last')
 end
 
+# What saving the post would store of content the grid editor left to the text editor: the text
+# editor writes its content into the field before the form goes, as it does here. It puts a
+# newline between tags; the content these specs store has none of its own, so they are taken off.
+def text_editor_content
+  page.evaluate_script(<<~JS).delete("\n")
+    (function(){
+      tinymce.triggerSave();
+      return jQuery('#form-post textarea.tinymce_textarea').first().val();
+    })()
+  JS
+end
+
 def trigger_grid_auto_save
   page.execute_script("jQuery('.panel_grid_editor').trigger('auto_save');")
 end

@@ -27,7 +27,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
     expect(page).to have_css('.mce-tinymce')
     expect(page).to have_no_css('.panel_grid_editor')
-    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
+    expect(text_editor_content).to eq(content)
   end
 
   # Going to the text editor and back shows the editor built earlier: the content is not read again.
@@ -57,7 +57,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
 
     expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
     expect(page).to have_no_css('.panel_grid_editor')
-    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
+    expect(text_editor_content).to eq(content)
   end
 
   it 'keeps content holding several grids inside a wrapper in the text editor' do
@@ -68,7 +68,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
 
     expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
     expect(page).to have_no_css('.panel_grid_editor')
-    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
+    expect(text_editor_content).to eq(content)
   end
 
   # Several grids are several grids side by side. Grid markup pasted into a block of the one grid is
@@ -118,7 +118,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
 
     expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
     expect(page).to have_no_css('.panel_grid_editor')
-    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
+    expect(text_editor_content).to eq(content)
   end
 
   # Beside the grid is beside it at any depth: inside a wrapper the grid has siblings too.
@@ -129,7 +129,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
 
     expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
     expect(page).to have_no_css('.panel_grid_editor')
-    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
+    expect(text_editor_content).to eq(content)
   end
 
   it 'opens a grid that has only what the text editor leaves around a block beside it' do
@@ -150,7 +150,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
 
     expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
     expect(page).to have_no_css('.panel_grid_editor')
-    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').val()")).to eq(content)
+    expect(text_editor_content).to eq(content)
   end
 
   # Reading the content is one thing, rebuilding the grid from it another: the column and block
@@ -161,15 +161,18 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     find('.mce-tinymce')
     content = grid_post_content(grid_with_block('<p>kept</p>'))
 
+    # the field and the text editor hold the same content, as they do when the page opens with it
     page.execute_script(<<~JS, content)
       jQuery.fn.sortable = function(){ throw new Error('widget broke'); };
+      tinymce.activeEditor.setContent(arguments[0]);
       jQuery('#form-post textarea.tinymce_textarea').first().val(arguments[0]).gridEditor(tinymce.activeEditor);
     JS
 
     expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
     expect(page).to have_css('.mce-tinymce')
     expect(page).to have_no_css('.panel_grid_editor')
-    expect(page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea').first().val()")).to eq(content)
+    expect(saved_grid_content).to be_nil
+    expect(text_editor_content).to eq(content)
   end
 
   # The same goes for content that is no grid yet: when building the editor throws, the text editor
