@@ -71,7 +71,7 @@ RSpec.describe 'importing a grid template', :js do
     apply_listed_template
 
     expect(page).to have_css('.panel_grid_body .drg_column')
-    expect(saved_grid_content).to match(GRID_YELLOW_BACKGROUND)
+    expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)')
     expect(saved_grid_content).to include('data-style="{&quot;b-c&quot;:&quot;#ffcc00&quot;}"')
   end
 
@@ -87,7 +87,7 @@ RSpec.describe 'importing a grid template', :js do
     apply_listed_template
 
     expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '100%')
-    expect(saved_grid_content).to match(GRID_YELLOW_BACKGROUND)
+    expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)')
   end
 
   # The list stays open while the template is fetched, and the loading overlay stops the mouse, not
@@ -207,7 +207,7 @@ RSpec.describe 'importing a grid template', :js do
 
     expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
     expect(page).to have_css('.panel_grid_body', count: 1)
-    expect(saved_grid_content).to match(GRID_YELLOW_BACKGROUND)
+    expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)')
   end
 
   it 'applies a plain-wrapper template that is followed by stray markup' do

@@ -119,11 +119,6 @@ def apply_listed_template
   accept_confirm { find('#grid_table_list .import_item').click }
 end
 
-# The yellow background the specs give a grid, as saved content may carry it: rgb() the way the
-# grid exports it, or #rrggbb once the text editor, which saves when it loses focus, has written
-# the same content again. Which of the two the textarea holds depends on when that happens.
-GRID_YELLOW_BACKGROUND = /background-color: (?:rgb\(255, 204, 0\)|#ffcc00)/
-
 # The post's textarea has more than one writer. The grid writes its export there at every
 # auto_save. The text editor, handed the same content, writes it again in its own serialization (a
 # newline between tags, #rrggbb for rgb(), <strong> for <b>, no script) when it loses focus, two
