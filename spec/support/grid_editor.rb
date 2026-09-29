@@ -124,10 +124,26 @@ end
 # the same content again. Which of the two the textarea holds depends on when that happens.
 GRID_YELLOW_BACKGROUND = /background-color: (?:rgb\(255, 204, 0\)|#ffcc00)/
 
-# What the textarea behind the editor holds right now: the grid as the last auto_save exported it,
-# or that content written again by the text editor, which saves when it loses focus.
+# The post's textarea has more than one writer. The grid writes its export there at every
+# auto_save. The text editor, handed the same content, writes it again in its own serialization (a
+# newline between tags, #rrggbb for rgb(), <strong> for <b>, no script) when it loses focus, two
+# seconds after the form opened and with every draft. Which of them wrote last depends on timing,
+# so the export is put on record as the grid writes it, at the change_in its auto_save triggers.
+def record_grid_exports
+  page.execute_script(<<~JS)
+    if(window.jQuery && !window.__cama_grid_exports){
+      window.__cama_grid_exports = {last: null};
+      jQuery(document).on('change_in', 'textarea', function(){
+        if(jQuery(this).prev('.panel_grid_editor').length) window.__cama_grid_exports.last = this.value;
+      });
+    }
+  JS
+end
+
+# The grid as the last auto_save exported it, nil when none did since the editor page was opened.
+# Saving the post stores the text editor's serialization of it, not the export itself.
 def saved_grid_content
-  page.evaluate_script("jQuery('.panel_grid_editor').next('textarea').val()")
+  page.evaluate_script('window.__cama_grid_exports.last')
 end
 
 def trigger_grid_auto_save

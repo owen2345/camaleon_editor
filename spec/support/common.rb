@@ -56,12 +56,14 @@ end
 # loads the grid editor's JS. Shared by the feature specs that drive the editor's builders.
 # as: a user built by the :user factory (whose password the instance still holds) instead of
 # the site's administrator. post: an existing post to edit instead of a new one.
+# From here on the grid's exports are on record (see record_grid_exports).
 def install_plugin_and_open_post_editor(as: nil, post: nil)
   store_current_site(@site)
   plugin_install('camaleon_editor')
   as ? admin_sign_in(as.username, as.password) : admin_sign_in
   post_type = post ? post.post_type : @site.post_types.first
   visit "#{cama_root_relative_path}/admin/post_type/#{post_type.id}/posts/#{post ? "#{post.id}/edit" : 'new'}"
+  record_grid_exports
 end
 
 # Wait until the page has no jQuery request in flight (adapted from camaleon_cms's
