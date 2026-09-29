@@ -94,6 +94,11 @@ def apply_listed_template
   accept_confirm { find('#grid_table_list .import_item').click }
 end
 
+# The yellow background the specs give a grid, as saved content may carry it: rgb() the way the
+# grid exports it, or #rrggbb once the text editor, which saves when it loses focus, has written
+# the same content again. Which of the two the textarea holds depends on when that happens.
+GRID_YELLOW_BACKGROUND = /background-color: (?:rgb\(255, 204, 0\)|#ffcc00)/
+
 # What the editor would save for the post right now: the grid as the last auto_save exported it.
 def saved_grid_content
   page.evaluate_script("jQuery('.panel_grid_editor').next('textarea').val()")
