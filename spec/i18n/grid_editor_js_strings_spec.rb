@@ -2,7 +2,8 @@
 
 # Core's admin layout hands the browser the camaleon_cms.admin.js tree of the current language and
 # nothing else. A string the editor's scripts ask for has to be in that tree: one that is not comes
-# out as the last segment of its key, titleized ("List" for "List of templates"), in every language.
+# out in every language as the default the script passes, the English string, and without a default
+# as the last segment of its key, titleized ("List" for "List of templates").
 RSpec.describe 'the grid editor strings its scripts read', type: :model do
   # Every call that names its key, as [key, English default or nil].
   def script_calls

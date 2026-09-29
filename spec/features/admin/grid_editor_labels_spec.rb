@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 # The labels and prompts of the grid editor come from the plugin's locale file by way of core's
-# I18n() script helper, which answers with the titleized key when it finds no string.
+# I18n() script helper. Where the page holds no string for a key, the helper answers with the
+# default the script passes, the English string, and without one with the titleized key.
 RSpec.describe 'the grid editor labels', :js do
   init_site
 
