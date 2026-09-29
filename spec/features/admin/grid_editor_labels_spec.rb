@@ -5,31 +5,50 @@
 RSpec.describe 'the grid editor labels', :js do
   init_site
 
-  before do
-    install_plugin_and_open_post_editor
-    open_grid_editor
-  end
+  context 'with a new post' do
+    before do
+      install_plugin_and_open_post_editor
+      open_grid_editor
+    end
 
-  it 'shows the strings of the locale file, not the titleized keys' do
-    within '.grid_editor_menu' do
-      expect(page).to have_link('Blocks')
-      expect(page).to have_link('Content Elements')
-      expect(page).to have_link('Clear')
-      expect(page).to have_link('Text Editor')
-      expect(page).to have_field('Preview', type: 'checkbox')
-      expect(page).to have_field('Fullscreen', type: 'checkbox')
+    it 'shows the strings of the locale file, not the titleized keys' do
+      within '.grid_editor_menu' do
+        expect(page).to have_link('Blocks')
+        expect(page).to have_link('Content Elements')
+        expect(page).to have_link('Clear')
+        expect(page).to have_link('Text Editor')
+        expect(page).to have_field('Preview', type: 'checkbox')
+        expect(page).to have_field('Fullscreen', type: 'checkbox')
 
-      open_templates_menu
-      expect(page).to have_link('List of templates')
-      expect(page).to have_link('Save as template')
+        open_templates_menu
+        expect(page).to have_link('List of templates')
+        expect(page).to have_link('Save as template')
+      end
+    end
+
+    it 'asks before clearing the grid or leaving the editor, in a sentence' do
+      message = dismiss_confirm { find('.grid_editor_menu a.clear').click }
+      expect(message).to eq('Are you sure to clear the editor?')
+
+      message = dismiss_confirm { find('.grid_editor_menu a.toggle_panel_grid').click }
+      expect(message).to eq('Are you sure to leave this editor?')
     end
   end
 
-  it 'asks before clearing the grid or leaving the editor, in a sentence' do
-    message = dismiss_confirm { find('.grid_editor_menu a.clear').click }
-    expect(message).to eq('Are you sure to clear the editor?')
+  context 'with a post whose grid holds a block with a content element' do
+    before do
+      store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
+      open_post_in_editor(@post)
+    end
 
-    message = dismiss_confirm { find('.grid_editor_menu a.toggle_panel_grid').click }
-    expect(message).to eq('Are you sure to leave this editor?')
+    it 'asks before deleting, naming what goes: the content element or the block' do
+      find('.drg_item > .header_box .dropdown-toggle').click
+      message = dismiss_confirm { find('.drg_item > .header_box .grid_content_remove').click }
+      expect(message).to eq('Are you sure to delete this content?')
+
+      find('.drg_column > .header_box .dropdown-toggle').click
+      message = dismiss_confirm { find('.drg_column > .header_box .grid_col_remove').click }
+      expect(message).to eq('Are you sure to delete this block?')
+    end
   end
 end

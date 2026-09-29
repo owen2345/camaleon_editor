@@ -590,7 +590,7 @@ jQuery(function(){
 
             // content dropdown options
             grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
-                if(confirm(I18n("grid_editor.del_block"))) {
+                if(confirm(I18n("grid_editor.del_content"))) {
                     jQuery(this).closest(".drg_item").fadeDestroy();
                     editor.trigger("auto_save");
                 }
