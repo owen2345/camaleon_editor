@@ -5,6 +5,20 @@ en:
     admin:
       js:
         grid_editor:
+          templates: "Templates"
+          use_tpl: "Use Template"
+          save_tpl: "Save as template"
+          list: "List of templates"
+          text_editor: "Text Editor"
+          blocks: "Blocks"
+          contents: "Content Elements"
+          clear: "Clear"
+          preview: "Preview"
+          fullscreen: "Fullscreen"
+          toggle_editor: "Are you sure to leave this editor?"
+          del_block: "Are you sure to delete this block?"
+          del_content: "Are you sure to delete this content?"
+          clear_editor: "Are you sure to clear the editor?"
           import_failed: "The template could not be loaded."
           request_failed: "The request was not completed. Reload the page and try again."
           content_unreadable: "This content is marked as a grid but could not be read as a grid, so it stays in the text editor."
@@ -18,20 +32,6 @@ en:
     templates:
       apply: "Apply template"
       apply_confirm: "Apply this template? It replaces the current content of the grid."
-  admin:
-    js:
-      grid_editor:
-        templates: "Templates"
-        use_tpl: "Use Template"
-        save_tpl: "Save as template"
-        list: "List of templates"
-        text_editor: "Text Editor"
-        blocks: "Blocks"
-        contents: "Content Elements"
-        toggle_editor: "Are you sure to leave this editor?"
-        del_block: "Are you sure to delete this block?"
-        del_content: "Are you sure to delete this content?"
-        clear_editor: "Are you sure to clear the editor?"
 
 es:
   # Core hands the browser only the camaleon_cms.admin.js tree, so a string the editor's script
@@ -40,6 +40,20 @@ es:
     admin:
       js:
         grid_editor:
+          templates: "Plantillas"
+          use_tpl: "Use Template"
+          save_tpl: "Guardar como plantilla"
+          list: "Lista de plantillas"
+          text_editor: "Editor de Texto"
+          blocks: "Bloques"
+          contents: "Contenidos"
+          clear: "Limpiar"
+          preview: "Vista previa"
+          fullscreen: "Pantalla completa"
+          toggle_editor: "Esta seguro de abandonar este editor?"
+          del_block: "Esta seguro de eliminar este bloque?"
+          del_content: "Esta seguro de eliminar este contenido?"
+          clear_editor: "Esta seguro de limpiar el editor?"
           import_failed: "No se pudo cargar la plantilla."
           request_failed: "La solicitud no se completó. Recargue la página e inténtelo de nuevo."
           content_unreadable: "Este contenido está marcado como rejilla pero no se pudo leer como tal, por lo que permanece en el editor de texto."
@@ -53,20 +67,6 @@ es:
     templates:
       apply: "Aplicar plantilla"
       apply_confirm: "¿Aplicar esta plantilla? Reemplaza el contenido actual de la rejilla."
-  admin:
-    js:
-      grid_editor:
-        templates: "Plantillas"
-        use_tpl: "Use Template"
-        save_tpl: "Guardar como plnatilla"
-        list: "Lista de plantillas"
-        text_editor: "Editor de Texto"
-        blocks: "Bloques"
-        contents: "Contenidos"
-        toggle_editor: "Esta seguro de abandonar este editor?"
-        del_block: "Esta seguro de eliminar este bloque?"
-        del_content: "Esta seguro de eliminar este contenido?"
-        clear_editor: "Esta seguro de limpiar el editor?"
 
 it:
   # Core hands the browser only the camaleon_cms.admin.js tree, so a string the editor's script
@@ -75,6 +75,20 @@ it:
     admin:
       js:
         grid_editor:
+          templates: "Modelli"
+          use_tpl: "Use Template"
+          save_tpl: "Salva come modello"
+          list: "Elenco dei modelli"
+          text_editor: "Editor di testo"
+          blocks: "Blocchi"
+          contents: "Contenuto"
+          clear: "Svuota"
+          preview: "Anteprima"
+          fullscreen: "Schermo intero"
+          toggle_editor: "Sei sicuro di voler lasciare questo editor?"
+          del_block: "Sei sicuro di voler eliminare questo blocco?"
+          del_content: "Sei sicuro di voler cancellare questo contenuto?"
+          clear_editor: "Sei sicuro di voler cancellare l'editor?"
           import_failed: "Impossibile caricare il modello."
           request_failed: "La richiesta non è stata completata. Ricarica la pagina e riprova."
           content_unreadable: "Questo contenuto è contrassegnato come griglia ma non è leggibile come tale, quindi resta nell'editor di testo."
@@ -88,17 +102,3 @@ it:
     templates:
       apply: "Applica modello"
       apply_confirm: "Applicare questo modello? Sostituisce il contenuto attuale della griglia."
-  admin:
-    js:
-      grid_editor:
-        templates: "Modelli"
-        use_tpl: "Use Template"
-        save_tpl: "Salva come modello"
-        list: "Elenco dei modelli"
-        text_editor: "Editor di testo"
-        blocks: "Blocchi"
-        contents: "Contenuto"
-        toggle_editor: "Sei sicuro di voler lasciare questo editor?"
-        del_block: "Sei sicuro di voler eliminare questo blocco?"
-        del_content: "Sei sicuro di voler cancellare questo contenuto?"
-        clear_editor: "Sei sicuro di voler cancellare l'editor?"
