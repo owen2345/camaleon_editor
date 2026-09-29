@@ -248,26 +248,29 @@ jQuery(function(){
         // declared a manager: the entry; declared not one: no entry; not declared: the entry, held back
         var save_template_entry = "";
         if(can_manage_templates !== false){
-            save_template_entry = '<li class="'+(can_manage_templates ? '' : 'hidden')+'"><a class="new_template" title="New Template" href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl")+'</a></li >';
+            save_template_entry = '<li class="'+(can_manage_templates ? '' : 'hidden')+'"><a class="new_template" title="New Template" href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl", "Save as template")+'</a></li >';
         }
 
         // template grid editor
+        // Every I18n("grid_editor...") call of the editor passes the English string as its default:
+        // the page holds the strings of the admin language alone, and in a language the plugin does
+        // not ship core's helper would answer with the titleized key, "List" or "Clear Editor".
         var editor = $("<div class='panel_grid_editor' id='"+editor_id+"'>"+
             "<div class='grid_editor_menu'>"+
             "<ul class='nav nav-tabs'>"+
-            "<li class='active'><a href='#grid_columns_"+gridEditor_id+"' role='tab' data-toggle='tab'><i class='fa fa-th-list'></i> "+I18n("grid_editor.blocks")+"</a></li>"+
-            "<li class=''><a href='#grid_contents_"+gridEditor_id+"' role='tab' data-toggle='tab'><i class='fa fa-table'></i> "+I18n("grid_editor.contents")+"</a></li>"+
+            "<li class='active'><a href='#grid_columns_"+gridEditor_id+"' role='tab' data-toggle='tab'><i class='fa fa-th-list'></i> "+I18n("grid_editor.blocks", "Blocks")+"</a></li>"+
+            "<li class=''><a href='#grid_contents_"+gridEditor_id+"' role='tab' data-toggle='tab'><i class='fa fa-table'></i> "+I18n("grid_editor.contents", "Content Elements")+"</a></li>"+
             '<li>' +
-            '<a class="dropdown-toggle" href="#" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+I18n("grid_editor.templates")+' <span class="caret"></span> </a>'+
+            '<a class="dropdown-toggle" href="#" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+I18n("grid_editor.templates", "Templates")+' <span class="caret"></span> </a>'+
             '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1"> ' +
-            '<li><a class="list_templates" title="Grid Templates" href = "'+root_url+'admin/plugins/camaleon_editor/grid_editor" >'+I18n("grid_editor.list")+'</a></li >'+
+            '<li><a class="list_templates" title="Grid Templates" href = "'+root_url+'admin/plugins/camaleon_editor/grid_editor" >'+I18n("grid_editor.list", "List of templates")+'</a></li >'+
             save_template_entry+
             "<li><a class='grid_style_settings' title='Style Settings' href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
             '</ul> ' +
             '</li>'+
-            "<li class=''><a href='#' class='clear'><i class='fa fa-trash'></i>  "+I18n("grid_editor.clear")+"</a></li>"+
-            "<li class=''><a href='#' class='toggle_panel_grid'><i class='fa fa-share'></i>  "+I18n("grid_editor.text_editor")+"</a></li>"+
-            "<li class='pull-right'><label style='margin: 0px;'><input class='toggle_preview_grid' type='checkbox'/> "+I18n("grid_editor.preview")+"</label><br><label style='margin: 0px;'><input class='toggle_fullscreen_grid' type='checkbox'/> "+I18n("grid_editor.fullscreen")+"</label></li>"+
+            "<li class=''><a href='#' class='clear'><i class='fa fa-trash'></i>  "+I18n("grid_editor.clear", "Clear")+"</a></li>"+
+            "<li class=''><a href='#' class='toggle_panel_grid'><i class='fa fa-share'></i>  "+I18n("grid_editor.text_editor", "Text Editor")+"</a></li>"+
+            "<li class='pull-right'><label style='margin: 0px;'><input class='toggle_preview_grid' type='checkbox'/> "+I18n("grid_editor.preview", "Preview")+"</label><br><label style='margin: 0px;'><input class='toggle_fullscreen_grid' type='checkbox'/> "+I18n("grid_editor.fullscreen", "Fullscreen")+"</label></li>"+
             "</ul>"+
             "<div class='tab-content'>"+
             "<div role='tabpanel' class='tab-pane active' id='grid_columns_"+gridEditor_id+"'> "+
@@ -466,14 +469,14 @@ jQuery(function(){
         function do_editor_menus(editor){
             // toggle editor menus
             editor.find(".grid_editor_menu .toggle_panel_grid").click(function(){
-                if(!confirm(I18n("grid_editor.toggle_editor"))) return false;
+                if(!confirm(I18n("grid_editor.toggle_editor", "Are you sure to leave this editor?"))) return false;
                 editor.hide();
                 if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
                 tinymce_panel.show();
                 return false;
             });
             editor.find(".grid_editor_menu .clear").click(function(){
-                if(!confirm(I18n("grid_editor.clear_editor"))) return false;
+                if(!confirm(I18n("grid_editor.clear_editor", "Are you sure to clear the editor?"))) return false;
                 grid_root(editor).html("");
                 editor.trigger("auto_save");
                 return false;
@@ -590,7 +593,7 @@ jQuery(function(){
 
             // content dropdown options
             grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
-                if(confirm(I18n("grid_editor.del_content"))) {
+                if(confirm(I18n("grid_editor.del_content", "Are you sure to delete this content?"))) {
                     jQuery(this).closest(".drg_item").fadeDestroy();
                     editor.trigger("auto_save");
                 }
@@ -613,7 +616,7 @@ jQuery(function(){
 
             // column dropdown options
             grid_root(editor).on("click", '.grid_col_remove', function (e) {
-                if(confirm(I18n("grid_editor.del_block"))){
+                if(confirm(I18n("grid_editor.del_block", "Are you sure to delete this block?"))){
                     jQuery(this).closest(".drg_column").fadeDestroy();
                     editor.trigger("auto_save");
                 }

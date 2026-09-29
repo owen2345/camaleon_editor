@@ -35,6 +35,27 @@ RSpec.describe 'the grid editor labels', :js do
     end
   end
 
+  # The browser gets the strings of the admin language alone, and the plugin ships three languages.
+  context 'with an admin language the plugin does not ship' do
+    before do
+      @site.set_admin_language('fr')
+      install_plugin_and_open_post_editor
+      open_grid_editor
+    end
+
+    it 'shows and asks in English, not in titleized keys' do
+      within '.grid_editor_menu' do
+        expect(page).to have_link('Content Elements')
+
+        open_templates_menu
+        expect(page).to have_link('List of templates')
+      end
+
+      message = dismiss_confirm { find('.grid_editor_menu a.clear').click }
+      expect(message).to eq('Are you sure to clear the editor?')
+    end
+  end
+
   context 'with a post whose grid holds a block with a content element' do
     before do
       store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
