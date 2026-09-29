@@ -35,6 +35,28 @@ RSpec.describe 'the grid editor labels', :js do
     end
   end
 
+  # The English strings are the script's defaults as well: only a translation shows that the page
+  # holds the strings of the locale file.
+  context 'with an admin language the plugin ships a translation for' do
+    before do
+      @site.set_admin_language('es')
+      install_plugin_and_open_post_editor
+      open_grid_editor
+    end
+
+    it 'shows and asks in that language' do
+      within '.grid_editor_menu' do
+        expect(page).to have_link('Contenidos')
+
+        find('a.dropdown-toggle', text: 'Plantillas').click
+        expect(page).to have_link('Lista de plantillas')
+      end
+
+      message = dismiss_confirm { find('.grid_editor_menu a.clear').click }
+      expect(message).to eq('¿Está seguro de limpiar el editor?')
+    end
+  end
+
   # The browser gets the strings of the admin language alone, and the plugin ships three languages.
   context 'with an admin language the plugin does not ship' do
     before do
