@@ -91,8 +91,8 @@ RSpec.describe 'the grid editor labels', :js do
 
     it 'asks before deleting, naming what goes: the content element or the block' do
       find('.drg_item > .header_box .dropdown-toggle').click
-      # The action's tooltip is core's string, the one its label shows
-      expect(find('.drg_item > .header_box .grid_content_remove')['title']).to eq('Delete')
+      # The action's label says it all: no tooltip repeats it
+      expect(page).to have_no_css('.drg_item > .header_box .grid_content_remove[title]')
       message = dismiss_confirm { find('.drg_item > .header_box .grid_content_remove').click }
       expect(message).to eq('Are you sure to delete this content?')
 

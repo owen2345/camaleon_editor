@@ -98,7 +98,7 @@ jQuery(function(){
     };
 
     // A title attribute holding a translated string, escaped: a translation holding a quote would end
-    // the attribute otherwise. The plugin's own strings pass their English default; core's need none.
+    // the attribute otherwise.
     function tooltip(key, english, data){
         return ' title="'+$.fn.gridEditorEscapeHtml(I18n(key, english, data))+'"';
     }
@@ -425,8 +425,8 @@ jQuery(function(){
             var options = "<div class='dropdown'>" +
                 "<a class='dropdown-toggle' data-toggle='dropdown'>&nbsp; <span class='caret'></span></a>" +
                 "<ul class='dropdown-menu auto_with pull-right' role='menu'>"+
-                "<li><a class='grid_col_remove'"+tooltip("button.delete")+" href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
-                "<li><a class='grid_col_clone'"+tooltip("button.clone")+" href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
+                "<li><a class='grid_col_remove' href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
+                "<li><a class='grid_col_clone' href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
                 "<li><a class='grid_style_settings'"+tooltip("grid_editor.style_settings_title", "Style settings")+" href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
                 "</ul>"+
                 "</div>" ;
@@ -455,9 +455,9 @@ jQuery(function(){
             var options = "<div class='dropdown'>" +
                 "<a class='dropdown-toggle' data-toggle='dropdown'>&nbsp; <span class='caret'></span></a>" +
                 "<ul class='dropdown-menu auto_with pull-right' role='menu'>"+
-                "<li><a class='grid_content_remove'"+tooltip("button.delete")+" href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
-                "<li><a class='grid_content_clone'"+tooltip("button.clone")+" href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
-                "<li><a class='grid_content_edit'"+tooltip("button.edit")+" href='#'><i class='fa fa-pencil'></i> "+I18n("button.edit")+"</a></li>"+
+                "<li><a class='grid_content_remove' href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
+                "<li><a class='grid_content_clone' href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
+                "<li><a class='grid_content_edit' href='#'><i class='fa fa-pencil'></i> "+I18n("button.edit")+"</a></li>"+
                 "<li><a class='grid_style_settings'"+tooltip("grid_editor.style_settings_title", "Style settings")+" href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
                 "</ul>"+
                 "</div>";
