@@ -5,10 +5,13 @@
 # out in every language as the default the script passes, the English string, and without a default
 # as the last segment of its key, titleized ("List" for "List of templates").
 RSpec.describe 'the grid editor strings its scripts read', type: :model do
-  # Every call that names its key, as [key, English default or nil].
+  # Every call that names its key, as [key, English default or nil]: I18n("grid_editor.<key>", ...)
+  # for the labels and prompts, report_failure("<key>", ...) for the failure messages.
   def script_calls
     scripts = Rails.root.glob('../../app/assets/javascripts/plugins/camaleon_editor/admin/*.js')
-    scripts.flat_map { |script| script.read.scan(/I18n\(\s*["']grid_editor\.(\w+)["'](?:\s*,\s*"([^"]*)")?/) }
+    scripts.flat_map do |script|
+      script.read.scan(/(?:I18n\(\s*["']grid_editor\.|report_failure\(\s*["'])(\w+)["'](?:\s*,\s*"([^"]*)")?/)
+    end
   end
 
   def script_keys
@@ -16,7 +19,8 @@ RSpec.describe 'the grid editor strings its scripts read', type: :model do
   end
 
   it 'finds the keys the scripts ask for' do
-    expect(script_keys).to include('list', 'contents', 'toggle_editor', 'clear', 'preview', 'fullscreen')
+    expect(script_keys).to include('list', 'contents', 'toggle_editor', 'clear', 'preview', 'fullscreen',
+                                   'import_failed', 'request_failed', 'content_unreadable', 'editor_failed')
   end
 
   it 'ships every one of them, in every language, in the tree core exports' do
