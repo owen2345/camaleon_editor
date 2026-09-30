@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-# The labels and prompts of the grid editor come from the plugin's locale file by way of core's
-# I18n() script helper. Where the page holds no string for a key, the helper answers with the
-# default the script passes, the English string, and without one with the titleized key.
+# The labels, prompts and tooltips of the grid editor come from the locale files, the plugin's and
+# core's, by way of core's I18n() script helper. Where the page holds no string for a key, the helper
+# answers with the default the script passes, the English string, and without one with the titleized key.
 RSpec.describe 'the grid editor labels', :js do
   init_site
 
@@ -22,8 +22,8 @@ RSpec.describe 'the grid editor labels', :js do
         expect(page).to have_field('Fullscreen', type: 'checkbox')
 
         open_templates_menu
-        expect(page).to have_link('List of templates')
-        expect(page).to have_link('Save as template')
+        expect(page).to have_link('List of templates', title: 'Grid templates')
+        expect(page).to have_link('Save as template', title: 'New template')
       end
     end
 
@@ -50,8 +50,12 @@ RSpec.describe 'the grid editor labels', :js do
         expect(page).to have_link('Contenidos')
 
         open_templates_menu(label: 'Plantillas')
-        expect(page).to have_link('Lista de plantillas')
+        expect(page).to have_link('Lista de plantillas', title: 'Plantillas de rejilla')
       end
+
+      # The palette's tooltips are Bootstrap's, which shows the title on hover
+      find('.grid_editor_menu .tab-pane.active .clearfix[data-col="12"]').hover
+      expect(page).to have_css('.tooltip', text: 'Inserta un salto de línea para ordenar los bloques de columna.')
 
       message = dismiss_confirm { find('.grid_editor_menu a.clear').click }
       expect(message).to eq('¿Está seguro de limpiar el editor?')
@@ -71,7 +75,7 @@ RSpec.describe 'the grid editor labels', :js do
         expect(page).to have_link('Content Elements')
 
         open_templates_menu
-        expect(page).to have_link('List of templates')
+        expect(page).to have_link('List of templates', title: 'Grid templates')
       end
 
       message = dismiss_confirm { find('.grid_editor_menu a.clear').click }
@@ -87,6 +91,8 @@ RSpec.describe 'the grid editor labels', :js do
 
     it 'asks before deleting, naming what goes: the content element or the block' do
       find('.drg_item > .header_box .dropdown-toggle').click
+      # The action's tooltip is core's string, the one its label shows
+      expect(find('.drg_item > .header_box .grid_content_remove')['title']).to eq('Delete')
       message = dismiss_confirm { find('.drg_item > .header_box .grid_content_remove').click }
       expect(message).to eq('Are you sure to delete this content?')
 

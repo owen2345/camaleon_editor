@@ -97,6 +97,12 @@ jQuery(function(){
         });
     };
 
+    // A title attribute holding a translated string, escaped: a translation holding a quote would end
+    // the attribute otherwise. The plugin's own strings pass their English default; core's need none.
+    function tooltip(key, english, data){
+        return ' title="'+$.fn.gridEditorEscapeHtml(I18n(key, english, data))+'"';
+    }
+
     // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too. The
     // alert is core's modal, often the very code whose throw is being reported, and the report runs
     // inside a request's callback: thrown on from here it would make jQuery skip the callbacks still
@@ -229,10 +235,10 @@ jQuery(function(){
         var editor_id = "grid_editor_"+gridEditor_id;
         if(existing_editor){ textarea.prev().show(); return textarea; }
         var tpl_rows = "";
-        $.each({6: 50, 4: 33, 3: 25, 2: 16, 8: 66, 9: 75, 12: 100}, function(k, val){ tpl_rows += '<div class="" data-col="'+k+'" title="Insert a column block with '+val+'% of width." data-col_title="'+val+'%"><div class="grid_sortable_items"></div></div>'; });
+        $.each({6: 50, 4: 33, 3: 25, 2: 16, 8: 66, 9: 75, 12: 100}, function(k, val){ tpl_rows += '<div class="" data-col="'+k+'"'+tooltip("grid_editor.col_block_title", "Insert a column block with %{width}% of width.", {width: val})+' data-col_title="'+val+'%"><div class="grid_sortable_items"></div></div>'; });
 
         // break line
-        tpl_rows += '<div class="clearfix" title="Insert a break line to have ordered column blocks." data-col_title="Break Line" data-col="12"></div>' + $.fn.gridEditor_extra_rows.join("");
+        tpl_rows += '<div class="clearfix"'+tooltip("grid_editor.break_line_title", "Insert a break line to have ordered column blocks.")+' data-col_title="Break Line" data-col="12"></div>' + $.fn.gridEditor_extra_rows.join("");
 
         // tpl options
         var tpl_options = "";
@@ -248,7 +254,7 @@ jQuery(function(){
         // declared a manager: the entry; declared not one: no entry; not declared: the entry, held back
         var save_template_entry = "";
         if(can_manage_templates !== false){
-            save_template_entry = '<li class="'+(can_manage_templates ? '' : 'hidden')+'"><a class="new_template" title="New Template" href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl", "Save as template")+'</a></li >';
+            save_template_entry = '<li class="'+(can_manage_templates ? '' : 'hidden')+'"><a class="new_template"'+tooltip("grid_editor.save_tpl_title", "New template")+' href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl", "Save as template")+'</a></li >';
         }
 
         // template grid editor
@@ -263,9 +269,9 @@ jQuery(function(){
             '<li>' +
             '<a class="dropdown-toggle" href="#" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+I18n("grid_editor.templates", "Templates")+' <span class="caret"></span> </a>'+
             '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1"> ' +
-            '<li><a class="list_templates" title="Grid Templates" href = "'+root_url+'admin/plugins/camaleon_editor/grid_editor" >'+I18n("grid_editor.list", "List of templates")+'</a></li >'+
+            '<li><a class="list_templates"'+tooltip("grid_editor.list_title", "Grid templates")+' href = "'+root_url+'admin/plugins/camaleon_editor/grid_editor" >'+I18n("grid_editor.list", "List of templates")+'</a></li >'+
             save_template_entry+
-            "<li><a class='grid_style_settings' title='Style Settings' href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
+            "<li><a class='grid_style_settings'"+tooltip("grid_editor.style_settings_title", "Style settings")+" href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
             '</ul> ' +
             '</li>'+
             "<li class=''><a href='#' class='clear'><i class='fa fa-trash'></i>  "+I18n("grid_editor.clear", "Clear")+"</a></li>"+
@@ -419,9 +425,9 @@ jQuery(function(){
             var options = "<div class='dropdown'>" +
                 "<a class='dropdown-toggle' data-toggle='dropdown'>&nbsp; <span class='caret'></span></a>" +
                 "<ul class='dropdown-menu auto_with pull-right' role='menu'>"+
-                "<li><a class='grid_col_remove' title='Remove' href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
-                "<li><a class='grid_col_clone' title='Clone' href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
-                "<li><a class='grid_style_settings' title='Style Settings' href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
+                "<li><a class='grid_col_remove'"+tooltip("button.delete")+" href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
+                "<li><a class='grid_col_clone'"+tooltip("button.clone")+" href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
+                "<li><a class='grid_style_settings'"+tooltip("grid_editor.style_settings_title", "Style settings")+" href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
                 "</ul>"+
                 "</div>" ;
             column.addClass("drg_column btn btn-default");
@@ -449,10 +455,10 @@ jQuery(function(){
             var options = "<div class='dropdown'>" +
                 "<a class='dropdown-toggle' data-toggle='dropdown'>&nbsp; <span class='caret'></span></a>" +
                 "<ul class='dropdown-menu auto_with pull-right' role='menu'>"+
-                "<li><a class='grid_content_remove' title='Remove' href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
-                "<li><a class='grid_content_clone' title='Clone' href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
-                "<li><a class='grid_content_edit' title='Edit' href='#'><i class='fa fa-pencil'></i> "+I18n("button.edit")+"</a></li>"+
-                "<li><a class='grid_style_settings' title='Style Settings' href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
+                "<li><a class='grid_content_remove'"+tooltip("button.delete")+" href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
+                "<li><a class='grid_content_clone'"+tooltip("button.clone")+" href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
+                "<li><a class='grid_content_edit'"+tooltip("button.edit")+" href='#'><i class='fa fa-pencil'></i> "+I18n("button.edit")+"</a></li>"+
+                "<li><a class='grid_style_settings'"+tooltip("grid_editor.style_settings_title", "Style settings")+" href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
                 "</ul>"+
                 "</div>";
             content.addClass("drg_item btn btn-default");
