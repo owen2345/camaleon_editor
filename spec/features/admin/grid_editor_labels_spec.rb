@@ -60,6 +60,12 @@ RSpec.describe 'the grid editor labels', :js do
       message = dismiss_confirm { find('.grid_editor_menu a.clear').click }
       expect(message).to eq('¿Está seguro de limpiar el editor?')
     end
+
+    # The list opens in a modal headed by its entry's title
+    it 'opens the templates list under a heading in that language' do
+      open_templates_list(label: 'Plantillas')
+      expect(page).to have_css('#ow_inline_modal .modal-title', text: 'Plantillas de rejilla')
+    end
   end
 
   # The browser gets the strings of the admin language alone, and the plugin ships three languages.

@@ -86,8 +86,8 @@ def open_templates_menu(label: 'Templates')
   find('.grid_editor_menu a.dropdown-toggle', text: label).click
 end
 
-def open_templates_list
-  open_templates_menu
+def open_templates_list(label: 'Templates')
+  open_templates_menu(label: label)
   find('.grid_editor_menu .list_templates').click
 end
 
