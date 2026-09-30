@@ -6,7 +6,6 @@ en:
       js:
         grid_editor:
           templates: "Templates"
-          use_tpl: "Use Template"
           save_tpl: "Save as template"
           list: "List of templates"
           text_editor: "Text Editor"
@@ -41,7 +40,6 @@ es:
       js:
         grid_editor:
           templates: "Plantillas"
-          use_tpl: "Use Template"
           save_tpl: "Guardar como plantilla"
           list: "Lista de plantillas"
           text_editor: "Editor de Texto"
@@ -76,7 +74,6 @@ it:
       js:
         grid_editor:
           templates: "Modelli"
-          use_tpl: "Use Template"
           save_tpl: "Salva come modello"
           list: "Elenco dei modelli"
           text_editor: "Editor di testo"
