@@ -99,7 +99,8 @@ end
 # the same content again. Which of the two the textarea holds depends on when that happens.
 GRID_YELLOW_BACKGROUND = /background-color: (?:rgb\(255, 204, 0\)|#ffcc00)/
 
-# What the editor would save for the post right now: the grid as the last auto_save exported it.
+# What the textarea behind the editor holds right now: the grid as the last auto_save exported it,
+# or that content written again by the text editor, which saves when it loses focus.
 def saved_grid_content
   page.evaluate_script("jQuery('.panel_grid_editor').next('textarea').val()")
 end
