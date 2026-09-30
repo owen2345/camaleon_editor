@@ -98,7 +98,8 @@ jQuery(function(){
     };
 
     // A title attribute holding a translated string, escaped: a translation holding a quote would end
-    // the attribute otherwise.
+    // the attribute otherwise. It is the tooltip and, for the templates entries, the heading of the
+    // modal their panel opens in (open_templates_modal_on_click).
     function tooltip(key, english, data){
         return ' title="'+$.fn.gridEditorEscapeHtml(I18n(key, english, data))+'"';
     }

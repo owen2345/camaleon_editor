@@ -4,7 +4,7 @@
 
 ### Fix: the grid editor shows its translated labels and prompts
 
-The editor's menu and confirm prompts showed titleized keys ("List", "Clear Editor") in every language: their strings sat outside the tree core exports to the browser. They now read "List of templates" and full sentences, in Spanish and Italian too, and in English in any other language. The tooltips of the menu, of the column palette and of the block and content actions are translated as well. [#16](https://github.com/owen2345/camaleon_editor/pull/16).
+The editor's menu and confirm prompts showed titleized keys ("List", "Clear Editor") in every language: their strings sat outside the tree core exports to the browser. They now read "List of templates" and full sentences, in Spanish and Italian too, and in English in any other language. The tooltips of the menu, the column palette and the style settings are translated as well, and so are the headings of the templates list and form, which take the tooltip of the entry that opens them. [#16](https://github.com/owen2345/camaleon_editor/pull/16).
 
 **Notes for upgraders**
 - A host app overriding these strings under `admin.js.grid_editor` moves them to `camaleon_cms.admin.js.grid_editor`.
