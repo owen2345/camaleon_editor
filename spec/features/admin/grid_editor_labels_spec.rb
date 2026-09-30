@@ -49,7 +49,7 @@ RSpec.describe 'the grid editor labels', :js do
       within '.grid_editor_menu' do
         expect(page).to have_link('Contenidos')
 
-        find('a.dropdown-toggle', text: 'Plantillas').click
+        open_templates_menu(label: 'Plantillas')
         expect(page).to have_link('Lista de plantillas')
       end
 

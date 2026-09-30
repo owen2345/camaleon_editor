@@ -81,8 +81,9 @@ def open_grid_editor
   accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
 end
 
-def open_templates_menu
-  find('.grid_editor_menu a.dropdown-toggle', text: 'Templates').click
+# The menu's label is the admin language's; the default is the English one.
+def open_templates_menu(label: 'Templates')
+  find('.grid_editor_menu a.dropdown-toggle', text: label).click
 end
 
 def open_templates_list
