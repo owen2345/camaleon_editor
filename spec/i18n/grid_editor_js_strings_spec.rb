@@ -6,8 +6,8 @@
 # as the last segment of its key, titleized ("List" for "List of templates").
 RSpec.describe 'the grid editor strings its scripts read', type: :model do
   # Every call that names its key, as [key, English default or nil]: I18n("grid_editor.<key>", ...)
-  # for the labels and prompts, tooltip("grid_editor.<key>", ...) for the tooltips and
-  # report_failure("<key>", ...) for the failure messages.
+  # for the labels and prompts, tooltip("grid_editor.<key>", ...) for the tooltips, which the block
+  # scripts call as $.fn.gridEditor_tooltip, and report_failure("<key>", ...) for the failure messages.
   def script_calls
     scripts = Rails.root.glob('../../app/assets/javascripts/plugins/camaleon_editor/admin/*.js')
     call = /(?:(?:I18n|tooltip)\(\s*["']grid_editor\.|report_failure\(\s*["'])(\w+)["'](?:\s*,\s*"([^"]*)")?/
@@ -20,7 +20,8 @@ RSpec.describe 'the grid editor strings its scripts read', type: :model do
 
   it 'finds the keys the scripts ask for' do
     expect(script_keys).to include('list', 'contents', 'toggle_editor', 'clear', 'preview', 'fullscreen',
-                                   'list_title', 'col_block_title',
+                                   'list_title', 'col_block_title', 'switch_editor',
+                                   'audio_form', 'add_item', 'edit_item', 'style_blue',
                                    'import_failed', 'request_failed', 'content_unreadable', 'editor_failed')
   end
 
