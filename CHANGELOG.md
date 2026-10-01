@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Tooling: the grid specs read the grid's own export
+
+The feature specs read what the grid exported from a record of their own, not from the post's textarea, which the text editor rewrites in its own serialization when it loses focus: they no longer fail on that timing. Development tooling only. [#18](https://github.com/owen2345/camaleon_editor/pull/18).
+
 ### Fix: the grid editor shows its translated labels and prompts
 
 The editor's menu, prompts, tooltips, hints, blocks and style settings panel showed titleized keys or hard-coded English. They now follow the admin language, in English where untranslated, and the templates modals' headings no longer open empty. [#16](https://github.com/owen2345/camaleon_editor/pull/16).
