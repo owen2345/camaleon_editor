@@ -186,18 +186,21 @@ jQuery(function(){
     // knew when it loaded: a session gone or a permission taken away since then comes back as the
     // login or dashboard page. The panel is fetched and checked first, and only a panel is shown.
     function open_templates_modal_on_click(links, callback){
-        links.click(function(e){
-            e.preventDefault();
+        links.each(function(){
             var link = $(this);
-            $.fn.gridEditor_one_request(link.closest(".panel_grid_editor"), function(){
-                return $.get(link.attr("href")).done(function(res){
-                    $.fn.gridEditor_show_templates_panel(res, function(panel){
-                        // The link's title heads the modal. A second after the page loads core gives every
-                        // link of the admin a Bootstrap tooltip, which keeps the title in data-original-title
-                        // and leaves the attribute empty: the heading is read from wherever it is by now.
-                        open_modal({title: link.attr("data-original-title") || link.attr("title"), content: panel, callback: callback});
-                    });
-                }).fail($.fn.gridEditor_request_failed);
+            // The link's title heads the modal, and is read here, as the editor wrote it: a second
+            // after the page loads core gives every link of the admin a Bootstrap tooltip, which takes
+            // the title out of the attribute and keeps it where that version of Bootstrap sees fit.
+            var heading = link.attr("title");
+            link.click(function(e){
+                e.preventDefault();
+                $.fn.gridEditor_one_request(link.closest(".panel_grid_editor"), function(){
+                    return $.get(link.attr("href")).done(function(res){
+                        $.fn.gridEditor_show_templates_panel(res, function(panel){
+                            open_modal({title: heading, content: panel, callback: callback});
+                        });
+                    }).fail($.fn.gridEditor_request_failed);
+                });
             });
         });
     }

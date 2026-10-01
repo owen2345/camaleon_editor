@@ -36,7 +36,7 @@ RSpec.describe 'the grid editor labels', :js do
     end
 
     # A second after the page loads, core gives every link of the admin a Bootstrap tooltip, which
-    # moves the link's title into data-original-title: the entry heads its modal from either.
+    # takes the title out of the attribute: the modal keeps the heading its entry was built with.
     it 'heads the templates list by its entry, a link core has given a tooltip by then' do
       page.execute_script("jQuery('.grid_editor_menu a.list_templates').tooltip()")
       expect(page).to have_css('.grid_editor_menu a.list_templates[data-original-title]', visible: :all)
