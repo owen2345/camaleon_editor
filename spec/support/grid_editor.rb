@@ -91,6 +91,17 @@ def open_templates_list(label: 'Templates')
   find('.grid_editor_menu .list_templates').click
 end
 
+# The tooltip a link of the admin carries, or nil. A second after the page loads, core gives every
+# link a Bootstrap tooltip, which moves a title into data-original-title and leaves the attribute
+# empty: which of the two holds the text depends on when the example looks.
+def tooltip_of(link)
+  link['data-original-title'].presence || link[:title].presence
+end
+
+def have_link_with_tooltip(label, tooltip)
+  have_link(label) { |link| tooltip_of(link) == tooltip }
+end
+
 def apply_listed_template
   accept_confirm { find('#grid_table_list .import_item').click }
 end

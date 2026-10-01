@@ -22,8 +22,8 @@ RSpec.describe 'the grid editor labels', :js do
         expect(page).to have_field('Fullscreen', type: 'checkbox')
 
         open_templates_menu
-        expect(page).to have_link('List of templates', title: 'Grid templates')
-        expect(page).to have_link('Save as template', title: 'New template')
+        expect(page).to have_link_with_tooltip('List of templates', 'Grid templates')
+        expect(page).to have_link_with_tooltip('Save as template', 'New template')
       end
     end
 
@@ -60,7 +60,7 @@ RSpec.describe 'the grid editor labels', :js do
         expect(page).to have_link('Contenidos')
 
         open_templates_menu(label: 'Plantillas')
-        expect(page).to have_link('Lista de plantillas', title: 'Plantillas de rejilla')
+        expect(page).to have_link_with_tooltip('Lista de plantillas', 'Plantillas de rejilla')
       end
 
       # The palette's tooltips are Bootstrap's, which shows the title on hover
@@ -91,7 +91,7 @@ RSpec.describe 'the grid editor labels', :js do
         expect(page).to have_link('Content Elements')
 
         open_templates_menu
-        expect(page).to have_link('List of templates', title: 'Grid templates')
+        expect(page).to have_link_with_tooltip('List of templates', 'Grid templates')
       end
 
       message = dismiss_confirm { find('.grid_editor_menu a.clear').click }
@@ -108,7 +108,7 @@ RSpec.describe 'the grid editor labels', :js do
     it 'asks before deleting, naming what goes: the content element or the block' do
       find('.drg_item > .header_box .dropdown-toggle').click
       # The action's label says it all: no tooltip repeats it
-      expect(page).to have_no_css('.drg_item > .header_box .grid_content_remove[title]')
+      expect(tooltip_of(find('.drg_item > .header_box .grid_content_remove'))).to be_nil
       message = dismiss_confirm { find('.drg_item > .header_box .grid_content_remove').click }
       expect(message).to eq('Are you sure to delete this content?')
 
