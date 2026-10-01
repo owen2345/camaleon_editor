@@ -547,6 +547,7 @@ jQuery(function(){
                 if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
                 left_with = tinyEditor.getContent();
                 tinymce_panel.show();
+                field_follows();
                 return false;
             });
             editor.find(".grid_editor_menu .clear").click(function(){
@@ -758,6 +759,15 @@ jQuery(function(){
             if(exported !== null && grid_shown && e.format === "html" && !e.selection) e.content = exported;
         });
 
+        // The editor that takes over from the other speaks for the field from then on, and the
+        // field follows at once: written, and said to have changed, as core has it done when the
+        // text editor loses focus. A post in several languages sends what its fields composed the
+        // last time one of them said so, and a switch of editors takes the focus from neither.
+        function field_follows(){
+            tinyEditor.save();
+            textarea.trigger("change");
+        }
+
         // The grid made again from a grid root parsed off the text editor's content: its attributes,
         // its style, its columns. What it held is set aside as nodes, handlers included, and comes
         // back when a parser throws part-way: a half-built grid is worse than the one left behind.
@@ -826,6 +836,7 @@ jQuery(function(){
             }
             $(text_editor.editorContainer).hide();
             editor.show();
+            if(hidden) field_follows();
         });
 
         // drag columns

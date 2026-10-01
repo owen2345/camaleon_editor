@@ -289,6 +289,35 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(export).to include('<p>english</p>', script, '<b>changed</b>')
       expect(post_content).to eq("<!--:en-->#{export}<!--:--><!--:es-->#{grid_in('spanish')}<!--:-->")
     end
+
+    # What the post sends for its content. Core composes it from the fields of the languages when
+    # one of them says it changed, which a text editor does when it loses focus. An editor that
+    # takes over from the other does not wait for that: the field is written, and says so, then.
+    def composed_content
+      page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea.translated-item')[0].value")
+    end
+
+    it 'has the post send the text editor version once the author went back to it' do
+      leave_for_the_text_editor
+
+      expect(composed_content).to include('<strong>bold</strong>', grid_in('spanish'))
+    end
+
+    it 'has the post send the grid made again from what was changed in the text editor' do
+      leave_for_the_text_editor
+      page.execute_script(<<~JS)
+        var editor = tinymce.get(jQuery('#form-post textarea.tinymce_textarea.translate-item').first().attr('id'));
+        editor.setContent(editor.getContent().replace('bold', 'changed in the text editor'));
+      JS
+      open_grid_editor
+      find('.panel_grid_body .drg_item strong', text: 'changed in the text editor', visible: :all)
+
+      expect(composed_content).to include('<strong>changed in the text editor</strong>', grid_in('spanish'))
+
+      submit_post_form
+
+      expect(post_content).to include('<strong>changed in the text editor</strong>', grid_in('spanish'))
+    end
   end
 
   # Core refuses a script from a role it does not trust with unfiltered HTML, and rewrites nothing.
