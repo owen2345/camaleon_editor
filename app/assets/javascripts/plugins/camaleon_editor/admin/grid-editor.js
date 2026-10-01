@@ -486,6 +486,9 @@ jQuery(function(){
             column.addClass("drg_column btn btn-default");
             if(column.children(".header_box").length == 0) column.prepend(html);
             if(!skip_options){
+                // Marked as built, with its blocks: the sort that ends on a column or a block not marked
+                // yet - one dropped in from the palette - is what gives it its menu, and gives it once.
+                column.addClass("grid-col-built");
                 // the column's own header, area and blocks: a block may hold grid markup of its own
                 column.children('.header_box').append(options);
                 grid_content_manager(column.children(".grid_sortable_items"));
@@ -525,7 +528,7 @@ jQuery(function(){
             content.addClass("drg_item btn btn-default");
             if(content.children(".header_box").length == 0) content.prepend(html);
             if(!skip_options){
-                content.children('.header_box').append(options);
+                content.addClass("grid-item-built").children('.header_box').append(options);
             }
             // save used libraries
             // TODO: finish or retire the list of libraries a grid uses, a design of the plugin's first
@@ -892,7 +895,6 @@ jQuery(function(){
             stop: function (e, ui) {
                 ui.item.css({left: "", opacity: "", right: "", bottom: "", top: "", position: ""}).removeAttr("data-original-title").removeAttr("aria-describedby");
                 if(!jQuery(ui.item).hasClass('grid-col-built')) parse_content_column(ui.item)
-                ui.item.addClass('grid-col-built');
                 editor.trigger("auto_save");
             }
         });
@@ -921,7 +923,6 @@ jQuery(function(){
                 stop: function (e, ui) {
                     ui.item.removeClass('col-md-12').css({left: "", opacity: "", right: "", bottom: "", top: "", position: ""}).removeAttr("data-original-title").removeAttr("aria-describedby");
                     if(!jQuery(ui.item).hasClass('grid-item-built')) parse_content_content(ui.item)
-                    ui.item.addClass('grid-item-built');
                     editor.trigger("auto_save");
                 }
             });

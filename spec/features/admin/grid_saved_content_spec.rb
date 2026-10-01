@@ -98,6 +98,26 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page.evaluate_script('window.__cama_parses')).to eq(0)
   end
 
+  # A column or a block dropped in from the palette is given its menu as the sort that placed it
+  # ends. Those of a grid rebuilt from content have theirs already: sorting one adds no second.
+  it 'leaves a column and a block of a rebuilt grid their one menu when they are sorted' do
+    store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
+    open_post_in_editor(@post)
+    find('.panel_grid_editor .panel_grid_body .drg_item')
+
+    # what the grid's sortables do as a sort ends, for the column and for its block
+    page.execute_script(<<~JS)
+      var grid = jQuery('.panel_grid_editor > .panel_grid_body_w > .panel_grid_body');
+      var column = grid.children('.drg_column').first();
+      grid.sortable('option', 'stop').call(grid[0], {}, {item: column});
+      var area = column.children('.grid_sortable_items');
+      area.sortable('option', 'stop').call(area[0], {}, {item: area.children('.drg_item').first()});
+    JS
+
+    expect(page).to have_css('.panel_grid_body .drg_column > .header_box .dropdown', count: 1, visible: :all)
+    expect(page).to have_css('.panel_grid_body .drg_item > .header_box .dropdown', count: 1, visible: :all)
+  end
+
   # The editor holds one grid: opening the first of several would drop the others at the next save.
   it 'keeps content holding several grids in the text editor' do
     content = grid_post_content(grid_body_markup + grid_body_markup(grid_column_markup(col: 12, title: '100%')))
