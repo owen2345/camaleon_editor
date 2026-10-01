@@ -125,7 +125,7 @@ end
 # seconds after the form opened and with every draft. Which of them wrote last depends on timing,
 # so the export is put on record as the grid writes it, at the change_in its auto_save triggers.
 # Nothing else triggers one on a textarea, and the record does not look for the editor beside the
-# field: a rebuild that fails has taken it out of the page again.
+# field: a rebuild that fails never puts its editor in the page.
 def record_grid_exports
   page.execute_script(<<~JS)
     if(window.jQuery && !window.__cama_grid_exports){
