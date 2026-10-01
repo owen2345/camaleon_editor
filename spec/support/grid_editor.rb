@@ -119,15 +119,62 @@ def apply_listed_template
   accept_confirm { find('#grid_table_list .import_item').click }
 end
 
-# The yellow background the specs give a grid, as saved content may carry it: rgb() the way the
-# grid exports it, or #rrggbb once the text editor, which saves when it loses focus, has written
-# the same content again. Which of the two the textarea holds depends on when that happens.
-GRID_YELLOW_BACKGROUND = /background-color: (?:rgb\(255, 204, 0\)|#ffcc00)/
+# A modal slides into place for a moment after it opens, and a click aimed at one of several rows
+# while it moves can land on the row beside it. This waits until no transition runs in the modal.
+def wait_for_modal_at_rest(selector)
+  find("#{selector}.in")
+  Timeout.timeout(Capybara.default_max_wait_time) do
+    sleep 0.05 while page.evaluate_script(<<~JS, selector)
+      document.querySelector(arguments[0]).getAnimations({subtree: true}).some(function(animation){
+        return animation instanceof CSSTransition;
+      })
+    JS
+  end
+end
 
-# What the textarea behind the editor holds right now: the grid as the last auto_save exported it,
-# or that content written again by the text editor, which saves when it loses focus.
+# The post's textarea has more than one writer. The grid writes its export there at every
+# auto_save. The text editor, handed the same content, writes it again in its own serialization (a
+# newline between tags, #rrggbb for rgb(), <strong> for <b>, no script) when it loses focus, two
+# seconds after the form opened and with every draft. Which of them wrote last depends on timing.
+# And once a block form has loaded a text editor of its own through jQuery's tinymce(), val() hands
+# the grid's export to the text editor alone: the field keeps what it held.
+#
+# So the export is not read off the field. The grid hands it to the text editor right before the
+# change_in its auto_save triggers, and what a text editor was last handed at that moment goes on
+# record. Nothing else triggers a change_in on a textarea, and the record does not look for the
+# editor beside the field: a rebuild that fails never puts its editor in the page.
+def record_grid_exports
+  page.execute_script(<<~JS)
+    if(window.jQuery && !window.__cama_grid_exports){
+      var record = window.__cama_grid_exports = {handed: null, last: null};
+      var watch = function(editor){
+        editor.on('BeforeSetContent', function(event){ record.handed = event.content; });
+      };
+      if(window.tinymce){
+        jQuery.each(tinymce.editors, function(_index, editor){ watch(editor); });
+        tinymce.on('AddEditor', function(event){ watch(event.editor); });
+      }
+      jQuery(document).on('change_in', 'textarea', function(){ record.last = record.handed; });
+    }
+  JS
+end
+
+# The grid as the last auto_save exported it, nil when none did since the editor page was opened.
+# Saving the post stores the text editor's serialization of it, not the export itself.
 def saved_grid_content
-  page.evaluate_script("jQuery('.panel_grid_editor').next('textarea').val()")
+  page.evaluate_script('window.__cama_grid_exports.last')
+end
+
+# What saving the post would store of content the grid editor left to the text editor: the text
+# editor writes its content into the field before the form goes, as it does here. It puts a
+# newline between tags; the content these specs store has none of its own, so they are taken off.
+def text_editor_content
+  page.evaluate_script(<<~JS).delete("\n")
+    (function(){
+      tinymce.triggerSave();
+      return jQuery('#form-post textarea.tinymce_textarea').first().val();
+    })()
+  JS
 end
 
 def trigger_grid_auto_save
