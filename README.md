@@ -35,7 +35,8 @@ bundle exec rake camaleon_editor:security:scan_templates
 
 A post saved from the grid editor stores the grid as the editor exported it; the text editor
 behind it does not rewrite it. An author who leaves the grid editor for the text editor works on
-the grid's markup there, and that editor's content is what is saved. Back in the grid editor, the
+the grid's markup there, and that editor's content is what is saved; a grid opened over a post's
+other content hands the text editor that content back instead. Back in the grid editor, the
 grid is made again from what was changed in the text editor. Other content written there is no
 grid to make: the grid comes back as it was left and is what is saved, and that content waits in
 the text editor.
