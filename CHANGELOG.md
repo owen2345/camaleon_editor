@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Fix: a post saved from the grid editor stores the grid as exported
+
+The text editor behind the grid no longer rewrites the grid when the post is saved, so a script in a block is stored. [#20](https://github.com/owen2345/camaleon_editor/pull/20).
+
+**Notes for upgraders**
+- A role without unfiltered HTML is refused a changed grid that holds a script; the script used to be dropped silently.
+- Grid posts keep the export's markup: `<b>`, `rgb()`, no newlines between tags.
+
 ### Tooling: the grid specs read the grid's own export
 
 The feature specs read what the grid exported from a record of their own, not from the post's textarea, which the text editor rewrites in its own serialization when it loses focus: they no longer fail on that timing. Development tooling only. [#18](https://github.com/owen2345/camaleon_editor/pull/18).
