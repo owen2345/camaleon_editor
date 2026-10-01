@@ -82,6 +82,22 @@ RSpec.describe 'the grid editor labels', :js do
       open_templates_list(label: 'Plantillas')
       expect(page).to have_css('#ow_inline_modal .modal-title', text: 'Plantillas de rejilla')
     end
+
+    # The modal is headed by the script, its form rendered by the server, and a width below zero
+    # refused by the script again
+    it 'opens the style settings in that language' do
+      open_grid_style_settings(label: 'Plantillas')
+
+      within '#cama_editor_style_modal' do
+        expect(page).to have_css('.modal-title', text: 'Ajustes de estilo')
+        expect(page).to have_css('legend', text: 'Imagen de fondo')
+        expect(page).to have_select('Posición', with_options: ['Izquierda arriba'])
+
+        fill_in 'Ancho:', with: '-1'
+        find('.modal_submit').click
+        expect(page).to have_css('.border_width_error', text: 'El ancho debe ser cero o mayor')
+      end
+    end
   end
 
   # The browser gets the strings of the admin language alone, and the plugin ships three languages.
@@ -103,6 +119,15 @@ RSpec.describe 'the grid editor labels', :js do
 
       message = dismiss_confirm { find('.grid_editor_menu a.clear').click }
       expect(message).to eq('Are you sure to clear the editor?')
+    end
+
+    it 'opens the style settings in English' do
+      open_grid_style_settings
+
+      within '#cama_editor_style_modal' do
+        expect(page).to have_css('.modal-title', text: 'Style settings')
+        expect(page).to have_css('legend', text: 'Background Image')
+      end
     end
   end
 

@@ -91,6 +91,12 @@ def open_templates_list(label: 'Templates')
   find('.grid_editor_menu .list_templates').click
 end
 
+# The style settings of the whole grid, an entry of the same menu.
+def open_grid_style_settings(label: 'Templates')
+  open_templates_menu(label: label)
+  find('.grid_editor_menu .grid_style_settings').click
+end
+
 # The tooltip a link of the admin carries, or nil. A second after the page loads, core gives every
 # link a Bootstrap tooltip, which moves a title into data-original-title and leaves the attribute
 # empty: which of the two holds the text depends on when the example looks.
