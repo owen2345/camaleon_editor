@@ -776,8 +776,8 @@ jQuery(function(){
                 if(window.console) console.error(error);
                 grid.empty();
                 set_attributes(grid, previous.attributes);
-                // natively: jQuery's append() would run the scripts of the grid set aside
-                $.each(previous.contents, function(){ grid[0].appendChild(this); });
+                // detach() marked the scripts of the grid set aside as run: append() leaves them alone
+                grid.append(previous.contents);
                 return false;
             }
             // released for good, or jQuery's data store would hold the grid for the life of the page

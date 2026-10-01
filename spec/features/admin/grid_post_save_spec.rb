@@ -170,7 +170,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
       end
 
       # Making the grid again runs the parsers that rebuild a saved grid, and a widget they set up
-      # can throw: the grid built earlier comes back whole, and the author stays in the text editor.
+      # can throw: the grid built earlier comes back whole, its script not run on the way, and the
+      # author stays in the text editor.
       it 'keeps the grid built earlier when making it again throws' do
         change_in_the_text_editor('bold', 'changed in the text editor')
         page.execute_script("jQuery.fn.sortable = function(){ throw new Error('widget broke'); };")
@@ -182,6 +183,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
         expect(page).to have_css('.panel_grid_body[style*="background-color"] .drg_item > .header_box',
                                  count: 1, visible: :all)
         expect(page).to have_css('.panel_grid_body .drg_item b', text: 'bold', visible: :all)
+        expect(page).to have_css('.panel_grid_body .drg_item script', count: 1, visible: :all)
+        expect(page.evaluate_script('window.__cama_widget_loaded')).to be_nil
       end
 
       # Other content written in the text editor is no grid to make. The grid built earlier comes
