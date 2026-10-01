@@ -51,10 +51,7 @@ window.grid_accordion_builder = function (panel, editor) {
           "<td><i class='fa fa-arrows' style='cursor: move;'></i></td>" +
           "<td class='name'></td>" +
           "<td class='hidden'><textarea class='descr hidden'></textarea></td>" +
-          "<td class='text-right'>" +
-            "<a href='#' class='edit_item'" + $.fn.gridEditor_tooltip("grid_editor.edit_item", "Edit") + "><i class='fa fa-pencil'></i></a> " +
-            "<a href='#' class='del_item'" + $.fn.gridEditor_tooltip("grid_editor.delete_item", "Delete") + "><i class='fa fa-trash'></i></a>" +
-          "</td>" +
+          "<td class='text-right'>" + $.fn.gridEditor_item_actions() + "</td>" +
         "</tr>"
     );
     tpl.find("tbody").append(tr);

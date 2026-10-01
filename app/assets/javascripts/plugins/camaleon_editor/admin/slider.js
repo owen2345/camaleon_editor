@@ -34,8 +34,7 @@ window.grid_slider_builder = function(panel, editor){
           "<td class='text-right'><" +
             "textarea class='descr hidden'></textarea> " +
             "<input class='media hidden' /> " +
-            "<a href='#' class='edit_item'" + $.fn.gridEditor_tooltip("grid_editor.edit_item", "Edit") + "><i class='fa fa-pencil'></i></a> " +
-            "<a href='#' class='del_item'" + $.fn.gridEditor_tooltip("grid_editor.delete_item", "Delete") + "><i class='fa fa-trash'></i></a>" +
+            $.fn.gridEditor_item_actions() +
           "</td>" +
         "</tr>"
     );

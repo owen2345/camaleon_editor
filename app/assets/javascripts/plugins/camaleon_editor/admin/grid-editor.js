@@ -108,8 +108,11 @@ jQuery(function(){
     function tooltip(key, english, data){
         return ' title="'+$.fn.gridEditorEscapeHtml(I18n(key, english, data))+'"';
     }
-    // for the block scripts, whose forms list their items with an action or two each
-    $.fn.gridEditor_tooltip = tooltip;
+    // The actions of an item (a tab, a slide) in the list a block's form shows: edit it, delete it.
+    $.fn.gridEditor_item_actions = function(){
+        return "<a href='#' class='edit_item'"+tooltip("grid_editor.edit_item", "Edit")+"><i class='fa fa-pencil'></i></a> "+
+            "<a href='#' class='del_item'"+tooltip("grid_editor.delete_item", "Delete")+"><i class='fa fa-trash'></i></a>";
+    };
 
     // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too. The
     // alert is core's modal, often the very code whose throw is being reported, and the report runs

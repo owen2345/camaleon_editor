@@ -35,11 +35,7 @@ window.grid_gallery_builder = function(panel, editor){
             "<td><i class='fa fa-arrows' style='cursor: move;'></i></td>" +
             "<td class='name'></td>" +
             "<td class='text-right'>" +
-              fields +
-              " <a href='#' class='edit_item'" + $.fn.gridEditor_tooltip("grid_editor.edit_item", "Edit") + ">" +
-                "<i class='fa fa-pencil'></i>" +
-              "</a> " +
-              "<a href='#' class='del_item'" + $.fn.gridEditor_tooltip("grid_editor.delete_item", "Delete") + "><i class='fa fa-trash'></i></a>" +
+              fields + " " + $.fn.gridEditor_item_actions() +
             "</td>" +
           "</tr>");
     tpl.find("tbody").append(tr);
