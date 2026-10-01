@@ -122,15 +122,26 @@ end
 # The post's textarea has more than one writer. The grid writes its export there at every
 # auto_save. The text editor, handed the same content, writes it again in its own serialization (a
 # newline between tags, #rrggbb for rgb(), <strong> for <b>, no script) when it loses focus, two
-# seconds after the form opened and with every draft. Which of them wrote last depends on timing,
-# so the export is put on record as the grid writes it, at the change_in its auto_save triggers.
-# Nothing else triggers one on a textarea, and the record does not look for the editor beside the
-# field: a rebuild that fails never puts its editor in the page.
+# seconds after the form opened and with every draft. Which of them wrote last depends on timing.
+# And once a block form has loaded a text editor of its own through jQuery's tinymce(), val() hands
+# the grid's export to the text editor alone: the field keeps what it held.
+#
+# So the export is not read off the field. The grid hands it to the text editor right before the
+# change_in its auto_save triggers, and what a text editor was last handed at that moment goes on
+# record. Nothing else triggers a change_in on a textarea, and the record does not look for the
+# editor beside the field: a rebuild that fails never puts its editor in the page.
 def record_grid_exports
   page.execute_script(<<~JS)
     if(window.jQuery && !window.__cama_grid_exports){
-      window.__cama_grid_exports = {last: null};
-      jQuery(document).on('change_in', 'textarea', function(){ window.__cama_grid_exports.last = this.value; });
+      var record = window.__cama_grid_exports = {handed: null, last: null};
+      var watch = function(editor){
+        editor.on('BeforeSetContent', function(event){ record.handed = event.content; });
+      };
+      if(window.tinymce){
+        jQuery.each(tinymce.editors, function(_index, editor){ watch(editor); });
+        tinymce.on('AddEditor', function(event){ watch(event.editor); });
+      }
+      jQuery(document).on('change_in', 'textarea', function(){ record.last = record.handed; });
     }
   JS
 end
