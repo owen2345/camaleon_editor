@@ -1,56 +1,56 @@
 <form>
     <fieldset>
-        <legend>Background Image</legend>
+        <legend><%= camaleon_editor_t("style_settings.background_image") %></legend>
         <div class='col-md-12'>
             <div class="form-group">
-                <label class="control-label" for="cama_style_b-img">Image:</label>
-                <input placeholder="Upload your image or paste an URL" type="text" class="form-control bg_image file_upload" name="b-img" id="cama_style_b-img" />
+                <label class="control-label" for="cama_style_b-img"><%= camaleon_editor_t("style_settings.image") %>:</label>
+                <input placeholder="<%= camaleon_editor_t("style_settings.image_placeholder") %>" type="text" class="form-control bg_image file_upload" name="b-img" id="cama_style_b-img" />
             </div>
         </div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label" for="cama_style_b-pos">Position</label>
+                <label class="control-label" for="cama_style_b-pos"><%= camaleon_editor_t("style_settings.position") %></label>
                 <select class="form-control pos_bg" name="b-pos" id="cama_style_b-pos">
-                    <option value="">Default</option>
-                    <option value="left top">Left Top</option>
-                    <option value="left center">Left Center</option>
-                    <option value="left bottom">Left Bottom</option>
-                    <option value="center top">Center Top</option>
-                    <option value="center center">Center Center</option>
-                    <option value="center bottom">Center Bottom</option>
-                    <option value="right top">Right Top</option>
-                    <option value="right center">Right Center</option>
-                    <option value="right bottom">Right Bottom</option>
+                    <option value=""><%= camaleon_editor_t("style_settings.default") %></option>
+                    <option value="left top"><%= camaleon_editor_t("style_settings.left_top") %></option>
+                    <option value="left center"><%= camaleon_editor_t("style_settings.left_center") %></option>
+                    <option value="left bottom"><%= camaleon_editor_t("style_settings.left_bottom") %></option>
+                    <option value="center top"><%= camaleon_editor_t("style_settings.center_top") %></option>
+                    <option value="center center"><%= camaleon_editor_t("style_settings.center_center") %></option>
+                    <option value="center bottom"><%= camaleon_editor_t("style_settings.center_bottom") %></option>
+                    <option value="right top"><%= camaleon_editor_t("style_settings.right_top") %></option>
+                    <option value="right center"><%= camaleon_editor_t("style_settings.right_center") %></option>
+                    <option value="right bottom"><%= camaleon_editor_t("style_settings.right_bottom") %></option>
                 </select>
             </div>
         </div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label" for="cama_style_b-r">Repeat</label>
+                <label class="control-label" for="cama_style_b-r"><%= camaleon_editor_t("style_settings.repeat") %></label>
                 <select class="repeat_bg form-control" name="b-r" id="cama_style_b-r">
-                    <option value="">Default</option>
-                    <option value="no-repeat">No Repeat</option>
-                    <option value="repeat">Repeat</option>
+                    <option value=""><%= camaleon_editor_t("style_settings.default") %></option>
+                    <option value="no-repeat"><%= camaleon_editor_t("style_settings.no_repeat") %></option>
+                    <option value="repeat"><%= camaleon_editor_t("style_settings.repeat_on") %></option>
                 </select>
             </div>
         </div>
         <div class="clearfix"></div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label" for="cama_style_b-s">Size</label>
+                <label class="control-label" for="cama_style_b-s"><%= camaleon_editor_t("style_settings.size") %></label>
                 <select class="form-control size_bg" name="b-s" id="cama_style_b-s">
-                    <option value="">Normal</option>
-                    <option value="contain">Contain</option>
-                    <option value="cover">Cover</option>
+                    <option value=""><%= camaleon_editor_t("style_settings.normal") %></option>
+                    <option value="contain"><%= camaleon_editor_t("style_settings.contain") %></option>
+                    <option value="cover"><%= camaleon_editor_t("style_settings.cover") %></option>
                 </select>
             </div>
         </div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label" for="cama_style_b-a">Attachment</label>
+                <label class="control-label" for="cama_style_b-a"><%= camaleon_editor_t("style_settings.attachment") %></label>
                 <select class="form-control attach_bg" name="b-a" id="cama_style_b-a">
-                    <option value="">Normal</option>
-                    <option value="fixed">Fixed</option>
+                    <option value=""><%= camaleon_editor_t("style_settings.normal") %></option>
+                    <option value="fixed"><%= camaleon_editor_t("style_settings.fixed") %></option>
                 </select>
             </div>
         </div>
@@ -59,7 +59,7 @@
     <div class="row">
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label" for="cama_style_b-c">Background Color:</label>
+                <label class="control-label" for="cama_style_b-c"><%= camaleon_editor_t("style_settings.background_color") %>:</label>
                 <div class="input-group color panel_color" data-color="" data-color-format="rgba">
                     <input type="text" class="form-control input-value color_bg" name="b-c" id="cama_style_b-c" value="">
                     <span class="input-group-addon"><i></i></span>
@@ -68,7 +68,7 @@
         </div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label" for="cama_style_t-c">Text Color:</label>
+                <label class="control-label" for="cama_style_t-c"><%= camaleon_editor_t("style_settings.text_color") %>:</label>
                 <div class="input-group panel_color color" data-color="">
                     <input type="text" class="form-control input-value text_bg" name="t-c" id="cama_style_t-c" value="">
                     <span class="input-group-addon"><i></i></span>
@@ -79,10 +79,10 @@
 
     <div class="clearfix"></div>
     <fieldset>
-        <legend>Border</legend>
+        <legend><%= camaleon_editor_t("style_settings.border") %></legend>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label" for="cama_style_bo-c">Color:</label>
+                <label class="control-label" for="cama_style_bo-c"><%= camaleon_editor_t("style_settings.color") %>:</label>
                 <div class="input-group panel_color color" data-color="">
                     <input type="text" class="form-control input-value color_border" name="bo-c" id="cama_style_bo-c" value="">
                     <span class="input-group-addon"><i></i></span>
@@ -91,26 +91,26 @@
         </div>
         <div class='col-md-6'>
             <div class="form-group">
-                <label class="control-label" for="cama_style_bo-w">Width:</label>
+                <label class="control-label" for="cama_style_bo-w"><%= camaleon_editor_t("style_settings.width") %>:</label>
                 <input type="number" class="form-control input-value border_width" name="bo-w" id="cama_style_bo-w" value="" min="0">
             </div>
         </div>
     </fieldset>
 
-    <div class="form-group"><label class="control-label" for="cama_style_m-t">Margin:</label>
-        <div class="input-group"><span class="input-group-addon">Top: </span>
-            <input class="form-control" type="number" name="m-t" id="cama_style_m-t"> <span class="input-group-addon">Right: </span>
-            <input type="number" class="form-control" name="m-r" id="cama_style_m-r"> <span class="input-group-addon">Bottom: </span>
-            <input class="form-control" type="number" name="m-b" id="cama_style_m-b"> <span class="input-group-addon">Left: </span>
+    <div class="form-group"><label class="control-label" for="cama_style_m-t"><%= camaleon_editor_t("style_settings.margin") %>:</label>
+        <div class="input-group"><span class="input-group-addon"><%= camaleon_editor_t("style_settings.top") %>: </span>
+            <input class="form-control" type="number" name="m-t" id="cama_style_m-t"> <span class="input-group-addon"><%= camaleon_editor_t("style_settings.right") %>: </span>
+            <input type="number" class="form-control" name="m-r" id="cama_style_m-r"> <span class="input-group-addon"><%= camaleon_editor_t("style_settings.bottom") %>: </span>
+            <input class="form-control" type="number" name="m-b" id="cama_style_m-b"> <span class="input-group-addon"><%= camaleon_editor_t("style_settings.left") %>: </span>
             <input class="form-control" type="number" name="m-l" id="cama_style_m-l">
         </div>
     </div>
 
-    <div class="form-group"><label class="control-label" for="cama_style_p-t">Padding:</label>
-        <div class="input-group"><span class="input-group-addon">Top: </span>
-            <input class="form-control" type="number" name="p-t" id="cama_style_p-t"> <span class="input-group-addon">Right: </span>
-            <input type="number" class="form-control" name="p-r" id="cama_style_p-r"> <span class="input-group-addon">Bottom: </span>
-            <input class="form-control" type="number" name="p-b" id="cama_style_p-b"> <span class="input-group-addon">Left: </span>
+    <div class="form-group"><label class="control-label" for="cama_style_p-t"><%= camaleon_editor_t("style_settings.padding") %>:</label>
+        <div class="input-group"><span class="input-group-addon"><%= camaleon_editor_t("style_settings.top") %>: </span>
+            <input class="form-control" type="number" name="p-t" id="cama_style_p-t"> <span class="input-group-addon"><%= camaleon_editor_t("style_settings.right") %>: </span>
+            <input type="number" class="form-control" name="p-r" id="cama_style_p-r"> <span class="input-group-addon"><%= camaleon_editor_t("style_settings.bottom") %>: </span>
+            <input class="form-control" type="number" name="p-b" id="cama_style_p-b"> <span class="input-group-addon"><%= camaleon_editor_t("style_settings.left") %>: </span>
             <input class="form-control" type="number" name="p-l" id="cama_style_p-l">
         </div>
     </div>

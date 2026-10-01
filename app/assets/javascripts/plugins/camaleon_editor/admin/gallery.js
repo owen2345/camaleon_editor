@@ -3,15 +3,15 @@ window.grid_gallery_builder = function(panel, editor){
   const tpl =
       $('<div>' +
           '<table class="table table-hover">' +
-            '<thead><th></th><th>Title</th><th class="hidden"></th></thead>' +
+            '<thead><th></th><th>' + I18n("grid_editor.item_title", "Title") + '</th><th class="hidden"></th></thead>' +
             '<tbody></tbody>' +
           '</table>'+
-          '<a class="btn btn-default add_item">Add Item <i class="fa fa-plus-circle"></i></a>' +
+          '<a class="btn btn-default add_item">' + I18n("grid_editor.add_item", "Add Item") + ' <i class="fa fa-plus-circle"></i></a>' +
       '</div>');
 
   // link buttons
   tpl.find(".add_item").click(function() {
-    show_form(add_item("Title sample"));
+    show_form(add_item(I18n("grid_editor.title_sample", "Title sample")));
     return false;
   });
   tpl.on("click", "a.edit_item", function() {
@@ -35,11 +35,7 @@ window.grid_gallery_builder = function(panel, editor){
             "<td><i class='fa fa-arrows' style='cursor: move;'></i></td>" +
             "<td class='name'></td>" +
             "<td class='text-right'>" +
-              fields +
-              " <a href='#' class='edit_item' title='Edit'>" +
-                "<i class='fa fa-pencil'></i>" +
-              "</a> " +
-              "<a href='#' class='del_item' title='Destroy'><i class='fa fa-trash'></i></a>" +
+              fields + " " + $.fn.gridEditor_item_actions() +
             "</td>" +
           "</tr>");
     tpl.find("tbody").append(tr);
@@ -64,9 +60,9 @@ window.grid_gallery_builder = function(panel, editor){
     const form =
         $('<form>'+
             '<div class="form-group"> \
-              <label class="control-label">Title</label><input class="form-control name"> \
+              <label class="control-label">' + I18n("grid_editor.item_title", "Title") + '</label><input class="form-control name"> \
             </div>'+
-            `<div class="form-group"><label class="control-label">Media</label> \
+            `<div class="form-group"><label class="control-label">${I18n("grid_editor.media", "Media")}</label> \
               <div class="group-input-fields-content input-group"> \
               <input type="url" class="form-control url_file" /> \
               <span class="input-group-addon btn_upload"><i class="fa fa-upload"></i> </span> \
@@ -93,7 +89,7 @@ window.grid_gallery_builder = function(panel, editor){
 
     open_modal({
       id: 'cama_editor_modal2',
-      title: "Gallery Item Form",
+      title: I18n("grid_editor.gallery_item_form", "Gallery Item Form"),
       type: "primary",
       modal_size: "modal-lg",
       modal_settings: { keyboard: false, backdrop: "static" },
@@ -137,7 +133,7 @@ window.grid_gallery_builder = function(panel, editor){
   };
 
   open_modal({
-    title: "Gallery Panel",
+    title: I18n("grid_editor.gallery_panel", "Gallery Panel"),
     modal_size: "modal-lg",
     modal_settings: { keyboard: false, backdrop: "static" },
     content: tpl,

@@ -9,16 +9,30 @@ jQuery(function(){
     $.fn.skipGridEditorLibraries = function(str){ return str.replace(/^\<div\>\[grid_editor[^\]]*\]\<\/div\>/, ""); }
     $.fn.gridEditor_extra_rows = [];
     $.fn.gridEditor_libraries = [];
+
+    // A value on its way into a quoted attribute of a markup string. The block builders assemble their
+    // markup by concatenation: a url holding a quote would end the attribute and go on as markup of
+    // its own. The browser reads the escaped value back as the same url, on the public page too.
+    $.fn.gridEditorEscapeHtml = function(text){
+        return String(text == null ? "" : text).replace(/[&<>"']/g, function(character){
+            return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[character];
+        });
+    };
+
     //********************** editor content options **********************//
+    // The editor's own blocks, named and described in the admin language. The palette writes a
+    // description into a title attribute as it is - a block another plugin registers gives its own -
+    // so a translated one is escaped here, as tooltip() escapes the strings it is given.
+    var hint = $.fn.gridEditorEscapeHtml;
     $.fn.gridEditor_options = {
-        text: {title: "Text", description: "Permit you to include text plain in any column.", libraries: [], callback: grid_text_builder},
-        editor: {title: "Editor", description: "Permit you to include text html in any column.", libraries: [], callback: grid_editor_builder},
-        tab: {title: "Tabs", description: "Permit you to include tabs container in any col.", callback: grid_tab_builder},
-        slider: {title: "Slider", description: "Permit you to include a slider animation in any col.", callback: grid_slider_builder},
-        image: {title: "Image", description: "Permit you to include an image.", callback: grid_image_builder},
-        video: {title: "Video", description: "Permit you to include a video.", callback: grid_video_builder},
-        audio: {title: "Audio", description: "Permit you to include a audio.", callback: grid_audio_builder},
-        accordion: {title: "Accordion", description: "Permit you to include an accordion in any column.", callback: grid_accordion_builder},
+        text: {title: I18n("grid_editor.block_text", "Text"), description: hint(I18n("grid_editor.block_text_hint", "Permits you to include plain text in any column.")), libraries: [], callback: grid_text_builder},
+        editor: {title: I18n("grid_editor.block_editor", "Editor"), description: hint(I18n("grid_editor.block_editor_hint", "Permits you to include HTML text in any column.")), libraries: [], callback: grid_editor_builder},
+        tab: {title: I18n("grid_editor.block_tab", "Tabs"), description: hint(I18n("grid_editor.block_tab_hint", "Permits you to include a tabs container in any column.")), callback: grid_tab_builder},
+        slider: {title: I18n("grid_editor.block_slider", "Slider"), description: hint(I18n("grid_editor.block_slider_hint", "Permits you to include a slider animation in any column.")), callback: grid_slider_builder},
+        image: {title: I18n("grid_editor.block_image", "Image"), description: hint(I18n("grid_editor.block_image_hint", "Permits you to include an image.")), callback: grid_image_builder},
+        video: {title: I18n("grid_editor.block_video", "Video"), description: hint(I18n("grid_editor.block_video_hint", "Permits you to include a video.")), callback: grid_video_builder},
+        audio: {title: I18n("grid_editor.block_audio", "Audio"), description: hint(I18n("grid_editor.block_audio_hint", "Permits you to include an audio file.")), callback: grid_audio_builder},
+        accordion: {title: I18n("grid_editor.block_accordion", "Accordion"), description: hint(I18n("grid_editor.block_accordion_hint", "Permits you to include an accordion in any column.")), callback: grid_accordion_builder},
         //gallery: {title: "Gallery", description: "Permit you to include a gallery of audio, video or image in any column.", callback: grid_gallery_builder},
     };
     //********************** end editor content options **********************//
@@ -88,13 +102,16 @@ jQuery(function(){
         });
     };
 
-    // A value on its way into a quoted attribute of a markup string. The block builders assemble their
-    // markup by concatenation: a url holding a quote would end the attribute and go on as markup of
-    // its own. The browser reads the escaped value back as the same url, on the public page too.
-    $.fn.gridEditorEscapeHtml = function(text){
-        return String(text == null ? "" : text).replace(/[&<>"']/g, function(character){
-            return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[character];
-        });
+    // A title attribute holding a translated string, escaped: a translation holding a quote would end
+    // the attribute otherwise. It is the tooltip and, for the templates entries, the heading of the
+    // modal their panel opens in (open_templates_modal_on_click).
+    function tooltip(key, english, data){
+        return ' title="'+$.fn.gridEditorEscapeHtml(I18n(key, english, data))+'"';
+    }
+    // The actions of an item (a tab, a slide) in the list a block's form shows: edit it, delete it.
+    $.fn.gridEditor_item_actions = function(){
+        return "<a href='#' class='edit_item'"+tooltip("grid_editor.edit_item", "Edit")+"><i class='fa fa-pencil'></i></a> "+
+            "<a href='#' class='del_item'"+tooltip("grid_editor.delete_item", "Delete")+"><i class='fa fa-trash'></i></a>";
     };
 
     // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too. The
@@ -179,15 +196,21 @@ jQuery(function(){
     // knew when it loaded: a session gone or a permission taken away since then comes back as the
     // login or dashboard page. The panel is fetched and checked first, and only a panel is shown.
     function open_templates_modal_on_click(links, callback){
-        links.click(function(e){
-            e.preventDefault();
+        links.each(function(){
             var link = $(this);
-            $.fn.gridEditor_one_request(link.closest(".panel_grid_editor"), function(){
-                return $.get(link.attr("href")).done(function(res){
-                    $.fn.gridEditor_show_templates_panel(res, function(panel){
-                        open_modal({title: link.attr("title"), content: panel, callback: callback});
-                    });
-                }).fail($.fn.gridEditor_request_failed);
+            // The link's title heads the modal, and is read here, as the editor wrote it: a second
+            // after the page loads core gives every link of the admin a Bootstrap tooltip, which takes
+            // the title out of the attribute and keeps it where that version of Bootstrap sees fit.
+            var heading = link.attr("title");
+            link.click(function(e){
+                e.preventDefault();
+                $.fn.gridEditor_one_request(link.closest(".panel_grid_editor"), function(){
+                    return $.get(link.attr("href")).done(function(res){
+                        $.fn.gridEditor_show_templates_panel(res, function(panel){
+                            open_modal({title: heading, content: panel, callback: callback});
+                        });
+                    }).fail($.fn.gridEditor_request_failed);
+                });
             });
         });
     }
@@ -205,6 +228,9 @@ jQuery(function(){
         request.always(function(){ if(abilities_request === request) abilities_request = null; });
         return request;
     }
+
+    // the title a break line is saved with (data-col_title), in every admin language
+    var BREAK_LINE = "Break Line";
 
     // grid editor plugin
     var gridEditor_id = 0;
@@ -229,10 +255,10 @@ jQuery(function(){
         var editor_id = "grid_editor_"+gridEditor_id;
         if(existing_editor){ textarea.prev().show(); return textarea; }
         var tpl_rows = "";
-        $.each({6: 50, 4: 33, 3: 25, 2: 16, 8: 66, 9: 75, 12: 100}, function(k, val){ tpl_rows += '<div class="" data-col="'+k+'" title="Insert a column block with '+val+'% of width." data-col_title="'+val+'%"><div class="grid_sortable_items"></div></div>'; });
+        $.each({6: 50, 4: 33, 3: 25, 2: 16, 8: 66, 9: 75, 12: 100}, function(k, val){ tpl_rows += '<div class="" data-col="'+k+'"'+tooltip("grid_editor.col_block_title", "Insert a column block with %{width}% of width.", {width: val})+' data-col_title="'+val+'%"><div class="grid_sortable_items"></div></div>'; });
 
         // break line
-        tpl_rows += '<div class="clearfix" title="Insert a break line to have ordered column blocks." data-col_title="Break Line" data-col="12"></div>' + $.fn.gridEditor_extra_rows.join("");
+        tpl_rows += '<div class="clearfix"'+tooltip("grid_editor.break_line_title", "Insert a break line to have ordered column blocks.")+' data-col_title="'+BREAK_LINE+'" data-col="12"></div>' + $.fn.gridEditor_extra_rows.join("");
 
         // tpl options
         var tpl_options = "";
@@ -248,34 +274,41 @@ jQuery(function(){
         // declared a manager: the entry; declared not one: no entry; not declared: the entry, held back
         var save_template_entry = "";
         if(can_manage_templates !== false){
-            save_template_entry = '<li class="'+(can_manage_templates ? '' : 'hidden')+'"><a class="new_template" title="New Template" href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl")+'</a></li >';
+            save_template_entry = '<li class="'+(can_manage_templates ? '' : 'hidden')+'"><a class="new_template"'+tooltip("grid_editor.save_tpl_title", "New template")+' href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl", "Save as template")+'</a></li >';
         }
 
+        // the entry that opens the style settings: of the whole grid in the menu, of a block or a
+        // content element in its dropdown
+        var style_settings_entry = "<li><a class='grid_style_settings'"+tooltip("grid_editor.style_settings_title", "Style settings")+" href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>";
+
         // template grid editor
+        // Every I18n("grid_editor...") call of the editor passes the English string as its default:
+        // the page holds the strings of the admin language alone, and in a language the plugin does
+        // not ship core's helper would answer with the titleized key, "List" or "Clear Editor".
         var editor = $("<div class='panel_grid_editor' id='"+editor_id+"'>"+
             "<div class='grid_editor_menu'>"+
             "<ul class='nav nav-tabs'>"+
-            "<li class='active'><a href='#grid_columns_"+gridEditor_id+"' role='tab' data-toggle='tab'><i class='fa fa-th-list'></i> "+I18n("grid_editor.blocks")+"</a></li>"+
-            "<li class=''><a href='#grid_contents_"+gridEditor_id+"' role='tab' data-toggle='tab'><i class='fa fa-table'></i> "+I18n("grid_editor.contents")+"</a></li>"+
+            "<li class='active'><a href='#grid_columns_"+gridEditor_id+"' role='tab' data-toggle='tab'><i class='fa fa-th-list'></i> "+I18n("grid_editor.blocks", "Blocks")+"</a></li>"+
+            "<li class=''><a href='#grid_contents_"+gridEditor_id+"' role='tab' data-toggle='tab'><i class='fa fa-table'></i> "+I18n("grid_editor.contents", "Content Elements")+"</a></li>"+
             '<li>' +
-            '<a class="dropdown-toggle" href="#" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+I18n("grid_editor.templates")+' <span class="caret"></span> </a>'+
+            '<a class="dropdown-toggle" href="#" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+I18n("grid_editor.templates", "Templates")+' <span class="caret"></span> </a>'+
             '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1"> ' +
-            '<li><a class="list_templates" title="Grid Templates" href = "'+root_url+'admin/plugins/camaleon_editor/grid_editor" >'+I18n("grid_editor.list")+'</a></li >'+
+            '<li><a class="list_templates"'+tooltip("grid_editor.list_title", "Grid templates")+' href = "'+root_url+'admin/plugins/camaleon_editor/grid_editor" >'+I18n("grid_editor.list", "List of templates")+'</a></li >'+
             save_template_entry+
-            "<li><a class='grid_style_settings' title='Style Settings' href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
+            style_settings_entry+
             '</ul> ' +
             '</li>'+
-            "<li class=''><a href='#' class='clear'><i class='fa fa-trash'></i>  "+I18n("grid_editor.clear")+"</a></li>"+
-            "<li class=''><a href='#' class='toggle_panel_grid'><i class='fa fa-share'></i>  "+I18n("grid_editor.text_editor")+"</a></li>"+
-            "<li class='pull-right'><label style='margin: 0px;'><input class='toggle_preview_grid' type='checkbox'/> "+I18n("grid_editor.preview")+"</label><br><label style='margin: 0px;'><input class='toggle_fullscreen_grid' type='checkbox'/> "+I18n("grid_editor.fullscreen")+"</label></li>"+
+            "<li class=''><a href='#' class='clear'><i class='fa fa-trash'></i>  "+I18n("grid_editor.clear", "Clear")+"</a></li>"+
+            "<li class=''><a href='#' class='toggle_panel_grid'><i class='fa fa-share'></i>  "+I18n("grid_editor.text_editor", "Text Editor")+"</a></li>"+
+            "<li class='pull-right'><label style='margin: 0px;'><input class='toggle_preview_grid' type='checkbox'/> "+I18n("grid_editor.preview", "Preview")+"</label><br><label style='margin: 0px;'><input class='toggle_fullscreen_grid' type='checkbox'/> "+I18n("grid_editor.fullscreen", "Fullscreen")+"</label></li>"+
             "</ul>"+
             "<div class='tab-content'>"+
             "<div role='tabpanel' class='tab-pane active' id='grid_columns_"+gridEditor_id+"'> "+
-            '<p class="text-info">Drag and drop this blocks(Column Blocks) in the area below. </p>'+
+            '<p class="text-info">'+I18n("grid_editor.blocks_hint", "Drag and drop these blocks (Column Blocks) into the area below.")+'</p>'+
             tpl_rows+
             " </div>"+
             "<div role='tabpanel' class='tab-pane' id='grid_contents_"+gridEditor_id+"'>"+
-            '<p class="text-info">Drag and drop this blocks(Content Blocks) in any Column Block. </p>'+
+            '<p class="text-info">'+I18n("grid_editor.contents_hint", "Drag and drop these blocks (Content Blocks) into any Column Block.")+'</p>'+
             tpl_options+
             "</div>"+
             "</div>"+
@@ -406,19 +439,27 @@ jQuery(function(){
             return editor;
         }
 
+        // What heads a column: the title saved with it, its width. A break line's saved title is its
+        // English name, in whatever admin language it was added: the content keeps it as it is, and
+        // the editor shows it in the admin language.
+        function column_title(column){
+            var title = column.attr("data-col_title") || "";
+            return title === BREAK_LINE ? I18n("grid_editor.break_line", "Break Line") : title;
+        }
+
         // parse column editor
         // column: content element
         // skip_options: boolean to add drodown options
         function parse_content_column(column, skip_options){
             // the title comes from stored content: it goes in as text, never as markup
             var html = $('<div class="header_box"><a><i class="fa fa-stop"></i> </a></div>');
-            html.children("a").append(document.createTextNode(column.attr("data-col_title") || ""));
+            html.children("a").append(document.createTextNode(column_title(column)));
             var options = "<div class='dropdown'>" +
                 "<a class='dropdown-toggle' data-toggle='dropdown'>&nbsp; <span class='caret'></span></a>" +
                 "<ul class='dropdown-menu auto_with pull-right' role='menu'>"+
-                "<li><a class='grid_col_remove' title='Remove' href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
-                "<li><a class='grid_col_clone' title='Clone' href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
-                "<li><a class='grid_style_settings' title='Style Settings' href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
+                "<li><a class='grid_col_remove' href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
+                "<li><a class='grid_col_clone' href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
+                style_settings_entry+
                 "</ul>"+
                 "</div>" ;
             column.addClass("drg_column btn btn-default");
@@ -434,22 +475,30 @@ jQuery(function(){
             column;
         }
 
+        // The registry entry of a block's kind, or null for a kind no script registers. An entry is the
+        // registry's own: a kind named like something every object carries ("constructor") has none.
+        function registered_kind(block){
+            var key = block.attr("data-kind");
+            return Object.prototype.hasOwnProperty.call($.fn.gridEditor_options, key) ? $.fn.gridEditor_options[key] : null;
+        }
+
         // parse column editor
         // content: content element
         // skip_options: boolean to add drodown options
         function parse_content_content(content, skip_options){
-            var t = "unknown";
-            try{ t = $.fn.gridEditor_options[content.attr("data-kind")].title }catch(e){}
+            // a block of a kind no script registers - its plugin gone - has no name
+            var kind = registered_kind(content);
+            var t = kind ? kind.title : I18n("grid_editor.block_unknown", "unknown");
             var html = '<div class="header_box">'+
                 '<a><i class="fa fa-keyboard-o"></i> '+ t +'</a>'+
                 '</div>';
             var options = "<div class='dropdown'>" +
                 "<a class='dropdown-toggle' data-toggle='dropdown'>&nbsp; <span class='caret'></span></a>" +
                 "<ul class='dropdown-menu auto_with pull-right' role='menu'>"+
-                "<li><a class='grid_content_remove' title='Remove' href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
-                "<li><a class='grid_content_clone' title='Clone' href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
-                "<li><a class='grid_content_edit' title='Edit' href='#'><i class='fa fa-pencil'></i> "+I18n("button.edit")+"</a></li>"+
-                "<li><a class='grid_style_settings' title='Style Settings' href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
+                "<li><a class='grid_content_remove' href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
+                "<li><a class='grid_content_clone' href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
+                "<li><a class='grid_content_edit' href='#'><i class='fa fa-pencil'></i> "+I18n("button.edit")+"</a></li>"+
+                style_settings_entry+
                 "</ul>"+
                 "</div>";
             content.addClass("drg_item btn btn-default");
@@ -458,7 +507,23 @@ jQuery(function(){
                 content.children('.header_box').append(options);
             }
             // save used libraries
-            $.fn.gridEditor_libraries = $.merge($.fn.gridEditor_libraries, $.fn.gridEditor_options[content.attr("data-kind")] || {})
+            // TODO: finish or retire the list of libraries a grid uses, a design of the plugin's first
+            // commit that neither end completed.
+            // The plan, as the code shows it: a kind declares libraries: [...] in the registry, names of
+            // Camaleon asset libraries; this line collects those of the kinds in use; auto_save writes
+            // them into the marker, [grid_editor data='a,b']; and on the public page the grid_editor
+            // shortcode (camaleon_editor_front in main_helper.rb) loads them, so a block's front-end
+            // assets arrive only where the block is used.
+            // What happens: the merge takes the registry entry itself, an object with no length, so it
+            // adds nothing and data is always empty; and the shortcode ignores its attributes and loads
+            // the plugin's stylesheet alone. The marker still tells a grid from other content
+            // (isGridEditorContent) and brings that stylesheet in: only the list is dead.
+            // To finish it: merge kind.libraries, each name once, into a list built for each save - this
+            // array is shared by every editor of the page and never emptied - and have the shortcode
+            // load what data names. To retire it: drop this line and the libraries keys of the
+            // registry, and keep data='' in the marker so saved content stays as it is;
+            // $.fn.gridEditor_libraries is public, so another plugin may read it.
+            $.fn.gridEditor_libraries = $.merge($.fn.gridEditor_libraries, kind || {})
             content;
         }
 
@@ -466,14 +531,14 @@ jQuery(function(){
         function do_editor_menus(editor){
             // toggle editor menus
             editor.find(".grid_editor_menu .toggle_panel_grid").click(function(){
-                if(!confirm(I18n("grid_editor.toggle_editor"))) return false;
+                if(!confirm(I18n("grid_editor.toggle_editor", "Are you sure to leave this editor?"))) return false;
                 editor.hide();
                 if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
                 tinymce_panel.show();
                 return false;
             });
             editor.find(".grid_editor_menu .clear").click(function(){
-                if(!confirm(I18n("grid_editor.clear_editor"))) return false;
+                if(!confirm(I18n("grid_editor.clear_editor", "Are you sure to clear the editor?"))) return false;
                 grid_root(editor).html("");
                 editor.trigger("auto_save");
                 return false;
@@ -588,9 +653,18 @@ jQuery(function(){
                 textarea.val(txt).trigger("change_in");
             });
 
+            // The registry entry of a block's kind, when it has a builder: the form the block is edited
+            // in. A block of a kind no script registers - its plugin gone - has none, so its menu offers
+            // no Edit. The registry is read as the menu opens and as Edit is clicked, not as the grid
+            // is rebuilt: a script may register its kind after that.
+            function editable_kind(block){
+                var kind = registered_kind(block);
+                return kind && $.isFunction(kind.callback) ? kind : null;
+            }
+
             // content dropdown options
             grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
-                if(confirm(I18n("grid_editor.del_block"))) {
+                if(confirm(I18n("grid_editor.del_content", "Are you sure to delete this content?"))) {
                     jQuery(this).closest(".drg_item").fadeDestroy();
                     editor.trigger("auto_save");
                 }
@@ -602,18 +676,23 @@ jQuery(function(){
                 editor.trigger("auto_save");
                 e.preventDefault();
             }).on("click", '.drg_item .grid_content_edit', function (e) {
-                var panel_content = $(this).closest(".drg_item");
-                var key = panel_content.attr("data-kind");
-                $.fn.gridEditor_options[key]["callback"](panel_content.children(".grid_item_content"), editor);
+                // first: the link goes nowhere, whatever the builder does
                 e.preventDefault();
+                var panel_content = $(this).closest(".drg_item");
+                var kind = editable_kind(panel_content);
+                if(kind) kind.callback(panel_content.children(".grid_item_content"), editor);
             }).on("click", "a.grid_style_settings", function(e){
                 grid_style_setting($(this), editor);
                 e.preventDefault();
+            }).on("click", ".drg_item > .header_box .dropdown-toggle", function(){
+                // this runs before Bootstrap's own handler opens the menu
+                var edit_entry = $(this).next(".dropdown-menu").find(".grid_content_edit").parent();
+                edit_entry.toggleClass("hidden", !editable_kind($(this).closest(".drg_item")));
             });
 
             // column dropdown options
             grid_root(editor).on("click", '.grid_col_remove', function (e) {
-                if(confirm(I18n("grid_editor.del_block"))){
+                if(confirm(I18n("grid_editor.del_block", "Are you sure to delete this block?"))){
                     jQuery(this).closest(".drg_column").fadeDestroy();
                     editor.trigger("auto_save");
                 }
@@ -754,7 +833,7 @@ jQuery(function(){
                 text: 'Grid Editor',
                 icon: false,
                 onclick: function(){
-                    if(!confirm("Are you sure to change the editor?")) return false;
+                    if(!confirm(I18n("grid_editor.switch_editor", "Are you sure to change the editor?"))) return false;
                     var area = $(editor.targetElm).gridEditor(editor);
                 }
             });

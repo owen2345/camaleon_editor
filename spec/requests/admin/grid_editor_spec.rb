@@ -223,4 +223,29 @@ RSpec.describe 'the grid editor admin' do
       expect(field_ids).to include(label['for']), "label #{label.text.inspect} points at no field"
     end
   end
+
+  it 'words the style panel in the admin language' do
+    @site.set_admin_language('es')
+
+    get '/admin/plugins/camaleon_editor/style-settings'
+
+    doc = Nokogiri::HTML(response.body)
+    expect(doc.css('legend').map(&:text)).to eq(['Imagen de fondo', 'Borde'])
+    expect(doc.at_css('label[for="cama_style_b-pos"]').text).to eq('Posición')
+    expect(doc.at_css('select.pos_bg option[value="left top"]').text).to eq('Izquierda arriba')
+    expect(doc.at_css('input.bg_image')['placeholder']).to eq('Suba su imagen o pegue una URL')
+  end
+
+  # The plugin ships fewer languages than the admin panel offers, and core has no strings for a
+  # background's position or a border's width: the panel is in English there.
+  it 'words the style panel in English in an admin language the plugin does not ship' do
+    @site.set_admin_language('fr')
+
+    get '/admin/plugins/camaleon_editor/style-settings'
+
+    doc = Nokogiri::HTML(response.body)
+    expect(doc.css('legend').map(&:text)).to eq(['Background Image', 'Border'])
+    expect(doc.at_css('label[for="cama_style_b-pos"]').text).to eq('Position')
+    expect(doc.at_css('input.bg_image')['placeholder']).to eq('Upload your image or paste a URL')
+  end
 end

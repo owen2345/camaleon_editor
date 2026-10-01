@@ -3,10 +3,10 @@ window.grid_slider_builder = function(panel, editor){
   const id_accor = panel.attr("id") || ("slider_" + Math.floor((Math.random() * 100000) + 1));
   panel.attr("id", id_accor);
   const tpl = $('<div><table class="table table-hover">' +
-      '<thead><th></th><th>Image</th><th></th></thead>' +
+      '<thead><th></th><th>' + I18n("grid_editor.image", "Image") + '</th><th></th></thead>' +
       '<tbody></tbody>' +
       '</table>'+
-      '<a class="btn btn-default add_item">Add Item <i class="fa fa-plus-circle"></i></a></div>');
+      '<a class="btn btn-default add_item">' + I18n("grid_editor.add_item", "Add Item") + ' <i class="fa fa-plus-circle"></i></a></div>');
 
   // link buttons
   tpl.find(".add_item").click(function() {
@@ -34,8 +34,7 @@ window.grid_slider_builder = function(panel, editor){
           "<td class='text-right'><" +
             "textarea class='descr hidden'></textarea> " +
             "<input class='media hidden' /> " +
-            "<a href='#' class='edit_item' title='Edit'><i class='fa fa-pencil'></i></a> " +
-            "<a href='#' class='del_item' title='Destroy'><i class='fa fa-trash'></i></a>" +
+            $.fn.gridEditor_item_actions() +
           "</td>" +
         "</tr>"
     );
@@ -61,14 +60,14 @@ window.grid_slider_builder = function(panel, editor){
   var show_form = function(tr){
     const form = $(
         '<form>'+
-          `<div class="form-group"><label class="control-label">Image</label> \
+          `<div class="form-group"><label class="control-label">${I18n("grid_editor.image", "Image")}</label> \
             <div class="group-input-fields-content input-group"> \
-              <input placeholder="Upload your image or paste an URL" type="url" class="form-control url_file" /> \
+              <input placeholder="${$.fn.gridEditorEscapeHtml(I18n("grid_editor.image_placeholder", "Upload your image or paste a URL"))}" type="url" class="form-control url_file" /> \
               <span class="input-group-addon btn_upload"><i class="fa fa-upload"></i> </span> \
             </div> \
           </div>`+
           '<div class="form-group"> \
-            <label class="control-label">Caption</label> \
+            <label class="control-label">' + I18n("grid_editor.caption", "Caption") + '</label> \
             <textarea class="form-control descr"></textarea> \
           </div>'+
         '</form>');
@@ -95,7 +94,7 @@ window.grid_slider_builder = function(panel, editor){
 
     open_modal({
       id: 'cama_editor_modal2',
-      title: "Slide Form",
+      title: I18n("grid_editor.slide_form", "Slide Form"),
       type: "primary",
       modal_size: "modal-lg",
       modal_settings: { keyboard: false, backdrop: "static" },
@@ -135,7 +134,7 @@ window.grid_slider_builder = function(panel, editor){
   };
 
   open_modal({
-    title: "Slider Panel",
+    title: I18n("grid_editor.slider_panel", "Slider Panel"),
     modal_size: "modal-lg",
     modal_settings: { keyboard: false, backdrop: "static" },
     content: tpl,

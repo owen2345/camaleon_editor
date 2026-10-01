@@ -55,7 +55,7 @@ function grid_style_setting(item, editor, parent_item){
         // border-width drops a negative length and the computed width falls back to 'medium' (a
         // thicker border than asked), so reject the value with an error instead of saving it.
         if(parseFloat(width_field.val()) < 0){
-            width_group.addClass("has-error").append('<span class="help-block border_width_error">Width must be zero or greater</span>');
+            width_group.addClass("has-error").append('<span class="help-block border_width_error">'+I18n("grid_editor.border_width_invalid", "Width must be zero or greater")+'</span>');
             return;
         }
         var b_width = parseFloat(width_field.val()) > 0 ? width_field.val() + "px" : "";
@@ -93,5 +93,5 @@ function grid_style_setting(item, editor, parent_item){
     // The item-form builders (tabs, slider, gallery, accordion) share id cama_editor_modal2; the
     // style panel needs its own, or open_modal's existing-id short-circuit re-shows their modal
     // (with their callbacks) when a style gear is clicked inside a nested grid.
-    open_modal({id: 'cama_editor_style_modal', title: "Style Settings", modal_size: "modal-lg", modal_settings: { keyboard: false, backdrop: "static" }, mode: "ajax", url: root_url+"admin/plugins/camaleon_editor/style-settings", callback: modal_callback, on_submit: submit_callback })
+    open_modal({id: 'cama_editor_style_modal', title: I18n("grid_editor.style_settings_title", "Style settings"), modal_size: "modal-lg", modal_settings: { keyboard: false, backdrop: "static" }, mode: "ajax", url: root_url+"admin/plugins/camaleon_editor/style-settings", callback: modal_callback, on_submit: submit_callback })
 }

@@ -21,7 +21,7 @@ RSpec.describe 'reopening a post whose grid holds a script', :js do
     saved = saved_grid_content
 
     expect(saved).to include('<script>window.__cama_widget_loaded = true;</script>')
-    expect(saved).to include('background-color: rgb(255, 204, 0)')
+    expect(saved).to match(GRID_YELLOW_BACKGROUND)
     expect(page.evaluate_script('window.__cama_widget_loaded')).to be_nil
   end
 end

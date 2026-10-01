@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fix: the grid editor shows its translated labels and prompts
+
+The editor's menu, prompts, tooltips, hints, blocks and style settings panel showed titleized keys or hard-coded English. They now follow the admin language, in English where untranslated, and the templates modals' headings no longer open empty. [#16](https://github.com/owen2345/camaleon_editor/pull/16).
+
+**Notes for upgraders**
+- Overrides under `admin.js.grid_editor` move to `camaleon_cms.admin.js.grid_editor`.
+
 ### Tooling: the suite can run against an unreleased camaleon_cms
 
 A callable **Core compatibility** workflow runs the suite against a given camaleon_cms commit; core calls it from its own pipeline, so a core change that breaks the plugin shows on the core pull request. Setting `CAMALEON_CMS_PATH` makes the Gemfile source the core from a local checkout; unset, nothing changes. Development tooling only. [#15](https://github.com/owen2345/camaleon_editor/pull/15).

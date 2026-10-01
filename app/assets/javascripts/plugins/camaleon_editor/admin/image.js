@@ -2,7 +2,7 @@
 window.grid_image_builder = function(panel, editor){
     const form =
         $('<form>'+
-            `<div class="form-group"><label class="control-label">Media</label> \
+            `<div class="form-group"><label class="control-label">${I18n("grid_editor.media", "Media")}</label> \
                 <div class="group-input-fields-content input-group"> \
                     <input type="url" class="form-control url_file" /> \
                     <span class="input-group-addon btn_upload"><i class="fa fa-upload"></i> </span> \
@@ -34,7 +34,7 @@ window.grid_image_builder = function(panel, editor){
     };
 
     open_modal({
-        title: "Image Form",
+        title: I18n("grid_editor.image_form", "Image Form"),
         modal_size: "modal-lg",
         modal_settings: { keyboard: false, backdrop: "static" },
         content: form,

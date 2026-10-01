@@ -11,6 +11,11 @@ def grid_column_markup(inner = '', col: 6, title: '50%')
     %(<div class="grid_sortable_items">#{inner}</div></div>)
 end
 
+# A break line: a full-width column with no area for blocks, saved under its English title.
+def grid_break_line_markup
+  %(<div class="clearfix col-md-12" data-col_title="Break Line" data-col="12"></div>)
+end
+
 def grid_body_markup(inner = grid_column_markup, attributes: '')
   %(<div class="panel_grid_body row"#{" #{attributes}" unless attributes.empty?}>#{inner}</div>)
 end
@@ -77,24 +82,50 @@ def abort_template_requests
   JS
 end
 
+# Switches the text editor to the grid editor, and answers with the prompt its button asked.
 def open_grid_editor
   accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
 end
 
-def open_templates_menu
-  find('.grid_editor_menu a.dropdown-toggle', text: 'Templates').click
+# The menu's label is the admin language's; the default is the English one.
+def open_templates_menu(label: 'Templates')
+  find('.grid_editor_menu a.dropdown-toggle', text: label).click
 end
 
-def open_templates_list
-  open_templates_menu
+def open_templates_list(label: 'Templates')
+  open_templates_menu(label: label)
   find('.grid_editor_menu .list_templates').click
+end
+
+# The style settings of the whole grid, an entry of the same menu.
+def open_grid_style_settings(label: 'Templates')
+  open_templates_menu(label: label)
+  find('.grid_editor_menu .grid_style_settings').click
+end
+
+# The tooltip an element of the admin carries, or nil. A Bootstrap tooltip moves a title into
+# data-original-title and leaves the attribute empty. The editor gives its palette blocks one as it
+# opens; core gives every link one a second after the page loads, so for a link, which of the two
+# attributes holds the text depends on when the example looks.
+def tooltip_of(element)
+  element['data-original-title'].presence || element[:title].presence
+end
+
+def have_link_with_tooltip(label, tooltip)
+  have_link(label) { |link| tooltip_of(link) == tooltip }
 end
 
 def apply_listed_template
   accept_confirm { find('#grid_table_list .import_item').click }
 end
 
-# What the editor would save for the post right now: the grid as the last auto_save exported it.
+# The yellow background the specs give a grid, as saved content may carry it: rgb() the way the
+# grid exports it, or #rrggbb once the text editor, which saves when it loses focus, has written
+# the same content again. Which of the two the textarea holds depends on when that happens.
+GRID_YELLOW_BACKGROUND = /background-color: (?:rgb\(255, 204, 0\)|#ffcc00)/
+
+# What the textarea behind the editor holds right now: the grid as the last auto_save exported it,
+# or that content written again by the text editor, which saves when it loses focus.
 def saved_grid_content
   page.evaluate_script("jQuery('.panel_grid_editor').next('textarea').val()")
 end
