@@ -34,11 +34,22 @@ bundle exec rake camaleon_editor:security:scan_templates
 ```
 
 A post saved from the grid editor stores the grid as the editor exported it; the text editor
-behind it does not rewrite it. Core then applies its own rules to the content. The grid's marker
-is a shortcode, so saving a grid takes **Allow shortcodes in content**, and a grid holding a
-script (an embed in a Text or Editor block) is stored for an administrator or a role trusted with
-unfiltered HTML and refused, with core's message, for anyone else. A script in a grid stays inert
-in the editor and runs on the public page.
+behind it does not rewrite it. An author who leaves the grid editor for the text editor works on
+the grid's markup there, and that editor's content is what is saved. Back in the grid editor, the
+grid is made again from what was changed in the text editor. Other content written there is no
+grid to make: the grid comes back as it was left and is what is saved, and that content waits in
+the text editor.
+
+Where the grid editor is loaded, the text editors keep the scripts of the content they are
+handed, where they used to take them out: a grid, an Editor block in its form, any other post
+content, markup written in the source view. Pasted markup still loses its scripts. A script
+stays inert in both editors and runs on the public page.
+
+Core then applies its own rules to content that changed, and the text editor's version of a grid
+counts as changed. The grid's marker is a shortcode, so saving a changed grid takes **Allow
+shortcodes in content**, and changed content holding a script (an embed in a Text or Editor
+block, a script the text editor kept) is stored for an administrator or a role trusted with
+unfiltered HTML and refused, with core's message, for anyone else.
 
 Plugin settings stay under the core **plugins** permission. A role holding neither editor permission
 is refused the grid-template endpoints.
