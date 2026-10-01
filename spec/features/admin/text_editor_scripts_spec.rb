@@ -83,6 +83,25 @@ RSpec.describe 'scripts in the text editor', :js do
       .to eq('<p><textarea>&lt;script&gt;x()&lt;/script&gt;</textarea></p>')
   end
 
+  # A page may set its text editors up with a protect list of its own, which is used in place of
+  # core's default: the scripts' pattern joins that list. What each pattern of a list leaves of
+  # the markup shows which patterns the list holds.
+  it "adds the pattern to a page's own protect list, and to the default one otherwise" do
+    own_list, default_list = page.evaluate_script(<<~JS)
+      (function(){
+        var left_by = function(settings){
+          return jQuery.map(settings.protect, function(pattern){
+            return '<?php one(); ?><script>two()</script>'.replace(pattern, function(){ return ''; });
+          });
+        };
+        return [left_by(cama_get_tinymce_settings({protect: [/<\\?php[\\s\\S]*?\\?>/g]})), left_by(cama_get_tinymce_settings())];
+      })()
+    JS
+
+    expect(own_list).to eq(['<script>two()</script>', '<?php one(); ?>'])
+    expect(default_list).to eq(['<?php one(); ?>'])
+  end
+
   it 'keeps the script of markup put in at the caret' do
     answer = through_the_text_editor('<p>written in the text editor</p>', inserted: "<p>inserted</p>#{script}")
 
