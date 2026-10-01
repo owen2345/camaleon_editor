@@ -192,7 +192,10 @@ jQuery(function(){
             $.fn.gridEditor_one_request(link.closest(".panel_grid_editor"), function(){
                 return $.get(link.attr("href")).done(function(res){
                     $.fn.gridEditor_show_templates_panel(res, function(panel){
-                        open_modal({title: link.attr("title"), content: panel, callback: callback});
+                        // The link's title heads the modal. A second after the page loads core gives every
+                        // link of the admin a Bootstrap tooltip, which keeps the title in data-original-title
+                        // and leaves the attribute empty: the heading is read from wherever it is by now.
+                        open_modal({title: link.attr("data-original-title") || link.attr("title"), content: panel, callback: callback});
                     });
                 }).fail($.fn.gridEditor_request_failed);
             });
