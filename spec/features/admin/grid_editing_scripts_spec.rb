@@ -162,6 +162,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       find('.panel_grid_body .drg_item') # the grid is rebuilt
 
       page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      wait_for_modal_at_rest('#ow_inline_modal') # two rows: the click must not land on the second
       first('#ow_inline_modal a.edit_item').click
       find('#cama_editor_modal2 input.name').set('x<y')
       find('#cama_editor_modal2 .modal_submit').click
@@ -173,7 +174,9 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       expect(page).to have_css('.panel_grid_body .nav-tabs > li', count: 2, visible: :all)
 
       page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
-      expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'x<y')
+      # the first tab is the one renamed, and the second is still behind it
+      expect(page).to have_css('#ow_inline_modal tbody tr:nth-child(1) td.name', exact_text: 'x<y')
+      expect(page).to have_css('#ow_inline_modal tbody tr:nth-child(2) td.name', exact_text: 'Two')
     end
 
     # "&T;" names no character: decoded it is what it was, so the label is text and reads back as typed.
@@ -201,6 +204,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       find('.panel_grid_body .drg_item') # the grid is rebuilt
 
       page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      wait_for_modal_at_rest('#ow_inline_modal') # two rows: the click must not land on the second
       first('#ow_inline_modal a.edit_item').click
       find('#cama_editor_modal2 input.name').set('<b>News')
       find('#cama_editor_modal2 .modal_submit').click
@@ -212,7 +216,8 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       expect(page).to have_no_css('.panel_grid_body .nav-tabs b', visible: :all)
 
       page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
-      expect(page).to have_css('#ow_inline_modal td.name', exact_text: '<b>News')
+      expect(page).to have_css('#ow_inline_modal tbody tr:nth-child(1) td.name', exact_text: '<b>News')
+      expect(page).to have_css('#ow_inline_modal tbody tr:nth-child(2) td.name', exact_text: 'Two')
     end
 
     it 'lists a label with a "<" that opens no tag as its text' do

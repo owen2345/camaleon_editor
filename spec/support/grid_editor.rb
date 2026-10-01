@@ -119,6 +119,19 @@ def apply_listed_template
   accept_confirm { find('#grid_table_list .import_item').click }
 end
 
+# A modal slides into place for a moment after it opens, and a click aimed at one of several rows
+# while it moves can land on the row beside it. This waits until no transition runs in the modal.
+def wait_for_modal_at_rest(selector)
+  find("#{selector}.in")
+  Timeout.timeout(Capybara.default_max_wait_time) do
+    sleep 0.05 while page.evaluate_script(<<~JS, selector)
+      document.querySelector(arguments[0]).getAnimations({subtree: true}).some(function(animation){
+        return animation instanceof CSSTransition;
+      })
+    JS
+  end
+end
+
 # The post's textarea has more than one writer. The grid writes its export there at every
 # auto_save. The text editor, handed the same content, writes it again in its own serialization (a
 # newline between tags, #rrggbb for rgb(), <strong> for <b>, no script) when it loses focus, two
