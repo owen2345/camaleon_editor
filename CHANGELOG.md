@@ -4,7 +4,7 @@
 
 ### Fix: the grid editor shows its translated labels and prompts
 
-The menu and confirm prompts showed titleized keys ("Clear Editor") in every language. They now show their strings, in English where none is translated. Tooltips and the templates modals' headings are translated too, and those headings no longer open empty. [#16](https://github.com/owen2345/camaleon_editor/pull/16).
+The menu and confirm prompts showed titleized keys ("Clear Editor"). They now show their strings, in English where untranslated. Tooltips, hints, the style settings panel and the templates modals' headings are translated too; those headings no longer open empty. [#16](https://github.com/owen2345/camaleon_editor/pull/16).
 
 **Notes for upgraders**
 - Overrides under `admin.js.grid_editor` move to `camaleon_cms.admin.js.grid_editor`.
