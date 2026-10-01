@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 # The specs read what the grid exported from a record of their own, not from the post's textarea:
-# the text editor writes there too, in its own serialization and at moments of its own. This is
-# the record held to that, with the text editor made to write right after the grid.
+# a text editor the author went back to writes there in its own serialization, and the grid's
+# write stops reaching the field once a block form has loaded a text editor. This is the record
+# held to both.
 RSpec.describe 'the record of what the grid exports', :js do
   init_site
 
@@ -10,8 +11,8 @@ RSpec.describe 'the record of what the grid exports', :js do
     page.evaluate_script("jQuery('.panel_grid_editor').next('textarea').val()")
   end
 
-  # What core does when the text editor loses focus, two seconds after the form opened and with
-  # every draft: the text editor's content goes into its textarea.
+  # What core does when the text editor loses focus: the text editor's content goes into its
+  # textarea.
   def let_the_text_editor_write
     page.execute_script("jQuery.each(tinymce.editors, function(_index, editor){ editor.fire('blur'); });")
   end
@@ -29,8 +30,9 @@ RSpec.describe 'the record of what the grid exports', :js do
     expect(saved_grid_content).to be_nil
   end
 
-  it 'holds the export, whatever the text editor writes over it in the textarea' do
+  it 'holds the export, whatever the text editor the author went back to writes in the textarea' do
     trigger_grid_auto_save
+    accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
     let_the_text_editor_write
 
     expect(post_textarea).to include('background-color: #ffcc00', '<strong>kept</strong>')

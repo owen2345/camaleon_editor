@@ -133,11 +133,12 @@ def wait_for_modal_at_rest(selector)
 end
 
 # The post's textarea has more than one writer. The grid writes its export there at every
-# auto_save. The text editor, handed the same content, writes it again in its own serialization (a
-# newline between tags, #rrggbb for rgb(), <strong> for <b>, no script) when it loses focus, two
-# seconds after the form opened and with every draft. Which of them wrote last depends on timing.
-# And once a block form has loaded a text editor of its own through jQuery's tinymce(), val() hands
-# the grid's export to the text editor alone: the field keeps what it held.
+# auto_save. The text editor writes its content there when it loses focus, with every draft and as
+# the form is sent: the grid's export while the grid editor is shown, and its own serialization (a
+# newline between tags, #rrggbb for rgb(), <strong> for <b>, no script) once the author went back
+# to it. And once a block form has loaded a text editor of its own through jQuery's tinymce(),
+# val() hands the grid's export to the text editor alone: the field keeps what it held until the
+# text editor next writes.
 #
 # So the export is not read off the field. The grid hands it to the text editor right before the
 # change_in its auto_save triggers, and what a text editor was last handed at that moment goes on
@@ -160,7 +161,7 @@ def record_grid_exports
 end
 
 # The grid as the last auto_save exported it, nil when none did since the editor page was opened.
-# Saving the post stores the text editor's serialization of it, not the export itself.
+# Saving the post while the grid editor is shown stores it as it is.
 def saved_grid_content
   page.evaluate_script('window.__cama_grid_exports.last')
 end
@@ -179,4 +180,16 @@ end
 
 def trigger_grid_auto_save
   page.execute_script("jQuery('.panel_grid_editor').trigger('auto_save');")
+end
+
+# Sends the post form with its own button, and waits for the page the server answers with. The
+# form asks before a page with unsaved changes is left; nobody is there to answer.
+def submit_post_form
+  page.execute_script(<<~JS)
+    window.onbeforeunload = null;
+    document.documentElement.setAttribute('data-cama-form-sent', '');
+  JS
+  find('#form-post .input-submit input[type=submit]').click
+  expect(page).to have_no_css('html[data-cama-form-sent]')
+  find_by_id('admin_content')
 end

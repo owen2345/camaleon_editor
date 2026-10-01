@@ -33,6 +33,13 @@ they are. To list the stored templates the scan would refuse today (read-only):
 bundle exec rake camaleon_editor:security:scan_templates
 ```
 
+A post saved from the grid editor stores the grid as the editor exported it; the text editor
+behind it does not rewrite it. Core then applies its own rules to the content. The grid's marker
+is a shortcode, so saving a grid takes **Allow shortcodes in content**, and a grid holding a
+script (an embed in a Text or Editor block) is stored for an administrator or a role trusted with
+unfiltered HTML and refused, with core's message, for anyone else. A script in a grid stays inert
+in the editor and runs on the public page.
+
 Plugin settings stay under the core **plugins** permission. A role holding neither editor permission
 is refused the grid-template endpoints.
 
