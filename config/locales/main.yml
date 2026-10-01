@@ -95,7 +95,7 @@ it:
           toggle_editor: "Sei sicuro di voler lasciare questo editor?"
           del_block: "Sei sicuro di voler eliminare questo blocco?"
           del_content: "Sei sicuro di voler cancellare questo contenuto?"
-          clear_editor: "Sei sicuro di voler cancellare l'editor?"
+          clear_editor: "Sei sicuro di voler svuotare l'editor?"
           save_tpl_title: "Nuovo modello"
           list_title: "Modelli di griglia"
           style_settings_title: "Impostazioni di stile"
