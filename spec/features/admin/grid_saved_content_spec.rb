@@ -30,6 +30,31 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(text_editor_content).to eq(content)
   end
 
+  # The author mends such content in the text editor, and the button makes the grid from what the
+  # text editor holds by then. The field behind it holds what the editor last wrote there - when it
+  # lost focus, with a draft - which may still be the content as it was.
+  it 'opens the grid from what the text editor holds once the content was mended there' do
+    grid = grid_post_content(grid_with_block('<p>kept</p>'))
+    store_post_content(@post, "#{grid}<p>written after the grid</p>")
+    open_post_in_editor(@post)
+    expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
+    page.execute_script("jQuery('#cama_alert_modal').modal('hide');")
+    expect(page).to have_no_css('#cama_alert_modal')
+
+    page.execute_script(<<~JS, grid)
+      tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id')).setContent(arguments[0]);
+    JS
+    open_grid_editor
+
+    expect(page).to have_css('.panel_grid_editor .panel_grid_body .drg_item', count: 1)
+    expect(page).to have_no_css('#cama_alert_modal')
+
+    submit_post_form
+    stored = CamaleonCms::Post.find(@post.id).content
+    expect(stored).to include('<p>kept</p>')
+    expect(stored).not_to include('written after the grid')
+  end
+
   # Going to the text editor and back with nothing changed there shows the editor built earlier:
   # the content is not parsed again. (Changed there, the grid is made again from it: see
   # grid_post_save_spec.)

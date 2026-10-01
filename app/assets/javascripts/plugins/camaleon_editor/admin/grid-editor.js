@@ -944,6 +944,10 @@ jQuery(function(){
                 icon: false,
                 onclick: function(){
                     if(!confirm(I18n("grid_editor.switch_editor", "Are you sure to change the editor?"))) return false;
+                    // A grid is first made from the field, which holds what the text editor last wrote
+                    // there - when it lost focus, with a draft - and not what the author changed since:
+                    // the editor writes it now, as core has it do when it loses focus.
+                    editor.save();
                     var area = $(editor.targetElm).gridEditor(editor);
                 }
             });
