@@ -39,6 +39,17 @@ RSpec.describe 'the grid editor strings its scripts read', type: :model do
     end
   end
 
+  # A value the script fills in (a column block's width) is named the same in every language: core's
+  # helper replaces the placeholder it is given and leaves one of any other name in the string.
+  it 'names the values a string takes the same in every language' do
+    script_keys.each do |key|
+      placeholders = SHIPPED_LOCALES.index_with do |locale|
+        I18n.t("camaleon_cms.admin.js.grid_editor.#{key}", locale: locale).scan(/%\{\w+\}/).sort
+      end
+      expect(placeholders.values.uniq.size).to eq(1), "#{key}: #{placeholders.inspect}"
+    end
+  end
+
   it 'keeps no string where the browser never sees it' do
     SHIPPED_LOCALES.each do |locale|
       expect(I18n.t('admin.js.grid_editor', locale: locale, default: nil)).to be_nil

@@ -57,6 +57,12 @@ RSpec.describe 'the grid editor labels', :js do
     end
 
     it 'shows and asks in that language' do
+      # The palette's tooltips are Bootstrap's, which shows the title on hover. A column block's names
+      # its width, a value the script hands to the translation; it is read first, before the
+      # templates menu opens over that block.
+      find('.grid_editor_menu .tab-pane.active [data-col="6"]').hover
+      expect(page).to have_css('.tooltip', text: 'Inserta un bloque de columna con el 50% del ancho.')
+
       within '.grid_editor_menu' do
         expect(page).to have_link('Contenidos')
         # the hint of each palette; the second one's tab is closed
@@ -69,7 +75,6 @@ RSpec.describe 'the grid editor labels', :js do
         expect(page).to have_link_with_tooltip('Lista de plantillas', 'Plantillas de rejilla')
       end
 
-      # The palette's tooltips are Bootstrap's, which shows the title on hover
       find('.grid_editor_menu .tab-pane.active .clearfix[data-col="12"]').hover
       expect(page).to have_css('.tooltip', text: 'Inserta un salto de línea para ordenar los bloques de columna.')
 
