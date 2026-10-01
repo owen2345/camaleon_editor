@@ -232,6 +232,16 @@ jQuery(function(){
     // the title a break line is saved with (data-col_title), in every admin language
     var BREAK_LINE = "Break Line";
 
+    // The text editor writes its content into its field, and the field says it changed, as core has
+    // it done when the text editor loses focus. For the moments the field has to follow at once: an
+    // editor takes over from the other and speaks for the field from then on, or a grid is about to
+    // be made from the field. A post in several languages sends what its fields composed the last
+    // time one of them said so, and a switch of editors takes the focus from neither.
+    function field_follows(text_editor, field){
+        text_editor.save();
+        field.trigger("change");
+    }
+
     // grid editor plugin
     var gridEditor_id = 0;
     $.fn.gridEditor = function(tinyEditor){
@@ -547,7 +557,7 @@ jQuery(function(){
                 if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
                 left_with = tinyEditor.getContent();
                 tinymce_panel.show();
-                field_follows();
+                field_follows(tinyEditor, textarea);
                 return false;
             });
             editor.find(".grid_editor_menu .clear").click(function(){
@@ -759,15 +769,6 @@ jQuery(function(){
             if(exported !== null && grid_shown && e.format === "html" && !e.selection) e.content = exported;
         });
 
-        // The editor that takes over from the other speaks for the field from then on, and the
-        // field follows at once: written, and said to have changed, as core has it done when the
-        // text editor loses focus. A post in several languages sends what its fields composed the
-        // last time one of them said so, and a switch of editors takes the focus from neither.
-        function field_follows(){
-            tinyEditor.save();
-            textarea.trigger("change");
-        }
-
         // The grid made again from a grid root parsed off the text editor's content: its attributes,
         // its style, its columns. What it held is set aside as nodes, handlers included, and comes
         // back when a parser throws part-way: a half-built grid is worse than the one left behind.
@@ -836,7 +837,7 @@ jQuery(function(){
             }
             $(text_editor.editorContainer).hide();
             editor.show();
-            if(hidden) field_follows();
+            if(hidden) field_follows(tinyEditor, textarea);
         });
 
         // drag columns
@@ -974,11 +975,8 @@ jQuery(function(){
                 onclick: function(){
                     if(!confirm(I18n("grid_editor.switch_editor", "Are you sure to change the editor?"))) return false;
                     // A grid is first made from the field, which holds what the text editor last wrote
-                    // there - when it lost focus, with a draft - and not what the author changed since:
-                    // the editor writes it now, and the field says it changed, as core has it done
-                    // when the editor loses focus (see field_follows for the field saying so).
-                    editor.save();
-                    $(editor.targetElm).trigger("change");
+                    // there - when it lost focus, with a draft - and not what the author changed since.
+                    field_follows(editor, $(editor.targetElm));
                     var area = $(editor.targetElm).gridEditor(editor);
                 }
             });
