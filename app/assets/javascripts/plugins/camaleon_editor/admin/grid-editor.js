@@ -930,10 +930,12 @@ jQuery(function(){
         // of the content it is handed, a grid or not, and core's rules meet them when the content
         // is saved. A paste goes through the editor's paste filter first, which takes its scripts
         // out as it always did. A page's own protect list is kept: its settings win over core's
-        // defaults, so the pattern joins the list that will be used.
+        // defaults, so the pattern joins the list that will be used. The pattern takes a script tag
+        // as a browser does: its name ends at a space, a slash or the bracket, and whatever follows
+        // the name of the closing tag goes with that tag.
         var keep_scripts = function(settings, def){
             var holder = settings.protect ? settings : def;
-            holder.protect = (holder.protect || []).concat([/<script(?=[\s>])[\s\S]*?<\/script\s*>/gi]);
+            holder.protect = (holder.protect || []).concat([/<script(?=[\s\/>])[\s\S]*?<\/script(?=[\s\/>])[^>]*>/gi]);
         }
         tinymce_global_settings["settings"].push(keep_scripts);
 

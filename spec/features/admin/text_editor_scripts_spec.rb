@@ -55,6 +55,18 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
+  # A script is one however its tags are written: a slash right behind the name, something behind
+  # the name of the closing tag. Each is set aside alone, and what stands between two stays content.
+  it 'gives back a script whose tags are written the less usual ways' do
+    content = '<p>before</p><script/src="//example.invalid/widget.js"></script><p>between</p>' \
+              '<script>window.__cama_widget_loaded = true;</script ignored><p>after</p>'
+
+    expect(through_the_text_editor(content)).to eq(content)
+    expect(scripts_in_the_text_editor).to eq(0)
+    expect(script_ran).to be_nil
+    within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: 'between') }
+  end
+
   it 'keeps the script of markup put in at the caret' do
     answer = through_the_text_editor('<p>written in the text editor</p>', inserted: "<p>inserted</p>#{script}")
 
