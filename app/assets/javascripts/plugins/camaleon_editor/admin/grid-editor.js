@@ -941,12 +941,28 @@ jQuery(function(){
         // of the content it is handed, a grid or not, and core's rules meet them when the content
         // is saved. A paste goes through the editor's paste filter first, which takes its scripts
         // out as it always did. A page's own protect list is kept: its settings win over core's
-        // defaults, so the pattern joins the list that will be used. The pattern takes a script tag
-        // as a browser does: its name ends at a space, a slash or the bracket, and whatever follows
-        // the name of the closing tag goes with that tag.
+        // defaults, so the pattern joins the list that will be used.
         var keep_scripts = function(settings, def){
             var holder = settings.protect ? settings : def;
-            holder.protect = (holder.protect || []).concat([/<script(?=[\s\/>])[\s\S]*?<\/script(?=[\s\/>])[^>]*>/gi]);
+            holder.protect = (holder.protect || []).concat([script_elements()]);
+        }
+        // The pattern reads markup as a browser does, a token at a time: a comment, an element whose
+        // content is text (a textarea, a style), a tag with its quoted values. Each is stepped over
+        // whole, so the tags of a script written inside one stay the text they are there: set aside,
+        // a commented-out script would end its comment early, and a title or a textarea would hold
+        // the editor's marker from then on. A script element is the one token set aside: its name
+        // ends at a space, a slash or the bracket, and whatever follows the name of the closing tag
+        // goes with that tag. The editor hands each pattern of the list to replace(), with a
+        // replacer that sets aside whatever the pattern matched: so this one answers replace()
+        // itself, and passes that replacer the scripts alone.
+        function script_elements(){
+            var tokens = /<!--(?:-?>|[\s\S]*?-->)|<(textarea|title|style|xmp|iframe|noembed|noframes)(?=[\s\/>])[\s\S]*?<\/\1(?=[\s\/>])[^>]*>|(<script(?=[\s\/>])[\s\S]*?<\/script(?=[\s\/>])[^>]*>)|<\/?[a-z](?:"[^"]*"|'[^']*'|[^>"'])*>/gi;
+            tokens[Symbol.replace] = function(markup, set_aside){
+                return RegExp.prototype[Symbol.replace].call(this, markup, function(token, _text_element, script){
+                    return script ? set_aside(script) : token;
+                });
+            };
+            return tokens;
         }
         tinymce_global_settings["settings"].push(keep_scripts);
 

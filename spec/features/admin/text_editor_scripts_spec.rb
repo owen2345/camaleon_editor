@@ -67,6 +67,22 @@ RSpec.describe 'scripts in the text editor', :js do
     within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: 'between') }
   end
 
+  # Inside a comment, a quoted attribute value or a textarea, a browser reads a script's tags as
+  # text, and so does the pattern: such content goes through the text editor as it would without
+  # the setting, and a script element beside it is still set aside.
+  it 'leaves the text of a script inside a comment, an attribute value or a textarea as it is' do
+    commented = '<p>before</p><!-- <script src="//example.invalid/widget.js"></script> --><p>between</p>' \
+                "#{script}<p>after</p>"
+
+    expect(through_the_text_editor(commented)).to eq(commented)
+    expect(scripts_in_the_text_editor).to eq(0)
+    expect(script_ran).to be_nil
+    expect(through_the_text_editor('<p title="<script>x()</script>">in a title</p>'))
+      .to eq('<p title="&lt;script&gt;x()&lt;/script&gt;">in a title</p>')
+    expect(through_the_text_editor('<p><textarea><script>x()</script></textarea></p>'))
+      .to eq('<p><textarea>&lt;script&gt;x()&lt;/script&gt;</textarea></p>')
+  end
+
   it 'keeps the script of markup put in at the caret' do
     answer = through_the_text_editor('<p>written in the text editor</p>', inserted: "<p>inserted</p>#{script}")
 
