@@ -9,16 +9,30 @@ jQuery(function(){
     $.fn.skipGridEditorLibraries = function(str){ return str.replace(/^\<div\>\[grid_editor[^\]]*\]\<\/div\>/, ""); }
     $.fn.gridEditor_extra_rows = [];
     $.fn.gridEditor_libraries = [];
+
+    // A value on its way into a quoted attribute of a markup string. The block builders assemble their
+    // markup by concatenation: a url holding a quote would end the attribute and go on as markup of
+    // its own. The browser reads the escaped value back as the same url, on the public page too.
+    $.fn.gridEditorEscapeHtml = function(text){
+        return String(text == null ? "" : text).replace(/[&<>"']/g, function(character){
+            return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[character];
+        });
+    };
+
     //********************** editor content options **********************//
+    // The editor's own blocks, named and described in the admin language. The palette writes a
+    // description into a title attribute as it is - a block another plugin registers gives its own -
+    // so a translated one is escaped here, as tooltip() escapes the strings it is given.
+    var hint = $.fn.gridEditorEscapeHtml;
     $.fn.gridEditor_options = {
-        text: {title: "Text", description: "Permit you to include text plain in any column.", libraries: [], callback: grid_text_builder},
-        editor: {title: "Editor", description: "Permit you to include text html in any column.", libraries: [], callback: grid_editor_builder},
-        tab: {title: "Tabs", description: "Permit you to include tabs container in any col.", callback: grid_tab_builder},
-        slider: {title: "Slider", description: "Permit you to include a slider animation in any col.", callback: grid_slider_builder},
-        image: {title: "Image", description: "Permit you to include an image.", callback: grid_image_builder},
-        video: {title: "Video", description: "Permit you to include a video.", callback: grid_video_builder},
-        audio: {title: "Audio", description: "Permit you to include a audio.", callback: grid_audio_builder},
-        accordion: {title: "Accordion", description: "Permit you to include an accordion in any column.", callback: grid_accordion_builder},
+        text: {title: I18n("grid_editor.block_text", "Text"), description: hint(I18n("grid_editor.block_text_hint", "Permits you to include plain text in any column.")), libraries: [], callback: grid_text_builder},
+        editor: {title: I18n("grid_editor.block_editor", "Editor"), description: hint(I18n("grid_editor.block_editor_hint", "Permits you to include HTML text in any column.")), libraries: [], callback: grid_editor_builder},
+        tab: {title: I18n("grid_editor.block_tab", "Tabs"), description: hint(I18n("grid_editor.block_tab_hint", "Permits you to include a tabs container in any column.")), callback: grid_tab_builder},
+        slider: {title: I18n("grid_editor.block_slider", "Slider"), description: hint(I18n("grid_editor.block_slider_hint", "Permits you to include a slider animation in any column.")), callback: grid_slider_builder},
+        image: {title: I18n("grid_editor.block_image", "Image"), description: hint(I18n("grid_editor.block_image_hint", "Permits you to include an image.")), callback: grid_image_builder},
+        video: {title: I18n("grid_editor.block_video", "Video"), description: hint(I18n("grid_editor.block_video_hint", "Permits you to include a video.")), callback: grid_video_builder},
+        audio: {title: I18n("grid_editor.block_audio", "Audio"), description: hint(I18n("grid_editor.block_audio_hint", "Permits you to include an audio file.")), callback: grid_audio_builder},
+        accordion: {title: I18n("grid_editor.block_accordion", "Accordion"), description: hint(I18n("grid_editor.block_accordion_hint", "Permits you to include an accordion in any column.")), callback: grid_accordion_builder},
         //gallery: {title: "Gallery", description: "Permit you to include a gallery of audio, video or image in any column.", callback: grid_gallery_builder},
     };
     //********************** end editor content options **********************//
@@ -85,15 +99,6 @@ jQuery(function(){
             var target = this;
             $(target).empty();
             $.each(parse_nodes(markup == null ? "" : markup), function(){ target.appendChild(this); });
-        });
-    };
-
-    // A value on its way into a quoted attribute of a markup string. The block builders assemble their
-    // markup by concatenation: a url holding a quote would end the attribute and go on as markup of
-    // its own. The browser reads the escaped value back as the same url, on the public page too.
-    $.fn.gridEditorEscapeHtml = function(text){
-        return String(text == null ? "" : text).replace(/[&<>"']/g, function(character){
-            return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[character];
         });
     };
 

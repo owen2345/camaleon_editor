@@ -22,6 +22,7 @@ RSpec.describe 'the grid editor strings its scripts read', type: :model do
     expect(script_keys).to include('list', 'contents', 'toggle_editor', 'clear', 'preview', 'fullscreen',
                                    'list_title', 'col_block_title', 'switch_editor',
                                    'audio_form', 'add_item', 'edit_item', 'style_blue',
+                                   'block_tab', 'block_tab_hint',
                                    'import_failed', 'request_failed', 'content_unreadable', 'editor_failed')
   end
 

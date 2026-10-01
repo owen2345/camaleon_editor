@@ -81,6 +81,15 @@ RSpec.describe 'the grid editor labels', :js do
       expect(message).to eq('¿Está seguro de limpiar el editor?')
     end
 
+    # The palette of content blocks shows each block by its name, with what it is for as its tooltip
+    it 'names and describes the content blocks in that language' do
+      find('.grid_editor_menu .nav-tabs a', text: 'Contenidos').click
+
+      tabs_block = find('.grid_editor_menu .tab-pane.active [data-kind="tab"]')
+      expect(tabs_block).to have_css('.header_box', text: 'Pestañas')
+      expect(tooltip_of(tabs_block)).to eq('Permite incluir un contenedor de pestañas en cualquier columna.')
+    end
+
     # The list opens in a modal headed by its entry's title
     it 'opens the templates list under a heading in that language' do
       open_templates_list(label: 'Plantillas')
