@@ -124,13 +124,13 @@ end
 # newline between tags, #rrggbb for rgb(), <strong> for <b>, no script) when it loses focus, two
 # seconds after the form opened and with every draft. Which of them wrote last depends on timing,
 # so the export is put on record as the grid writes it, at the change_in its auto_save triggers.
+# Nothing else triggers one on a textarea, and the record does not look for the editor beside the
+# field: a rebuild that fails has taken it out of the page again.
 def record_grid_exports
   page.execute_script(<<~JS)
     if(window.jQuery && !window.__cama_grid_exports){
       window.__cama_grid_exports = {last: null};
-      jQuery(document).on('change_in', 'textarea', function(){
-        if(jQuery(this).prev('.panel_grid_editor').length) window.__cama_grid_exports.last = this.value;
-      });
+      jQuery(document).on('change_in', 'textarea', function(){ window.__cama_grid_exports.last = this.value; });
     }
   JS
 end
