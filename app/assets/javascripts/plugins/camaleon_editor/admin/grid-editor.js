@@ -291,11 +291,11 @@ jQuery(function(){
             "</ul>"+
             "<div class='tab-content'>"+
             "<div role='tabpanel' class='tab-pane active' id='grid_columns_"+gridEditor_id+"'> "+
-            '<p class="text-info">Drag and drop this blocks(Column Blocks) in the area below. </p>'+
+            '<p class="text-info">'+I18n("grid_editor.blocks_hint", "Drag and drop these blocks (Column Blocks) into the area below.")+'</p>'+
             tpl_rows+
             " </div>"+
             "<div role='tabpanel' class='tab-pane' id='grid_contents_"+gridEditor_id+"'>"+
-            '<p class="text-info">Drag and drop this blocks(Content Blocks) in any Column Block. </p>'+
+            '<p class="text-info">'+I18n("grid_editor.contents_hint", "Drag and drop these blocks (Content Blocks) into any Column Block.")+'</p>'+
             tpl_options+
             "</div>"+
             "</div>"+

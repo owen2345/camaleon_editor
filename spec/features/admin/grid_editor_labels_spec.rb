@@ -20,6 +20,7 @@ RSpec.describe 'the grid editor labels', :js do
         expect(page).to have_link('Text Editor')
         expect(page).to have_field('Preview', type: 'checkbox')
         expect(page).to have_field('Fullscreen', type: 'checkbox')
+        expect(page).to have_css('.text-info', text: 'Drag and drop these blocks (Column Blocks) into the area below.')
 
         open_templates_menu
         expect(page).to have_link_with_tooltip('List of templates', 'Grid templates')
@@ -58,6 +59,11 @@ RSpec.describe 'the grid editor labels', :js do
     it 'shows and asks in that language' do
       within '.grid_editor_menu' do
         expect(page).to have_link('Contenidos')
+        # the hint of each palette; the second one's tab is closed
+        blocks_hint = 'Arrastre y suelte estos bloques (bloques de columna) en el área inferior.'
+        contents_hint = 'Arrastre y suelte estos bloques (bloques de contenido) en cualquier bloque de columna.'
+        expect(page).to have_css('.text-info', text: blocks_hint)
+        expect(page).to have_css('.text-info', text: contents_hint, visible: :all)
 
         open_templates_menu(label: 'Plantillas')
         expect(page).to have_link_with_tooltip('Lista de plantillas', 'Plantillas de rejilla')
@@ -89,6 +95,7 @@ RSpec.describe 'the grid editor labels', :js do
     it 'shows and asks in English, not in titleized keys' do
       within '.grid_editor_menu' do
         expect(page).to have_link('Content Elements')
+        expect(page).to have_css('.text-info', text: 'Drag and drop these blocks (Column Blocks) into the area below.')
 
         open_templates_menu
         expect(page).to have_link_with_tooltip('List of templates', 'Grid templates')
