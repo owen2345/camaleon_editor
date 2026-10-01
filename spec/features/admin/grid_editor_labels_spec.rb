@@ -228,4 +228,17 @@ RSpec.describe 'the grid editor labels', :js do
       expect(saved_grid_content).to include('data-col_title="Break Line"')
     end
   end
+
+  # The registry of block kinds is a plain object: a kind named like something every object carries
+  # ("constructor") is no more registered than any other.
+  context 'with a post whose grid holds a block of a kind named like a member of every object' do
+    before do
+      store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>', kind: 'constructor')))
+      open_post_in_editor(@post)
+    end
+
+    it 'heads it as a block of an unknown kind' do
+      expect(page).to have_css('.panel_grid_body .drg_item > .header_box', text: 'unknown')
+    end
+  end
 end

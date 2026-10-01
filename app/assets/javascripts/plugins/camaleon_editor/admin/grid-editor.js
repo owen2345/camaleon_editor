@@ -475,13 +475,20 @@ jQuery(function(){
             column;
         }
 
+        // The registry entry of a block's kind, or null for a kind no script registers. An entry is the
+        // registry's own: a kind named like something every object carries ("constructor") has none.
+        function registered_kind(block){
+            var key = block.attr("data-kind");
+            return Object.prototype.hasOwnProperty.call($.fn.gridEditor_options, key) ? $.fn.gridEditor_options[key] : null;
+        }
+
         // parse column editor
         // content: content element
         // skip_options: boolean to add drodown options
         function parse_content_content(content, skip_options){
             // a block of a kind no script registers - its plugin gone - has no name
-            var t = I18n("grid_editor.block_unknown", "unknown");
-            try{ t = $.fn.gridEditor_options[content.attr("data-kind")].title }catch(e){}
+            var kind = registered_kind(content);
+            var t = kind ? kind.title : I18n("grid_editor.block_unknown", "unknown");
             var html = '<div class="header_box">'+
                 '<a><i class="fa fa-keyboard-o"></i> '+ t +'</a>'+
                 '</div>';
@@ -500,7 +507,7 @@ jQuery(function(){
                 content.children('.header_box').append(options);
             }
             // save used libraries
-            $.fn.gridEditor_libraries = $.merge($.fn.gridEditor_libraries, $.fn.gridEditor_options[content.attr("data-kind")] || {})
+            $.fn.gridEditor_libraries = $.merge($.fn.gridEditor_libraries, kind || {})
             content;
         }
 
@@ -635,7 +642,7 @@ jQuery(function(){
             // no Edit. The registry is read as the menu opens and as Edit is clicked, not as the grid
             // is rebuilt: a script may register its kind after that.
             function editable_kind(block){
-                var kind = $.fn.gridEditor_options[block.attr("data-kind")];
+                var kind = registered_kind(block);
                 return kind && $.isFunction(kind.callback) ? kind : null;
             }
 
