@@ -158,6 +158,34 @@ RSpec.describe 'the grid editor labels', :js do
     end
   end
 
+  # A tooltip is a title attribute the script writes into a markup string: a translation holding a
+  # double quote would end the attribute there, and the tooltip would stop at the quote.
+  context 'with translations that hold a double quote' do
+    let(:quoted) { { break_line_title: 'Insert a "break" line.', block_tab_hint: 'Holds "tabs" & more.' } }
+
+    def store_editor_strings(strings)
+      I18n.backend.store_translations(:en, camaleon_cms: { admin: { js: { grid_editor: strings } } })
+    end
+
+    around do |example|
+      shipped = quoted.keys.index_with { |key| I18n.t("camaleon_cms.admin.js.grid_editor.#{key}", locale: :en) }
+      store_editor_strings(quoted)
+      example.run
+    ensure
+      store_editor_strings(shipped)
+    end
+
+    it 'shows the whole string as the tooltip of a column block and of a content block' do
+      install_plugin_and_open_post_editor
+      open_grid_editor
+
+      break_line = find('.grid_editor_menu .clearfix[data-col="12"]')
+      expect(tooltip_of(break_line)).to eq(quoted[:break_line_title])
+      tabs_block = find('.grid_editor_menu [data-kind="tab"]', visible: :all)
+      expect(tooltip_of(tabs_block)).to eq(quoted[:block_tab_hint])
+    end
+  end
+
   context 'with a post whose grid holds a block with a content element' do
     before do
       store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
