@@ -30,8 +30,10 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(text_editor_content).to eq(content)
   end
 
-  # Going to the text editor and back shows the editor built earlier: the content is not read again.
-  it 'shows the existing editor again without reading the content a second time' do
+  # Going to the text editor and back with nothing changed there shows the editor built earlier:
+  # the content is not parsed again. (Changed there, the grid is made again from it: see
+  # grid_post_save_spec.)
+  it 'shows the existing editor again without parsing the content a second time' do
     store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
     open_post_in_editor(@post)
     find('.panel_grid_editor .panel_grid_body .drg_item')

@@ -238,13 +238,18 @@ jQuery(function(){
         // one editor per field, as jQuery's before() gave each field of a set its own
         if(this.length > 1) return this.each(function(){ $(this).gridEditor(tinyEditor); });
         var textarea = $(this);
-        // an editor built earlier for this field is only shown again: nothing to read, nothing to build
-        var existing_editor = textarea.prev().hasClass("panel_grid_editor");
+        // An editor built earlier for this field is shown again, and nothing is built: the field is
+        // not read, and the editor sees for itself what the text editor holds by now (show_again).
+        var built_editor = textarea.prev(".panel_grid_editor");
+        if(built_editor.length){
+            built_editor.triggerHandler("show_again", [tinyEditor]);
+            return textarea;
+        }
         // Content marked as a grid that cannot be read as one stays in the text editor: shown as an
         // empty grid, its first change would be auto-saved over the content nobody got to see.
         var saved_body = null;
-        var saved_content = existing_editor ? null : textarea.val();
-        if(!existing_editor && $.fn.isGridEditorContent(saved_content)){
+        var saved_content = textarea.val();
+        if($.fn.isGridEditorContent(saved_content)){
             saved_body = parse_grid_body(saved_content, true);
             if(!saved_body){
                 content_unreadable();
@@ -255,10 +260,11 @@ jQuery(function(){
         // first auto_save, then the last export. A grid opened over other content has none before
         // its first auto_save, and the text editor's content stays what is saved until then.
         var exported = saved_body ? saved_content : null;
+        // What the text editor held when the author left the grid editor for it.
+        var left_with = null;
         gridEditor_id ++;
         var tinymce_panel = $(tinyEditor.editorContainer).hide();
         var editor_id = "grid_editor_"+gridEditor_id;
-        if(existing_editor){ textarea.prev().show(); return textarea; }
         var tpl_rows = "";
         $.each({6: 50, 4: 33, 3: 25, 2: 16, 8: 66, 9: 75, 12: 100}, function(k, val){ tpl_rows += '<div class="" data-col="'+k+'"'+tooltip("grid_editor.col_block_title", "Insert a column block with %{width}% of width.", {width: val})+' data-col_title="'+val+'%"><div class="grid_sortable_items"></div></div>'; });
 
@@ -539,6 +545,7 @@ jQuery(function(){
                 if(!confirm(I18n("grid_editor.toggle_editor", "Are you sure to leave this editor?"))) return false;
                 editor.hide();
                 if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
+                left_with = tinyEditor.getContent();
                 tinymce_panel.show();
                 return false;
             });
@@ -749,6 +756,76 @@ jQuery(function(){
         tinyEditor.on("GetContent", function(e){
             var grid_shown = $.contains(document, editor[0]) && editor[0].style.display !== "none";
             if(exported !== null && grid_shown && e.format === "html" && !e.selection) e.content = exported;
+        });
+
+        // The grid made again from a grid root parsed off the text editor's content: its attributes,
+        // its style, its columns. What it held is set aside as nodes, handlers included, and comes
+        // back when a parser throws part-way: a half-built grid is worse than the one left behind.
+        function rebuild_grid(body){
+            var grid = grid_root(editor);
+            var sortable = grid.hasClass("ui-sortable");
+            var previous = {contents: grid.contents().detach(), attributes: attributes_of(grid)};
+            try {
+                // as the editor was built: the root's own class, then what the content's root carries
+                set_attributes(grid, [{name: "class", value: "panel_grid_body row"}]);
+                keep_root_attributes(grid, body);
+                if(sortable) grid.addClass("ui-sortable");
+                fill_grid(grid, body);
+                parse_content(editor);
+            } catch(error) {
+                if(window.console) console.error(error);
+                grid.empty();
+                set_attributes(grid, previous.attributes);
+                // natively: jQuery's append() would run the scripts of the grid set aside
+                $.each(previous.contents, function(){ grid[0].appendChild(this); });
+                return false;
+            }
+            // released for good, or jQuery's data store would hold the grid for the life of the page
+            previous.contents.remove();
+            return true;
+        }
+        function attributes_of(element){
+            return $.map(element[0].attributes, function(attribute){ return {name: attribute.name, value: attribute.value}; });
+        }
+        function set_attributes(element, attributes){
+            $.each(attributes_of(element), function(_index, attribute){ element.removeAttr(attribute.name); });
+            $.each(attributes, function(_index, attribute){ element.attr(attribute.name, attribute.value); });
+        }
+
+        // What the author changed in the text editor is the newer of the two, and a grid follows it:
+        // the grid is made again from it and stands for that content until its next auto_save.
+        // Content marked as a grid that cannot be read as one stays in the text editor, as when the
+        // post is opened: false. Any other content is no grid to make: the grid built earlier comes
+        // back as it was left, standing for what it stood for - what the grid shows is what is
+        // saved - and the content is kept for the text editor, which gets it back when the author
+        // goes there again.
+        function follow_text_editor(content){
+            if(!$.fn.isGridEditorContent(content)){
+                editor.data("tiny_backup", content);
+                return true;
+            }
+            var body = parse_grid_body(content, true);
+            if(!body || !rebuild_grid(body)){
+                content_unreadable();
+                return false;
+            }
+            exported = content;
+            // the content before the grid, if any, is no longer what the text editor goes back to
+            editor.removeData("tiny_backup");
+            return true;
+        }
+
+        // Back from the text editor (see the head of gridEditor). With nothing changed there, the grid
+        // is shown as it was left and stands for what it stood for. text_editor is the one the button
+        // was clicked in: its panel is hidden once the grid is the one shown.
+        editor.bind("show_again", function(_event, text_editor){
+            var hidden = editor[0].style.display === "none";
+            if(hidden){
+                var content = tinyEditor.getContent();
+                if(content !== left_with && !follow_text_editor(content)) return;
+            }
+            $(text_editor.editorContainer).hide();
+            editor.show();
         });
 
         // drag columns
