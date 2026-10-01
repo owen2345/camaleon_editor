@@ -3,7 +3,7 @@
 # The post's field has two writers: the grid editor, and the text editor it stands in front of.
 # Core has the text editor write its content into the field when it loses focus, with every draft
 # and as the form is sent, and the text editor's serialization of a grid is not the grid's export:
-# a block's script is dropped, <b> and rgb() are respelled. While the grid editor is the one shown,
+# <b> and rgb() are respelled, a newline goes between tags. While the grid editor is the one shown,
 # the text editor answers with the grid's export, so the export is what the post stores.
 RSpec.describe 'saving a post from the grid editor', :js do
   init_site
@@ -23,6 +23,11 @@ RSpec.describe 'saving a post from the grid editor', :js do
     store_post_content(@post, stored_content)
     install_plugin_and_open_post_editor(as: as, post: @post)
     find('.panel_grid_editor .panel_grid_body .drg_column .drg_item')
+  end
+
+  def leave_for_the_text_editor
+    accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
+    find('.mce-tinymce')
   end
 
   context 'with an administrator' do
@@ -88,15 +93,14 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     # Back in the text editor, the author sees and edits the text editor's content: that is what
-    # is stored, in the text editor's serialization.
+    # is stored, in the text editor's serialization, with the grid's scripts still in it.
     it 'leaves the save to the text editor once the author went back to it' do
       trigger_grid_auto_save
-      accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
+      leave_for_the_text_editor
       shown = text_editor_content
       submit_post_form
 
-      expect(shown).to include('<strong>bold</strong>')
-      expect(shown).not_to include(script)
+      expect(shown).to include('<strong>bold</strong>', script)
       expect(post_content.delete("\r\n")).to eq(shown)
     end
   end
@@ -199,6 +203,15 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(export).to include('<b>changed</b>')
       expect(export).not_to include('<script')
       expect(post_content).to eq(export)
+    end
+
+    # The text editor's version of a grid is changed content to core, and still holds the script.
+    it 'refuses the text editor version of a grid that holds a script, and leaves the post as it was' do
+      leave_for_the_text_editor
+      submit_post_form
+
+      expect(page).to have_css('.alert-danger', text: /script/i)
+      expect(post_content).to eq(stored_content)
     end
   end
 end

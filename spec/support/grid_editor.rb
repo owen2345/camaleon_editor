@@ -135,21 +135,22 @@ end
 # The post's textarea has more than one writer. The grid writes its export there at every
 # auto_save. The text editor writes its content there when it loses focus, with every draft and as
 # the form is sent: the grid's export while the grid editor is shown, and its own serialization (a
-# newline between tags, #rrggbb for rgb(), <strong> for <b>, no script) once the author went back
-# to it. And once a block form has loaded a text editor of its own through jQuery's tinymce(),
+# newline between tags, #rrggbb for rgb(), <strong> for <b>) once the author went back to it.
+# And once a block form has loaded a text editor of its own through jQuery's tinymce(),
 # val() hands the grid's export to the text editor alone: the field keeps what it held until the
 # text editor next writes.
 #
 # So the export is not read off the field. The grid hands it to the text editor right before the
 # change_in its auto_save triggers, and what a text editor was last handed at that moment goes on
 # record. Nothing else triggers a change_in on a textarea, and the record does not look for the
-# editor beside the field: a rebuild that fails never puts its editor in the page.
+# editor beside the field: a rebuild that fails never puts its editor in the page. The record
+# listens ahead of the editor's own listeners: one of them sets the scripts of the content aside.
 def record_grid_exports
   page.execute_script(<<~JS)
     if(window.jQuery && !window.__cama_grid_exports){
       var record = window.__cama_grid_exports = {handed: null, last: null};
       var watch = function(editor){
-        editor.on('BeforeSetContent', function(event){ record.handed = event.content; });
+        editor.on('BeforeSetContent', function(event){ record.handed = event.content; }, true);
       };
       if(window.tinymce){
         jQuery.each(tinymce.editors, function(_index, editor){ watch(editor); });

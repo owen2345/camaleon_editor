@@ -741,10 +741,11 @@ jQuery(function(){
 
         // The post's field has a second writer. Core has the text editor write its content into the
         // field when it loses focus, with every draft and as the form is sent, and what the text
-        // editor makes of the export it was handed is not the export: a block's script is dropped,
-        // <b> and rgb() are respelled, bare table rows are flattened. So while the grid editor is the
-        // one shown, the text editor answers with the export itself, whoever asks for its content.
-        // Back in the text editor (the grid editor hidden), the text editor speaks for itself.
+        // editor makes of the export it was handed is not the export: <b> and rgb() are respelled,
+        // bare table rows are flattened (a block's script it keeps: see keep_scripts). So while
+        // the grid editor is the one shown, the text editor answers with the export itself, whoever
+        // asks for its content. Back in the text editor (the grid editor hidden), the text editor
+        // speaks for itself.
         tinyEditor.on("GetContent", function(e){
             var grid_shown = $.contains(document, editor[0]) && editor[0].style.display !== "none";
             if(exported !== null && grid_shown && e.format === "html" && !e.selection) e.content = exported;
@@ -842,6 +843,22 @@ jQuery(function(){
         }
         tinymce_global_settings["init"].push(auto_switch_editor);
         tinymce_global_settings["custom_toolbar"].push("grid_editor");
+
+        // A text editor takes the scripts out of the content it is handed, and a grid's embed blocks
+        // carry scripts: a grid that went through a text editor - the author left the grid editor for
+        // it, or edited an Editor block in its form - came back without them. The editor's own
+        // protect setting keeps them: out of its document, as comments that hold nothing that runs,
+        // and given back as they were. The setting goes by the markup, whatever it is: every text
+        // editor set up with core's settings on a page that loads the grid editor keeps the scripts
+        // of the content it is handed, a grid or not, and core's rules meet them when the content
+        // is saved. A paste goes through the editor's paste filter first, which takes its scripts
+        // out as it always did. A page's own protect list is kept: its settings win over core's
+        // defaults, so the pattern joins the list that will be used.
+        var keep_scripts = function(settings, def){
+            var holder = settings.protect ? settings : def;
+            holder.protect = (holder.protect || []).concat([/<script(?=[\s>])[\s\S]*?<\/script\s*>/gi]);
+        }
+        tinymce_global_settings["settings"].push(keep_scripts);
 
         // grid editor button
         var grid_editor_button = function(editor){
