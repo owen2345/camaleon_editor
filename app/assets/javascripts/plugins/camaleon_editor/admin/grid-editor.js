@@ -243,7 +243,7 @@ jQuery(function(){
         // Content marked as a grid that cannot be read as one stays in the text editor: shown as an
         // empty grid, its first change would be auto-saved over the content nobody got to see.
         var saved_body = null;
-        var saved_content = textarea.val();
+        var saved_content = existing_editor ? null : textarea.val();
         if(!existing_editor && $.fn.isGridEditorContent(saved_content)){
             saved_body = parse_grid_body(saved_content, true);
             if(!saved_body){
