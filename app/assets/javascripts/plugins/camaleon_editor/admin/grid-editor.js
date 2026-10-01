@@ -774,7 +774,7 @@ jQuery(function(){
                 text: 'Grid Editor',
                 icon: false,
                 onclick: function(){
-                    if(!confirm("Are you sure to change the editor?")) return false;
+                    if(!confirm(I18n("grid_editor.switch_editor", "Are you sure to change the editor?"))) return false;
                     var area = $(editor.targetElm).gridEditor(editor);
                 }
             });

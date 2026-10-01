@@ -77,6 +77,7 @@ def abort_template_requests
   JS
 end
 
+# Switches the text editor to the grid editor, and answers with the prompt its button asked.
 def open_grid_editor
   accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
 end

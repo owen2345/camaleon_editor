@@ -104,6 +104,20 @@ RSpec.describe 'the grid editor labels', :js do
     end
   end
 
+  # The text editor's toolbar button carries the editor's name, "Grid Editor" in every language, as
+  # the roles form does; the prompt it asks before the switch is a sentence, and is translated.
+  context 'with the text editor still open, in an admin language the plugin ships a translation for' do
+    before do
+      @site.set_admin_language('es')
+      install_plugin_and_open_post_editor
+    end
+
+    it 'asks before switching to the grid editor in that language' do
+      expect(open_grid_editor).to eq('¿Está seguro de cambiar de editor?')
+      expect(page).to have_css('.panel_grid_editor')
+    end
+  end
+
   # The browser gets the strings of the admin language alone, and the plugin ships three languages.
   context 'with an admin language the plugin does not ship' do
     before do
