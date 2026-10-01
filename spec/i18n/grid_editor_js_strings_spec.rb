@@ -33,8 +33,9 @@ RSpec.describe 'the grid editor strings its scripts read', type: :model do
   # copy of the English string, so it has to say the same thing.
   it 'gives every string an English default that says what the English locale string says' do
     script_calls.each do |key, default|
-      expect(default).to eq(I18n.t("camaleon_cms.admin.js.grid_editor.#{key}", locale: :en)),
-                         "no such default for #{key}"
+      english = I18n.t("camaleon_cms.admin.js.grid_editor.#{key}", locale: :en)
+      expect(default).to eq(english),
+                         "#{key}: the script's default is #{default.inspect}, the locale's #{english.inspect}"
     end
   end
 
