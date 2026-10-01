@@ -246,6 +246,6 @@ RSpec.describe 'the grid editor admin' do
     doc = Nokogiri::HTML(response.body)
     expect(doc.css('legend').map(&:text)).to eq(['Background Image', 'Border'])
     expect(doc.at_css('label[for="cama_style_b-pos"]').text).to eq('Position')
-    expect(doc.at_css('input.bg_image')['placeholder']).to eq('Upload your image or paste an URL')
+    expect(doc.at_css('input.bg_image')['placeholder']).to eq('Upload your image or paste a URL')
   end
 end

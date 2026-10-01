@@ -42,7 +42,7 @@ en:
           gallery_item_form: "Gallery Item Form"
           media: "Media"
           image: "Image"
-          image_placeholder: "Upload your image or paste an URL"
+          image_placeholder: "Upload your image or paste a URL"
           caption: "Caption"
           item_title: "Title"
           item_content: "Content"
@@ -88,7 +88,7 @@ en:
     style_settings:
       background_image: "Background Image"
       image: "Image"
-      image_placeholder: "Upload your image or paste an URL"
+      image_placeholder: "Upload your image or paste a URL"
       position: "Position"
       default: "Default"
       left_top: "Left Top"

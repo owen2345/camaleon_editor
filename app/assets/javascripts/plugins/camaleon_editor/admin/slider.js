@@ -62,7 +62,7 @@ window.grid_slider_builder = function(panel, editor){
         '<form>'+
           `<div class="form-group"><label class="control-label">${I18n("grid_editor.image", "Image")}</label> \
             <div class="group-input-fields-content input-group"> \
-              <input placeholder="${$.fn.gridEditorEscapeHtml(I18n("grid_editor.image_placeholder", "Upload your image or paste an URL"))}" type="url" class="form-control url_file" /> \
+              <input placeholder="${$.fn.gridEditorEscapeHtml(I18n("grid_editor.image_placeholder", "Upload your image or paste a URL"))}" type="url" class="form-control url_file" /> \
               <span class="input-group-addon btn_upload"><i class="fa fa-upload"></i> </span> \
             </div> \
           </div>`+
