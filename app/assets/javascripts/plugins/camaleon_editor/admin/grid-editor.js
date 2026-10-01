@@ -949,10 +949,13 @@ jQuery(function(){
         // of the content it is handed, a grid or not, and core's rules meet them when the content
         // is saved. A paste goes through the editor's paste filter first, which takes its scripts
         // out as it always did. A page's own protect list is kept: its settings win over core's
-        // defaults, so the pattern joins the list that will be used.
+        // defaults, so the pattern joins the list that will be used. One pattern serves every
+        // editor, and joins a list once: a page may set several editors up with the same settings.
+        var scripts = script_elements();
         var keep_scripts = function(settings, def){
             var holder = settings.protect ? settings : def;
-            holder.protect = (holder.protect || []).concat([script_elements()]);
+            var list = holder.protect || [];
+            if($.inArray(scripts, list) < 0) holder.protect = list.concat([scripts]);
         }
         // The pattern reads markup a token at a time, as the editor does with the content it is
         // handed, and steps over whole every token the editor reads as text or as a tag: the tags of

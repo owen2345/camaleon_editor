@@ -101,9 +101,10 @@ RSpec.describe 'scripts in the text editor', :js do
   end
 
   # A page may set its text editors up with a protect list of its own, which is used in place of
-  # core's default: the scripts' pattern joins that list. What each pattern of a list leaves of
-  # the markup shows which patterns the list holds.
-  it "adds the pattern to a page's own protect list, and to the default one otherwise" do
+  # core's default: the scripts' pattern joins that list, once, however many editors the page sets
+  # up with those settings. What each pattern of a list leaves of the markup shows which patterns
+  # the list holds.
+  it "adds the pattern to a page's own protect list once, and to the default one otherwise" do
     own_list, default_list = page.evaluate_script(<<~JS)
       (function(){
         var left_by = function(settings){
@@ -111,7 +112,9 @@ RSpec.describe 'scripts in the text editor', :js do
             return '<?php one(); ?><script>two()</script>'.replace(pattern, function(){ return ''; });
           });
         };
-        return [left_by(cama_get_tinymce_settings({protect: [/<\\?php[\\s\\S]*?\\?>/g]})), left_by(cama_get_tinymce_settings())];
+        var own = {protect: [/<\\?php[\\s\\S]*?\\?>/g]};
+        cama_get_tinymce_settings(own);
+        return [left_by(cama_get_tinymce_settings(own)), left_by(cama_get_tinymce_settings())];
       })()
     JS
 
