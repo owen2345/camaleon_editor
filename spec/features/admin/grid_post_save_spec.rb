@@ -101,6 +101,34 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
   end
 
+  # A grid opened over other content has exported nothing yet: the text editor's content stays what
+  # the post stores until the grid's first change.
+  context 'with a grid opened over other content' do
+    let(:stored_content) { '<p>written in the text editor</p>' }
+
+    before do
+      store_post_content(@post, stored_content)
+      install_plugin_and_open_post_editor(post: @post)
+      open_grid_editor
+      find('.panel_grid_editor .panel_grid_body', visible: :all)
+    end
+
+    it 'stores the content of the text editor while the grid has exported nothing' do
+      submit_post_form
+
+      expect(post_content).to eq(stored_content)
+    end
+
+    it 'stores the export from the first change of the grid on' do
+      trigger_grid_auto_save
+      export = saved_grid_content
+      submit_post_form
+
+      expect(export).to start_with(grid_post_content('<div class="panel_grid_body row'))
+      expect(post_content).to eq(export)
+    end
+  end
+
   # A post in several languages has one field for each, with a text editor and a grid editor of
   # its own, and core composes what the post stores from them.
   context 'with a post in two languages' do
