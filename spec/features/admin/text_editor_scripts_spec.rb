@@ -67,7 +67,7 @@ RSpec.describe 'scripts in the text editor', :js do
     within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: 'between') }
   end
 
-  # Inside a comment, a quoted attribute value or a textarea, a browser reads a script's tags as
+  # Inside a comment, a quoted attribute value or a textarea, the editor reads a script's tags as
   # text, and so does the pattern: such content goes through the text editor as it would without
   # the setting, and a script element beside it is still set aside.
   it 'leaves the text of a script inside a comment, an attribute value or a textarea as it is' do
@@ -81,6 +81,23 @@ RSpec.describe 'scripts in the text editor', :js do
       .to eq('<p title="&lt;script&gt;x()&lt;/script&gt;">in a title</p>')
     expect(through_the_text_editor('<p><textarea><script>x()</script></textarea></p>'))
       .to eq('<p><textarea>&lt;script&gt;x()&lt;/script&gt;</textarea></p>')
+  end
+
+  # The pattern goes by the editor's reading of markup where a browser's differs: a noscript and a
+  # CDATA section hold text, a comment ends at "--!>" as well, and one that opens with "<!-->" goes
+  # on to the next "-->". Each comes back as the editor gives it back without the setting.
+  it 'leaves the text of a script alone wherever the editor reads it as text' do
+    {
+      '<p>a</p><noscript><script>x()</script></noscript><p>b</p>' =>
+        '<p>a</p><noscript><script>x()</script></noscript><p>b</p>',
+      '<p>a</p><![CDATA[ <script>x()</script> ]]><p>b</p>' => '<p>a</p><![CDATA[ <script>x()</script> ]]><p>b</p>',
+      '<p>a</p><!-- <script>x()</script> --!><p>b</p>' => '<p>a</p><!-- <script>x()</script> --><p>b</p>',
+      '<p>a</p><!--> <script>x()</script> --><p>b</p>' => '<p>a</p><!-- > <script>x()</script> --><p>b</p>'
+    }.each { |markup, given_back| expect(through_the_text_editor(markup)).to eq(given_back) }
+
+    instruction = through_the_text_editor('<p>a</p><?php echo "<script>x()</script>"; ?><p>b</p>')
+    expect(instruction).to include('<?php echo')
+    expect(instruction).not_to include('mce:protected')
   end
 
   # A page may set its text editors up with a protect list of its own, which is used in place of
