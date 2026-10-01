@@ -11,6 +11,11 @@ def grid_column_markup(inner = '', col: 6, title: '50%')
     %(<div class="grid_sortable_items">#{inner}</div></div>)
 end
 
+# A break line: a full-width column with no area for blocks, saved under its English title.
+def grid_break_line_markup
+  %(<div class="clearfix col-md-12" data-col_title="Break Line" data-col="12"></div>)
+end
+
 def grid_body_markup(inner = grid_column_markup, attributes: '')
   %(<div class="panel_grid_body row"#{" #{attributes}" unless attributes.empty?}>#{inner}</div>)
 end

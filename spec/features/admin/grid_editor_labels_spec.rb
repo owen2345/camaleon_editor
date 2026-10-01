@@ -215,14 +215,13 @@ RSpec.describe 'the grid editor labels', :js do
   context 'with a post whose grid holds a break line and a block of a kind nobody registers' do
     before do
       @site.set_admin_language('es')
-      columns = grid_column_markup(grid_block_markup('', kind: 'gone')) +
-                grid_column_markup('', col: 12, title: 'Break Line')
+      columns = grid_column_markup(grid_block_markup('', kind: 'gone')) + grid_break_line_markup
       store_post_content(@post, grid_post_content(grid_body_markup(columns)))
       open_post_in_editor(@post)
     end
 
     it 'heads them in the admin language and saves the break line under its own title' do
-      expect(page).to have_css('.panel_grid_body .drg_column > .header_box', text: 'Salto de línea')
+      expect(page).to have_css('.panel_grid_body .drg_column.clearfix > .header_box', text: 'Salto de línea')
       expect(page).to have_css('.panel_grid_body .drg_item > .header_box', text: 'desconocido')
 
       trigger_grid_auto_save
