@@ -685,11 +685,19 @@ jQuery(function(){
                 return kind && $.isFunction(kind.callback) ? kind : null;
             }
 
+            // A block or a column the author deleted fades out, and is in the grid until it is gone: the
+            // grid is exported then. Exported at the click, it would still hold what was deleted.
+            function fade_out_of_grid(element){
+                element.fadeOut(function(){
+                    $(this).remove();
+                    editor.trigger("auto_save");
+                });
+            }
+
             // content dropdown options
             grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
                 if(confirm(I18n("grid_editor.del_content", "Are you sure to delete this content?"))) {
-                    jQuery(this).closest(".drg_item").fadeDestroy();
-                    editor.trigger("auto_save");
+                    fade_out_of_grid(jQuery(this).closest(".drg_item"));
                 }
                 e.preventDefault();
             }).on("click", '.drg_item .grid_content_clone', function (e) {
@@ -716,8 +724,7 @@ jQuery(function(){
             // column dropdown options
             grid_root(editor).on("click", '.grid_col_remove', function (e) {
                 if(confirm(I18n("grid_editor.del_block", "Are you sure to delete this block?"))){
-                    jQuery(this).closest(".drg_column").fadeDestroy();
-                    editor.trigger("auto_save");
+                    fade_out_of_grid(jQuery(this).closest(".drg_column"));
                 }
                 e.preventDefault();
             }).on("click", '.grid_col_clone', function (e) {

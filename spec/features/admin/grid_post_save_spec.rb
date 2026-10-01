@@ -58,6 +58,30 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(post_content).to eq(stored_content)
     end
 
+    # A block or a column the author deletes fades out, and is in the grid until it is gone: the
+    # grid is exported then, and the export is what the post stores.
+    it 'stores the grid without a block the author deleted' do
+      accept_confirm { page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_remove').click();") }
+      expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)
+      export = saved_grid_content
+      submit_post_form
+
+      expect(export).to include('data-col="6"')
+      expect(export).not_to include('embedded widget')
+      expect(post_content).to eq(export)
+    end
+
+    it 'stores the grid without a column the author deleted' do
+      accept_confirm { page.execute_script("jQuery('.panel_grid_body .drg_column .grid_col_remove').click();") }
+      expect(page).to have_no_css('.panel_grid_body .drg_column', visible: :all)
+      export = saved_grid_content
+      submit_post_form
+
+      expect(export).to start_with(grid_post_content('<div class="panel_grid_body row'))
+      expect(export).not_to include('data-col=')
+      expect(post_content).to eq(export)
+    end
+
     # The post form writes each text editor's content into its field to tell whether there is
     # anything to save, two seconds after it opens and with every draft; so does a text editor
     # that loses focus.
