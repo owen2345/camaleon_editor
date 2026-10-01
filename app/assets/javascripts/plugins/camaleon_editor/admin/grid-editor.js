@@ -507,6 +507,22 @@ jQuery(function(){
                 content.children('.header_box').append(options);
             }
             // save used libraries
+            // TODO: finish or retire the list of libraries a grid uses, a design of the plugin's first
+            // commit that neither end completed.
+            // The plan, as the code shows it: a kind declares libraries: [...] in the registry, names of
+            // Camaleon asset libraries; this line collects those of the kinds in use; auto_save writes
+            // them into the marker, [grid_editor data='a,b']; and on the public page the grid_editor
+            // shortcode (camaleon_editor_front in main_helper.rb) loads them, so a block's front-end
+            // assets arrive only where the block is used.
+            // What happens: the merge takes the registry entry itself, an object with no length, so it
+            // adds nothing and data is always empty; and the shortcode ignores its attributes and loads
+            // the plugin's stylesheet alone. The marker still tells a grid from other content
+            // (isGridEditorContent) and brings that stylesheet in: only the list is dead.
+            // To finish it: merge kind.libraries, each name once, into a list built for each save - this
+            // array is shared by every editor of the page and never emptied - and have the shortcode
+            // load what data names. To retire it: drop this line and the libraries keys of the
+            // registry, and keep data='' in the marker so saved content stays as it is;
+            // $.fn.gridEditor_libraries is public, so another plugin may read it.
             $.fn.gridEditor_libraries = $.merge($.fn.gridEditor_libraries, kind || {})
             content;
         }

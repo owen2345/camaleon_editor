@@ -107,6 +107,9 @@ module Plugins::CamaleonEditor::MainHelper
   end
 
   # loaded for frontend requests
+  # TODO: the marker a grid is saved under, [grid_editor data='...'], was meant to name the asset
+  # libraries its blocks need, for this callback to load. The editor has never filled the list and the
+  # callback ignores its attributes: see "save used libraries" in grid-editor.js for the whole account.
   def camaleon_editor_front
     callback = lambda { |_args, _attrs|
       append_asset_libraries({ front_grid_editor: { css: [plugin_gem_asset('front/basic.css', 'camaleon_editor')] } })
