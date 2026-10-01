@@ -39,7 +39,8 @@ the grid's markup there, and that editor's content is what is saved; a grid open
 other content hands the text editor that content back instead. Back in the grid editor, the
 grid is made again from what was changed in the text editor. Other content written there is no
 grid to make: the grid comes back as it was left and is what is saved, and that content waits in
-the text editor.
+the text editor. A grid opened over a post's other content takes over at its first change: until
+then, the post keeps what the text editor holds.
 
 Where the grid editor is loaded, the text editors keep the scripts of the content they are
 handed, where they used to take them out: a grid, an Editor block in its form, any other post
