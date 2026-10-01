@@ -75,4 +75,38 @@ RSpec.describe 'the grid editor block forms', :js do
       end
     end
   end
+
+  # A block of a kind no script registers - its plugin gone - has no form to be edited in. Its menu
+  # offers what needs none; an Edit entry could only fail.
+  context 'with a block of a kind no script registers' do
+    before do
+      store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>', kind: 'gone')))
+      open_post_in_editor(@post)
+    end
+
+    it 'offers to delete, clone and style the block, not to edit it' do
+      find('.drg_item > .header_box .dropdown-toggle').click
+
+      within '.drg_item > .header_box .dropdown-menu' do
+        expect(page).to have_css('a.grid_content_remove')
+        expect(page).to have_css('a.grid_content_clone')
+        expect(page).to have_css('a.grid_style_settings')
+        expect(page).to have_no_css('a.grid_content_edit')
+      end
+    end
+
+    # The entry is still in the page, hidden: a click that reaches it all the same breaks nothing
+    it 'opens nothing and goes nowhere when the Edit entry is clicked all the same' do
+      find('.panel_grid_body .drg_item') # the grid is rebuilt
+      page.execute_script(<<~JS)
+        window.__cama_errors = [];
+        window.addEventListener('error', function(event){ window.__cama_errors.push(event.message); });
+        document.querySelector('.panel_grid_body .drg_item .grid_content_edit').click();
+      JS
+
+      expect(page.evaluate_script('window.__cama_errors')).to eq([])
+      expect(URI(page.current_url).fragment).to be_nil
+      expect(page).to have_no_css('.modal')
+    end
+  end
 end

@@ -630,6 +630,15 @@ jQuery(function(){
                 textarea.val(txt).trigger("change_in");
             });
 
+            // The registry entry of a block's kind, when it has a builder: the form the block is edited
+            // in. A block of a kind no script registers - its plugin gone - has none, so its menu offers
+            // no Edit. The registry is read as the menu opens and as Edit is clicked, not as the grid
+            // is rebuilt: a script may register its kind after that.
+            function editable_kind(block){
+                var kind = $.fn.gridEditor_options[block.attr("data-kind")];
+                return kind && $.isFunction(kind.callback) ? kind : null;
+            }
+
             // content dropdown options
             grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
                 if(confirm(I18n("grid_editor.del_content", "Are you sure to delete this content?"))) {
@@ -644,13 +653,18 @@ jQuery(function(){
                 editor.trigger("auto_save");
                 e.preventDefault();
             }).on("click", '.drg_item .grid_content_edit', function (e) {
-                var panel_content = $(this).closest(".drg_item");
-                var key = panel_content.attr("data-kind");
-                $.fn.gridEditor_options[key]["callback"](panel_content.children(".grid_item_content"), editor);
+                // first: the link goes nowhere, whatever the builder does
                 e.preventDefault();
+                var panel_content = $(this).closest(".drg_item");
+                var kind = editable_kind(panel_content);
+                if(kind) kind.callback(panel_content.children(".grid_item_content"), editor);
             }).on("click", "a.grid_style_settings", function(e){
                 grid_style_setting($(this), editor);
                 e.preventDefault();
+            }).on("click", ".drg_item > .header_box .dropdown-toggle", function(){
+                // this runs before Bootstrap's own handler opens the menu
+                var edit_entry = $(this).next(".dropdown-menu").find(".grid_content_edit").parent();
+                edit_entry.toggleClass("hidden", !editable_kind($(this).closest(".drg_item")));
             });
 
             // column dropdown options
