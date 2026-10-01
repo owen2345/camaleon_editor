@@ -97,11 +97,12 @@ def open_grid_style_settings(label: 'Templates')
   find('.grid_editor_menu .grid_style_settings').click
 end
 
-# The tooltip a link of the admin carries, or nil. A second after the page loads, core gives every
-# link a Bootstrap tooltip, which moves a title into data-original-title and leaves the attribute
-# empty: which of the two holds the text depends on when the example looks.
-def tooltip_of(link)
-  link['data-original-title'].presence || link[:title].presence
+# The tooltip an element of the admin carries, or nil. A Bootstrap tooltip moves a title into
+# data-original-title and leaves the attribute empty. The editor gives its palette blocks one as it
+# opens; core gives every link one a second after the page loads, so for a link, which of the two
+# attributes holds the text depends on when the example looks.
+def tooltip_of(element)
+  element['data-original-title'].presence || element[:title].presence
 end
 
 def have_link_with_tooltip(label, tooltip)
