@@ -21,6 +21,7 @@ RSpec.describe 'the grid editor labels', :js do
         expect(page).to have_field('Preview', type: 'checkbox')
         expect(page).to have_field('Fullscreen', type: 'checkbox')
         expect(page).to have_css('.text-info', text: 'Drag and drop these blocks (Column Blocks) into the area below.')
+        expect(page).to have_css('.clearfix[data-col="12"] > .header_box', text: 'Break Line')
 
         open_templates_menu
         expect(page).to have_link_with_tooltip('List of templates', 'Grid templates')
@@ -64,6 +65,8 @@ RSpec.describe 'the grid editor labels', :js do
         contents_hint = 'Arrastre y suelte estos bloques (bloques de contenido) en cualquier bloque de columna.'
         expect(page).to have_css('.text-info', text: blocks_hint)
         expect(page).to have_css('.text-info', text: contents_hint, visible: :all)
+        # the column blocks are labelled by their width, the break line by its name
+        expect(page).to have_css('.clearfix[data-col="12"] > .header_box', text: 'Salto de línea')
 
         open_templates_menu(label: 'Plantillas')
         expect(page).to have_link_with_tooltip('Lista de plantillas', 'Plantillas de rejilla')
@@ -202,6 +205,28 @@ RSpec.describe 'the grid editor labels', :js do
       find('.drg_column > .header_box .dropdown-toggle').click
       message = dismiss_confirm { find('.drg_column > .header_box .grid_col_remove').click }
       expect(message).to eq('Are you sure to delete this block?')
+    end
+  end
+
+  # A column is headed by the title saved with it, its width; a break line's saved title is its
+  # English name, whatever the language it was added in. A block of a kind no script registers - its
+  # plugin gone - has no name at all. The editor heads both in the admin language, and saves the
+  # break line with the title it came with.
+  context 'with a post whose grid holds a break line and a block of a kind nobody registers' do
+    before do
+      @site.set_admin_language('es')
+      columns = grid_column_markup(grid_block_markup('', kind: 'gone')) +
+                grid_column_markup('', col: 12, title: 'Break Line')
+      store_post_content(@post, grid_post_content(grid_body_markup(columns)))
+      open_post_in_editor(@post)
+    end
+
+    it 'heads them in the admin language and saves the break line under its own title' do
+      expect(page).to have_css('.panel_grid_body .drg_column > .header_box', text: 'Salto de línea')
+      expect(page).to have_css('.panel_grid_body .drg_item > .header_box', text: 'desconocido')
+
+      trigger_grid_auto_save
+      expect(saved_grid_content).to include('data-col_title="Break Line"')
     end
   end
 end

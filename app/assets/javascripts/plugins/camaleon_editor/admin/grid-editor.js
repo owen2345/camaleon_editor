@@ -229,6 +229,9 @@ jQuery(function(){
         return request;
     }
 
+    // the title a break line is saved with (data-col_title), in every admin language
+    var BREAK_LINE = "Break Line";
+
     // grid editor plugin
     var gridEditor_id = 0;
     $.fn.gridEditor = function(tinyEditor){
@@ -255,7 +258,7 @@ jQuery(function(){
         $.each({6: 50, 4: 33, 3: 25, 2: 16, 8: 66, 9: 75, 12: 100}, function(k, val){ tpl_rows += '<div class="" data-col="'+k+'"'+tooltip("grid_editor.col_block_title", "Insert a column block with %{width}% of width.", {width: val})+' data-col_title="'+val+'%"><div class="grid_sortable_items"></div></div>'; });
 
         // break line
-        tpl_rows += '<div class="clearfix"'+tooltip("grid_editor.break_line_title", "Insert a break line to have ordered column blocks.")+' data-col_title="Break Line" data-col="12"></div>' + $.fn.gridEditor_extra_rows.join("");
+        tpl_rows += '<div class="clearfix"'+tooltip("grid_editor.break_line_title", "Insert a break line to have ordered column blocks.")+' data-col_title="'+BREAK_LINE+'" data-col="12"></div>' + $.fn.gridEditor_extra_rows.join("");
 
         // tpl options
         var tpl_options = "";
@@ -436,13 +439,21 @@ jQuery(function(){
             return editor;
         }
 
+        // What heads a column: the title saved with it, its width. A break line's saved title is its
+        // English name, in whatever admin language it was added: the content keeps it as it is, and
+        // the editor shows it in the admin language.
+        function column_title(column){
+            var title = column.attr("data-col_title") || "";
+            return title === BREAK_LINE ? I18n("grid_editor.break_line", "Break Line") : title;
+        }
+
         // parse column editor
         // column: content element
         // skip_options: boolean to add drodown options
         function parse_content_column(column, skip_options){
             // the title comes from stored content: it goes in as text, never as markup
             var html = $('<div class="header_box"><a><i class="fa fa-stop"></i> </a></div>');
-            html.children("a").append(document.createTextNode(column.attr("data-col_title") || ""));
+            html.children("a").append(document.createTextNode(column_title(column)));
             var options = "<div class='dropdown'>" +
                 "<a class='dropdown-toggle' data-toggle='dropdown'>&nbsp; <span class='caret'></span></a>" +
                 "<ul class='dropdown-menu auto_with pull-right' role='menu'>"+
@@ -468,7 +479,8 @@ jQuery(function(){
         // content: content element
         // skip_options: boolean to add drodown options
         function parse_content_content(content, skip_options){
-            var t = "unknown";
+            // a block of a kind no script registers - its plugin gone - has no name
+            var t = I18n("grid_editor.block_unknown", "unknown");
             try{ t = $.fn.gridEditor_options[content.attr("data-kind")].title }catch(e){}
             var html = '<div class="header_box">'+
                 '<a><i class="fa fa-keyboard-o"></i> '+ t +'</a>'+
