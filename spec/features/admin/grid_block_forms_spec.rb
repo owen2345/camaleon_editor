@@ -95,6 +95,20 @@ RSpec.describe 'the grid editor block forms', :js do
       end
     end
 
+    # A script may register a kind after the grid is rebuilt: the menu follows the registry as it opens
+    it 'offers to edit the block once a script registers its kind' do
+      toggle = find('.drg_item > .header_box .dropdown-toggle')
+      toggle.click
+      expect(page).to have_css('.drg_item > .header_box a.grid_content_remove')
+      expect(page).to have_no_css('.drg_item > .header_box a.grid_content_edit')
+
+      toggle.click # closes the menu
+      expect(page).to have_no_css('.drg_item > .header_box a.grid_content_remove')
+      page.execute_script("jQuery.fn.gridEditor_options.gone = {title: 'Back', callback: function(){}};")
+      toggle.click
+      expect(page).to have_css('.drg_item > .header_box a.grid_content_edit')
+    end
+
     # The entry is still in the page, hidden: a click that reaches it all the same breaks nothing
     it 'opens nothing and goes nowhere when the Edit entry is clicked all the same' do
       find('.panel_grid_body .drg_item') # the grid is rebuilt
