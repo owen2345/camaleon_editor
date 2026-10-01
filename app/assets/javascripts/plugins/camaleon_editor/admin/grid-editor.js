@@ -261,6 +261,10 @@ jQuery(function(){
             save_template_entry = '<li class="'+(can_manage_templates ? '' : 'hidden')+'"><a class="new_template"'+tooltip("grid_editor.save_tpl_title", "New template")+' href = "'+root_url+'/admin/plugins/camaleon_editor/grid_editor/new" >'+I18n("grid_editor.save_tpl", "Save as template")+'</a></li >';
         }
 
+        // the entry that opens the style settings: of the whole grid in the menu, of a block or a
+        // content element in its dropdown
+        var style_settings_entry = "<li><a class='grid_style_settings'"+tooltip("grid_editor.style_settings_title", "Style settings")+" href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>";
+
         // template grid editor
         // Every I18n("grid_editor...") call of the editor passes the English string as its default:
         // the page holds the strings of the admin language alone, and in a language the plugin does
@@ -275,7 +279,7 @@ jQuery(function(){
             '<ul class="dropdown-menu" aria-labelledby="dropdownMenu1"> ' +
             '<li><a class="list_templates"'+tooltip("grid_editor.list_title", "Grid templates")+' href = "'+root_url+'admin/plugins/camaleon_editor/grid_editor" >'+I18n("grid_editor.list", "List of templates")+'</a></li >'+
             save_template_entry+
-            "<li><a class='grid_style_settings'"+tooltip("grid_editor.style_settings_title", "Style settings")+" href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
+            style_settings_entry+
             '</ul> ' +
             '</li>'+
             "<li class=''><a href='#' class='clear'><i class='fa fa-trash'></i>  "+I18n("grid_editor.clear", "Clear")+"</a></li>"+
@@ -431,7 +435,7 @@ jQuery(function(){
                 "<ul class='dropdown-menu auto_with pull-right' role='menu'>"+
                 "<li><a class='grid_col_remove' href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
                 "<li><a class='grid_col_clone' href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
-                "<li><a class='grid_style_settings'"+tooltip("grid_editor.style_settings_title", "Style settings")+" href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
+                style_settings_entry+
                 "</ul>"+
                 "</div>" ;
             column.addClass("drg_column btn btn-default");
@@ -462,7 +466,7 @@ jQuery(function(){
                 "<li><a class='grid_content_remove' href='#'><i class='fa fa-trash-o'></i> "+I18n("button.delete")+"</a></li>"+
                 "<li><a class='grid_content_clone' href='#'><i class='fa fa-copy'></i> "+I18n("button.clone")+"</a></li>"+
                 "<li><a class='grid_content_edit' href='#'><i class='fa fa-pencil'></i> "+I18n("button.edit")+"</a></li>"+
-                "<li><a class='grid_style_settings'"+tooltip("grid_editor.style_settings_title", "Style settings")+" href='#'><i class='fa fa-paint-brush'></i> "+I18n("button.settings")+"</a></li>"+
+                style_settings_entry+
                 "</ul>"+
                 "</div>";
             content.addClass("drg_item btn btn-default");
