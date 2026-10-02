@@ -987,7 +987,8 @@ jQuery(function(){
         // then on. The tokens are the editor's own, where a browser's differ: a comment ends at
         // "--!>" as well, a noscript holds text, and a tag whose quotes do not pair ends at its
         // first bracket. An element of text left open holds what follows it to the end of the
-        // content. A script element is the one token set aside,
+        // content, and so does a comment left open: text to the editor, until the marker of a
+        // script set aside behind it closes it. A script element is the one token set aside,
         // taken as a browser takes it, since the editor never gets to read it: its name ends at a
         // space, a slash or the bracket, its opening tag at the bracket outside its quoted values -
         // a value may spell a closing tag - and whatever follows the name of the closing tag goes
@@ -1015,7 +1016,7 @@ jQuery(function(){
             var commented = "<!(?=--)(?:(?!-->|" + opening + "|" + closing + ")" + any + "|" + written + ")*(?:-->|(?=" + closing + "))";
             var text = "(?:(?:(?!<!--|" + closing + ")" + any + "|" + commented + ")*|" + any + "*?)";
             var tokens = new RegExp($.map([
-                /<!--[\s\S]*?--!?>/, // a comment
+                /<!--[\s\S]*?(?:--!?>|$)/, // a comment; left open, the marker of a script behind it would close it
                 /<!\[CDATA\[[\s\S]*?\]\]>/, // a CDATA section
                 /<\?[^\s\/<>]+[\s\S]*?[?\/]>/, // a processing instruction
                 new RegExp(/<(noscript|iframe|noframes|noembed|title|style|textarea|xmp)/.source + tag + any + "*?(?:<\\/\\1[^>]*>|$)"), // an element whose content is text

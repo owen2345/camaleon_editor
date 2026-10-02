@@ -192,6 +192,17 @@ RSpec.describe 'scripts in the text editor', :js do
       .to eq('<p>a</p><p><textarea>t&lt;script&gt;x()&lt;/script&gt;&lt;p&gt;b&lt;/p&gt;</textarea></p>')
   end
 
+  # A comment left open is text to the editor, up to the next thing that closes a comment: the
+  # marker a script behind it is set aside as would be just that, and would be stored inside the
+  # comment it closed. So a comment left open holds what follows it to the end of the content, and
+  # the content comes back as it does without the setting.
+  it 'sets no script aside behind a comment left open' do
+    answer = through_the_text_editor("<p>a</p><!-- left open #{script}<p>b</p>")
+
+    expect(answer).not_to include('protected')
+    expect(answer).to include('<p>b</p>')
+  end
+
   # A page may set its text editors up with a protect list of its own, which is used in place of
   # core's default: the scripts' pattern joins that list, once, however many editors the page sets
   # up with those settings. What each pattern of a list leaves of the markup shows which patterns
