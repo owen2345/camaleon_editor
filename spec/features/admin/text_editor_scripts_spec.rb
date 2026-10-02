@@ -12,8 +12,10 @@ RSpec.describe 'scripts in the text editor', :js do
   init_site
 
   let(:script) { '<script>window.__cama_widget_loaded = 1 < 2 && true;</script>' }
+  let(:stored_content) { nil }
 
   before do
+    store_post_content(@post, stored_content) if stored_content
     open_post_in_editor(@post)
     find('.mce-btn', text: 'Grid Editor')
   end
@@ -147,6 +149,21 @@ RSpec.describe 'scripts in the text editor', :js do
 
     expect(written.delete("\n")).to eq("<p>written in the text editor</p>#{script}")
     expect(typed).to eq('typed in the field')
+  end
+
+  # The post's text editor is handed the stored content as the form opens, and writes its content
+  # into the field as the form is sent: a post that is not a grid keeps its script through both.
+  context 'with a post whose content holds a script' do
+    let(:stored_content) { "<p>written in the text editor</p>#{script}<p>and below it</p>" }
+
+    it 'stores the script when the post is saved from the text editor, and does not run it' do
+      expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
+      expect(script_ran).to be_nil
+
+      submit_post_form
+
+      expect(CamaleonCms::Post.find(@post.id).content).to include(script, '<p>and below it</p>')
+    end
   end
 
   it 'keeps the script of markup put in at the caret' do
