@@ -467,6 +467,15 @@ jQuery(function(){
             return editor;
         }
 
+        // The grid made from the root of saved content: what the root carries, its style and its
+        // markup, then the editor's headers and menus. Filled rather than swapped in as live nodes,
+        // which would run the content's scripts.
+        function grid_from(grid, root){
+            keep_root_attributes(grid, root);
+            fill_grid(grid, root);
+            parse_content(editor);
+        }
+
         // What heads a column: the title saved with it, its width. A break line's saved title is its
         // English name, in whatever admin language it was added: the content keeps it as it is, and
         // the editor shows it in the admin language.
@@ -671,10 +680,7 @@ jQuery(function(){
 
             // if saved content is a grid_editor content, then rebuilt or recover this content
             if(saved_body){
-                // filled rather than swapped in as live nodes, which would run the saved content's scripts
-                keep_root_attributes(grid_root(editor), saved_body);
-                fill_grid(grid_root(editor), saved_body);
-                parse_content(editor); // recover saved content
+                grid_from(grid_root(editor), saved_body);
             }else{
                 editor.data("tiny_backup", tinyEditor.getContent())
             }
@@ -803,10 +809,8 @@ jQuery(function(){
             try {
                 // as the editor was built: the root's own class, then what the content's root carries
                 set_attributes(grid, [{name: "class", value: "panel_grid_body row"}]);
-                keep_root_attributes(grid, body);
+                grid_from(grid, body);
                 if(sortable) grid.addClass("ui-sortable");
-                fill_grid(grid, body);
-                parse_content(editor);
             } catch(error) {
                 if(window.console) console.error(error);
                 grid.empty();
