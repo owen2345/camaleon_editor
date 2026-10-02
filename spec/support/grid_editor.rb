@@ -98,6 +98,12 @@ def confirm_every_prompt
   page.execute_script('window.confirm = function(){ return true; };')
 end
 
+# Opens the form of the grid's first block, once the grid is rebuilt from what the post stores.
+def open_first_block_form
+  find('.panel_grid_body .drg_item')
+  page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+end
+
 # The way back: leaves the grid editor for the text editor, and answers the prompt its link asked.
 def leave_for_the_text_editor
   accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }

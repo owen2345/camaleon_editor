@@ -10,8 +10,7 @@ RSpec.describe 'the grid editor block forms', :js do
   def open_block_form(kind)
     store_post_content(@post, grid_post_content(grid_with_block('', kind: kind)))
     open_post_in_editor(@post)
-    find('.panel_grid_body .drg_item') # the grid is rebuilt
-    page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+    open_first_block_form
   end
 
   # The list of a block's items opens the form of one in a second modal. The list is still sliding
