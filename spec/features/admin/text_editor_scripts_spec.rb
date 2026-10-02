@@ -235,6 +235,29 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(with_the_caret_outside_any_block(content).delete("\n")).to eq(content)
   end
 
+  # Markup put in at the caret leaves the caret behind its last piece of content, and the editor
+  # steps back over what it takes for a block to find it: a script that ends the markup is stepped
+  # over, so what the author types next goes behind the text before the script, not behind the
+  # script.
+  it 'leaves the caret before a script that ends markup put in at the caret' do
+    widget = '<div class="widget"><div>body</div><script src="/widget.js"></script></div>'
+
+    answer = page.evaluate_script(<<~JS, widget)
+      (function(markup){
+        var editor = #{POST_TEXT_EDITOR};
+        editor.setContent('<p>written in the text editor</p>');
+        editor.focus();
+        editor.selection.select(editor.getBody(), true);
+        editor.selection.collapse(false);
+        editor.insertContent(markup);
+        editor.insertContent('typed');
+        return editor.getContent();
+      })(arguments[0])
+    JS
+
+    expect(answer.delete("\n")).to include(widget.sub('body', 'bodytyped'))
+  end
+
   # The editor's search goes through the text of the content and leaves out the text of an element
   # that shows none, a script's for one, as long as the element is no block to it. The script is
   # kept out of a paragraph without becoming a block to the search: its text is not found, and

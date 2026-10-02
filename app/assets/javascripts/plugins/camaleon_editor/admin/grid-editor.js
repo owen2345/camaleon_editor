@@ -1031,14 +1031,22 @@ jQuery(function(){
         // The editor gives whatever stands at the top level of its content a paragraph, unless it
         // is a block: a script written there would come back inside a paragraph nobody wrote. The
         // editor's parser counts a script among the blocks for that very purpose; the map of
-        // block elements the rest of the editor goes by does not hold it. What puts the
-        // paragraph there asks whether that map has an element's name. Every other reader asks
-        // what the map holds for the name: the editor's own test for a block, Indent, and its
-        // search, which leaves the text of a script alone as long as the script is no block.
-        // So the map gets the script's name with nothing behind it, before the editor is handed
-        // its content: no paragraph goes around a script, and nothing else takes it for a block.
+        // block elements the rest of the editor goes by does not hold it. The map is read by an
+        // element's name in upper case for an element of the editor's document, and in lower
+        // case for a piece of markup on its way in. In upper case, what puts the paragraph
+        // there, and the lists, ask whether the map has the name; the editor's own test for a
+        // block, Indent and its search, which leaves the text of a script alone as long as the
+        // script is no block, ask what the map holds for it. So the map gets that name with
+        // nothing behind it: no paragraph goes around a script, and the search and Indent leave
+        // it alone. In lower case the script is a block, as it is to the parser: markup put in
+        // at the caret leaves the caret before a script that ends it, not behind the script.
+        // Both before the editor is handed its content.
         var script_takes_no_paragraph = function(editor){
-            editor.on("PreInit", function(){ editor.schema.getBlockElements().SCRIPT = false; });
+            editor.on("PreInit", function(){
+                var blocks = editor.schema.getBlockElements();
+                blocks.SCRIPT = false;
+                blocks.script = {};
+            });
         }
 
         // Where a script ends. The editor ends it at the first closing tag it reads, or at a tag
