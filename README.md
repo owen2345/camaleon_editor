@@ -47,10 +47,10 @@ handed, where they used to take them out: a grid, an Editor block in its form, a
 content, markup written in the source view. Pasted markup still loses its scripts. A script
 stays inert in both editors and runs on the public page.
 
-A text editor gives a script back with its text as it was, and treats the element as it treats
-any other: the attributes come back in its spelling (double quotes, `async=""`), and a script
-standing at the top level of the content may get a paragraph of its own. It ends a script at the
-first `</script>` it reads, so a closing tag inside a script's text is written `<\/script>`.
+A text editor gives a script back where it stood, with its text as it was, and treats the
+element as it treats any other: the attributes come back in its spelling (double quotes,
+`async=""`). It ends a script at the first `</script>` it reads, so a closing tag inside a
+script's text is written `<\/script>`.
 
 Core then applies its own rules to content that changed, and the text editor's version of a grid
 counts as changed. The grid's marker is a shortcode, so saving a changed grid takes **Allow
