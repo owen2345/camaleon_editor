@@ -4,11 +4,11 @@
 
 ### Fix: a post keeps its grid and its scripts whichever editor it is saved from
 
-Text editors keep scripts and no longer rewrite the grid at save. A grid shown again follows changes in the text editor; a deleted block or column is no longer saved. [#20](https://github.com/owen2345/camaleon_editor/pull/20).
+Text editors keep scripts and no longer rewrite the grid at save or after a cancelled page leave. A grid shown again follows the text editor; a deleted block or column stays deleted. [#20](https://github.com/owen2345/camaleon_editor/pull/20).
 
 **Notes for upgraders**
-- A role without unfiltered HTML is refused changed content holding a script; the text editor used to drop it.
-- Grid posts keep the export's markup: `<b>`, `rgb()`.
+- Without unfiltered HTML, changed content holding a script is refused; the editor used to drop it.
+- Grid posts keep the export's `<b>` and `rgb()`.
 
 ### Tooling: the grid specs read the grid's own export
 
