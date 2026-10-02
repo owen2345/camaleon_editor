@@ -1040,7 +1040,8 @@ jQuery(function(){
         // block elements the rest of the editor goes by does not hold it. The map is read by an
         // element's name in upper case for an element of the editor's document, and in lower
         // case for a piece of markup on its way in. In upper case, what puts the paragraph
-        // there, and the lists, ask whether the map has the name; the editor's own test for a
+        // there (since TinyMCE 4.7.4, the oldest the gem takes: before, it asked what the map
+        // holds), and the lists, ask whether the map has the name; the editor's own test for a
         // block, Indent and its search, which leaves the text of a script alone as long as the
         // script is no block, ask what the map holds for it. So the map gets that name with
         // nothing behind it: no paragraph goes around a script, and the search and Indent leave

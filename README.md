@@ -52,7 +52,8 @@ editors and runs on the public page.
 
 A text editor gives a script back where it stood, on a line of its own, with its text as it was
 and no paragraph put around it. The attributes come back in the editor's spelling (double
-quotes, `async=""`). It reads a script to the closing tag a browser ends it at.
+quotes, `async=""`). It reads a script to the closing tag a browser ends it at. All of this
+takes TinyMCE 4.7.4 or later, which the gem asks of `tinymce-rails`.
 
 Core then applies its own rules to content that changed, and the text editor's version of a grid
 counts as changed. The grid's marker is a shortcode, so saving a changed grid takes **Allow
