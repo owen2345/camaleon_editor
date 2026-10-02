@@ -38,8 +38,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     store_post_content(@post, "#{grid}<p>written after the grid</p>")
     open_post_in_editor(@post)
     expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
-    page.execute_script("jQuery('#cama_alert_modal').modal('hide');")
-    expect(page).to have_no_css('#cama_alert_modal')
+    close_alert
 
     text_editor_holds(grid)
     open_grid_editor
@@ -61,18 +60,14 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     store_post_content(@post, "<!--:en-->#{grid}<p>written after the grid</p><!--:--><!--:es--><p>spanish</p><!--:-->")
     open_post_in_editor(@post)
     expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
-    page.execute_script("jQuery('#cama_alert_modal').modal('hide');")
-    expect(page).to have_no_css('#cama_alert_modal')
+    close_alert
 
-    page.execute_script(<<~JS, grid)
-      tinymce.get(jQuery('#form-post textarea.tinymce_textarea.translate-item').first().attr('id')).setContent(arguments[0]);
-    JS
+    text_editor_holds(grid)
     open_grid_editor
     expect(page).to have_css('.panel_grid_editor .panel_grid_body .drg_item', count: 1)
 
-    composed = page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea.translated-item')[0].value")
-    expect(composed).to include('<p>kept</p>', '<p>spanish</p>')
-    expect(composed).not_to include('written after the grid')
+    expect(composed_content).to include('<p>kept</p>', '<p>spanish</p>')
+    expect(composed_content).not_to include('written after the grid')
   end
 
   # Going to the text editor and back with nothing changed there shows the editor built earlier:

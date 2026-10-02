@@ -238,8 +238,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
         expect(page).to have_css('.mce-tinymce')
         expect(page).to have_no_css('.panel_grid_editor')
 
-        page.execute_script("jQuery('#cama_alert_modal').modal('hide');")
-        expect(page).to have_no_css('#cama_alert_modal')
+        close_alert
         submit_post_form
 
         expect(post_content.delete("\r\n")).to eq(changed)
@@ -405,13 +404,9 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(post_content).to eq("<!--:en-->#{export}<!--:--><!--:es-->#{grid_in('spanish')}<!--:-->")
     end
 
-    # What the post sends for its content. Core composes it from the fields of the languages when
-    # one of them says it changed, which a text editor does when it loses focus. An editor that
-    # takes over from the other does not wait for that: the field is written, and says so, then.
-    def composed_content
-      page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea.translated-item')[0].value")
-    end
-
+    # Core composes what the post sends when a field says it changed, which a text editor does
+    # when it loses focus. An editor that takes over from the other does not wait for that: the
+    # field is written, and says so, then.
     it 'has the post send the text editor version once the author went back to it' do
       leave_for_the_text_editor
 
@@ -420,10 +415,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
     it 'has the post send the grid made again from what was changed in the text editor' do
       leave_for_the_text_editor
-      page.execute_script(<<~JS)
-        var editor = tinymce.get(jQuery('#form-post textarea.tinymce_textarea.translate-item').first().attr('id'));
-        editor.setContent(editor.getContent().replace('bold', 'changed in the text editor'));
-      JS
+      change_in_the_text_editor('bold', 'changed in the text editor')
       open_grid_editor
       find('.panel_grid_body .drg_item strong', text: 'changed in the text editor', visible: :all)
 

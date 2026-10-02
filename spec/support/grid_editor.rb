@@ -93,11 +93,26 @@ def leave_for_the_text_editor
   find('.mce-tinymce')
 end
 
+# The field of the post's text editor. In a post of several languages each language has a field
+# and a text editor of its own, and this is the first language's: the field they are composed into
+# has no editor.
+POST_TEXT_EDITOR_FIELD = "jQuery('#form-post textarea.tinymce_textarea:not(.translated-item)').first()"
+
 # Hands the post's text editor its content, as an author who writes there does.
 def text_editor_holds(markup)
-  page.execute_script(<<~JS, markup)
-    tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id')).setContent(arguments[0]);
-  JS
+  page.execute_script("tinymce.get(#{POST_TEXT_EDITOR_FIELD}.attr('id')).setContent(arguments[0]);", markup)
+end
+
+# What a post in several languages sends for its content. Core composes it from the fields of the
+# languages when one of them says it changed, which a text editor does when it loses focus.
+def composed_content
+  page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea.translated-item')[0].value")
+end
+
+# Closes core's alert, and waits until it is gone: it would take the clicks meant for the page.
+def close_alert
+  page.execute_script("jQuery('#cama_alert_modal').modal('hide');")
+  expect(page).to have_no_css('#cama_alert_modal')
 end
 
 # The menu's label is the admin language's; the default is the English one.
@@ -187,7 +202,7 @@ def text_editor_content
   page.evaluate_script(<<~JS).delete("\n")
     (function(){
       tinymce.triggerSave();
-      return jQuery('#form-post textarea.tinymce_textarea').first().val();
+      return #{POST_TEXT_EDITOR_FIELD}.val();
     })()
   JS
 end
