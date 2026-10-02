@@ -13,26 +13,39 @@ RSpec.describe 'the grid editor in the admin post editor', :js do
   end
 
   # A page loaded in place (the Admin AJAX plugin swaps the admin's content for a response that
-  # brings the editor's script along) evaluates the script again, while the lists of hooks it adds
-  # to are the page's and stay: the hooks are added once, and the toolbar offers one button.
-  it 'adds its hooks once, however often its script is evaluated' do
+  # brings the editor's script along) evaluates the script again, while jQuery, the lists of hooks
+  # the script adds to and what other scripts registered with the editor are the page's and stay.
+  # The script does its work once: a text editor set up afterwards has one Grid Editor button, and
+  # a block kind another script registered is still there.
+  it 'does its work once, however often its script is evaluated' do
     install_plugin_and_open_post_editor
     find('.mce-btn', text: 'Grid Editor')
 
-    before, after, buttons = page.evaluate_script(<<~JS)
+    evaluated_again, hooks_before, hooks_after, kind_kept = page.evaluate_script(<<~JS)
       (function(){
         var hooks = function(){
           return jQuery.map(['init', 'settings', 'setups', 'custom_toolbar'], function(list){
             return tinymce_global_settings[list].length;
           });
         };
-        var before = hooks();
+        var before = hooks(), tabs_builder = window.grid_tab_builder;
+        jQuery.fn.gridEditor_options.faq = {title: 'FAQ', callback: function(){}};
         jQuery.ajax({url: jQuery('script[src*="editor-manifest"]').attr('src'), dataType: 'script', async: false});
-        return [before, hooks(), cama_get_tinymce_settings().toolbar.split('grid_editor').length - 1];
+        jQuery('<textarea id="later_editor"></textarea>').appendTo('body');
+        tinymce.init(cama_get_tinymce_settings({selector: '#later_editor'}));
+        return [window.grid_tab_builder !== tabs_builder, before, hooks(), 'faq' in jQuery.fn.gridEditor_options];
       })()
     JS
+    wait_for_text_editor("tinymce.get('later_editor')")
+    buttons = page.evaluate_script(<<~JS)
+      jQuery(tinymce.get('later_editor').editorContainer).find('.mce-btn').filter(function(){
+        return jQuery(this).text() === 'Grid Editor';
+      }).length
+    JS
 
-    expect(after).to eq(before)
+    expect(evaluated_again).to be(true)
+    expect(hooks_after).to eq(hooks_before)
     expect(buttons).to eq(1)
+    expect(kind_kept).to be(true)
   end
 end
