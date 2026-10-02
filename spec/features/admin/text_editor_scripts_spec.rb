@@ -100,6 +100,14 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(instruction).not_to include('mce:protected')
   end
 
+  # A text element left open holds what follows it to the end of the content, for the editor and so
+  # for the pattern: a script written there is its text, and comes back as it does without the
+  # setting.
+  it 'leaves the text of a script alone in a text element left open' do
+    expect(through_the_text_editor('<p>a</p><textarea>t<script>x()</script><p>b</p>'))
+      .to eq('<p>a</p><p><textarea>t&lt;script&gt;x()&lt;/script&gt;&lt;p&gt;b&lt;/p&gt;</textarea></p>')
+  end
+
   # A page may set its text editors up with a protect list of its own, which is used in place of
   # core's default: the scripts' pattern joins that list, once, however many editors the page sets
   # up with those settings. What each pattern of a list leaves of the markup shows which patterns
