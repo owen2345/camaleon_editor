@@ -112,6 +112,19 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(saved_grid_content).not_to include('embedded widget')
     end
 
+    # A column cloned while one of its blocks fades out does not take that block along: the copy
+    # would stay in the clone for good, marked as deleted and in no export.
+    it 'leaves a deleted block out of a clone of its column' do
+      page.execute_script(<<~JS)
+        window.confirm = function(){ return true; };
+        jQuery('.panel_grid_body .drg_item .grid_content_remove').click();
+        jQuery('.panel_grid_body .drg_column .grid_col_clone').click();
+      JS
+
+      expect(page).to have_css('.panel_grid_body .drg_column', count: 2)
+      expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)
+    end
+
     # The post form writes each text editor's content into its field to tell whether there is
     # anything to save, two seconds after it opens and with every draft; so does a text editor
     # that loses focus.

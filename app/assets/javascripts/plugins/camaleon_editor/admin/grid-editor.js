@@ -699,8 +699,9 @@ jQuery(function(){
             // is out of what the grid exports from the click on: marked, and the grid exported at once.
             // Exported once the fade ends, the grid would stand for what was deleted until then, and a
             // save sent meanwhile would store it. What fades out takes no click: not a second delete,
-            // not a clone that would carry the mark. The fade is under way before the export: a
-            // listener of the export that throws does not keep what was deleted in the grid.
+            // not a clone that would carry the mark (a clone of its column leaves it out). The fade
+            // is under way before the export: a listener of the export that throws does not keep
+            // what was deleted in the grid.
             function fade_out_of_grid(element){
                 element.addClass(DELETED).css("pointer-events", "none").fadeOut(function(){ $(this).remove(); });
                 editor.trigger("auto_save");
@@ -742,6 +743,8 @@ jQuery(function(){
             }).on("click", '.grid_col_clone', function (e) {
                 var widget = jQuery(this).closest(".drg_column");
                 var widget_clone = widget.clone();
+                // a block of the column that is fading out is deleted: the copy would not fade, and stay
+                widget_clone.children(".grid_sortable_items").children("."+DELETED).remove();
                 widget.after(widget_clone);
                 grid_content_manager(widget_clone.children(".grid_sortable_items"));
                 editor.trigger("auto_save");
