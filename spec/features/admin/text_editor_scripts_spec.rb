@@ -151,18 +151,38 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(typed).to eq('typed in the field')
   end
 
+  # The editor gives whatever stands at the top level of its content a paragraph, once the caret
+  # comes to stand outside any block, unless it is a block itself. A script is one to the editor,
+  # and stays where it was written.
+  it 'leaves a script at the top level of the content where it stands' do
+    content = "#{script}<p>written in the text editor</p>"
+    answer = page.evaluate_script(<<~JS, content)
+      (function(markup){
+        var editor = #{POST_TEXT_EDITOR};
+        editor.setContent(markup);
+        editor.focus();
+        editor.selection.setCursorLocation(editor.getBody(), 0);
+        editor.nodeChanged();
+        return editor.getContent();
+      })(arguments[0])
+    JS
+
+    expect(answer.delete("\n")).to eq(content)
+  end
+
   # The post's text editor is handed the stored content as the form opens, and writes its content
-  # into the field as the form is sent: a post that is not a grid keeps its script through both.
+  # into the field as the form is sent: a post that is not a grid keeps its script through both,
+  # where it stood.
   context 'with a post whose content holds a script' do
     let(:stored_content) { "<p>written in the text editor</p>#{script}<p>and below it</p>" }
 
-    it 'stores the script when the post is saved from the text editor, and does not run it' do
+    it 'stores the post with its script where it stood when it is saved from the text editor' do
       expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
       expect(script_ran).to be_nil
 
       submit_post_form
 
-      expect(CamaleonCms::Post.find(@post.id).content).to include(script, '<p>and below it</p>')
+      expect(CamaleonCms::Post.find(@post.id).content.delete("\r\n")).to eq(stored_content)
     end
   end
 

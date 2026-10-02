@@ -992,6 +992,19 @@ jQuery(function(){
         }
         tinymce_global_settings["setups"].push(paste_without_scripts);
 
+        // The editor gives whatever stands at the top level of its content a paragraph, unless it
+        // is a block: a script written there would come back inside a paragraph nobody wrote. The
+        // editor's parser counts a script among the blocks for that very purpose; the list of
+        // block elements the rest of the editor goes by does not hold it. So the script joins
+        // that list, before the editor is handed its content.
+        var script_is_a_block = function(editor){
+            editor.on("PreInit", function(){
+                var blocks = editor.schema.getBlockElements();
+                blocks.script = blocks.SCRIPT = {};
+            });
+        }
+        tinymce_global_settings["setups"].push(script_is_a_block);
+
         // A field has one more writer. As the page is being left, each text editor writes its raw
         // body there, with no event anybody could answer: the editor's own markup, a script under
         // the type the editor holds it with. On a page that is not left after all - the author stays

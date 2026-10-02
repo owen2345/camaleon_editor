@@ -48,7 +48,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   end
 
   # An Editor block is edited in a text editor of its own, which holds the block's script under a
-  # type that does not run and gives it back as it was.
+  # type that does not run and gives it back as it was, where it stood.
   it 'keeps the script of an editor block edited in its form, and does not run it' do
     store_post_content(@post, grid_post_content(grid_with_block("<p>widget</p>#{script}", kind: 'editor')))
     open_post_in_editor(@post)
@@ -62,7 +62,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     find('#ow_inline_modal .modal_submit').click
 
     expect(page).to have_no_css('#ow_inline_modal')
-    expect(saved_grid_content).to include(script)
+    expect(saved_grid_content.delete("\n")).to include("<p>widget</p>#{script}</div>")
     expect(script_ran).to be_nil
   end
 
