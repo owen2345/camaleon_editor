@@ -15,10 +15,6 @@ RSpec.describe 'saving a post from the grid editor', :js do
     grid_post_content(grid)
   end
 
-  def post_content
-    CamaleonCms::Post.find(@post.id).content
-  end
-
   def open_stored_post(as: nil)
     store_post_content(@post, stored_content)
     install_plugin_and_open_post_editor(as: as, post: @post)

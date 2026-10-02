@@ -247,7 +247,7 @@ RSpec.describe 'scripts in the text editor', :js do
 
       submit_post_form
 
-      expect(CamaleonCms::Post.find(@post.id).content.delete("\r\n")).to eq(stored_content)
+      expect(post_content.delete("\r\n")).to eq(stored_content)
     end
   end
 

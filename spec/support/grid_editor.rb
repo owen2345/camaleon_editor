@@ -36,6 +36,11 @@ def store_post_content(post, content)
   CamaleonCms::Post.where(id: post.id).update_all(content: content)
 end
 
+# What the post stores for its content by now.
+def post_content(post = @post)
+  CamaleonCms::Post.find(post.id).content
+end
+
 # Same for a template: with no signed-in author behind the write, the model's markup gate would
 # refuse what these specs need stored (scripts, handlers).
 def store_template_markup(template, markup)

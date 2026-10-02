@@ -47,9 +47,8 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page).to have_no_css('#cama_alert_modal')
 
     submit_post_form
-    stored = CamaleonCms::Post.find(@post.id).content
-    expect(stored).to include('<p>kept</p>')
-    expect(stored).not_to include('written after the grid')
+    expect(post_content).to include('<p>kept</p>')
+    expect(post_content).not_to include('written after the grid')
   end
 
   # In a post of several languages the field of a language is a copy, and the post sends what the
