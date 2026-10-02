@@ -44,7 +44,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     open_grid_editor
 
     expect(page).to have_css('.panel_grid_editor .panel_grid_body .drg_item', count: 1)
-    expect(page).to have_no_css('#cama_alert_modal')
+    expect(page).to have_no_css('body.modal-open')
 
     submit_post_form
     expect(post_content).to include('<p>kept</p>')
