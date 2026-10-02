@@ -978,8 +978,9 @@ jQuery(function(){
         // "--!>" as well, and a noscript holds text. An element of text left open holds what
         // follows it to the end of the content. A script element is the one token set aside,
         // taken as a browser takes it, since the editor never gets to read it: its name ends at a
-        // space, a slash or the bracket, and whatever follows the name of the closing tag goes with
-        // that tag. The editor hands each pattern of the list to replace(), with a replacer that
+        // space, a slash or the bracket, its opening tag at the bracket outside its quoted values -
+        // a value may spell a closing tag - and whatever follows the name of the closing tag goes
+        // with that tag. The editor hands each pattern of the list to replace(), with a replacer that
         // sets aside whatever the pattern matched: so this one answers replace() itself, and passes
         // that replacer the scripts alone.
         function script_elements(){
@@ -988,7 +989,7 @@ jQuery(function(){
                 /<!\[CDATA\[[\s\S]*?\]\]>/, // a CDATA section
                 /<\?[^\s\/<>]+[\s\S]*?[?\/]>/, // a processing instruction
                 /<(noscript|iframe|noframes|noembed|title|style|textarea|xmp)(?=[\s\/>])[\s\S]*?(?:<\/\1[^>]*>|$)/, // an element whose content is text
-                /(<script(?=[\s\/>])[\s\S]*?<\/script(?=[\s\/>])[^>]*>)/, // a script element
+                /(<script(?=[\s\/>])(?:(?:"[^"]*"|'[^']*'|[^>"'])*>)?[\s\S]*?<\/script(?=[\s\/>])[^>]*>)/, // a script element
                 /<\/?[a-z](?:"[^"]*"|'[^']*'|[^>"'])*>/ // any other tag, with its quoted values
             ], function(token){ return token.source; }).join("|"), "gi");
             tokens[Symbol.replace] = function(markup, set_aside){
