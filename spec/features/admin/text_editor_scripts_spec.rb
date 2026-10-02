@@ -186,20 +186,31 @@ RSpec.describe 'scripts in the text editor', :js do
   end
 
   # A rule the page's own lists hold for the script is the page's say on scripts, a narrower one
-  # included: the editor goes by the last rule it is given for an element, so none is put behind it.
+  # included: the editor goes by the last rule it is given for an element, so none is put behind
+  # it, and a script comes back with the attributes the page allows it. A rule for every element
+  # ("*[...]") is no say on scripts: behind it the script still joins the list.
   it "leaves a rule that a page's own lists hold for the script as the page wrote it" do
-    extended, behind_valid_elements, allowed = page.evaluate_script(<<~JS)
+    behind_valid_elements, behind_a_rule_for_all = page.evaluate_script(<<~JS)
       (function(){
-        var own = cama_get_tinymce_settings({extended_valid_elements: 'video[*],script[src|type]'});
-        var valid = cama_get_tinymce_settings({valid_elements: 'p,script[src]'});
-        var rule = new tinymce.html.Schema(own).getElementRule('script');
-        return [own.extended_valid_elements, valid.extended_valid_elements, rule.attributesOrder];
+        var own = {selector: '#own_rule', extended_valid_elements: 'video[*],script[src|type]'};
+        jQuery('<textarea id="own_rule"></textarea>').appendTo('body');
+        tinymce.init(cama_get_tinymce_settings(own));
+        return [cama_get_tinymce_settings({valid_elements: 'p,script[src]'}).extended_valid_elements,
+                cama_get_tinymce_settings({valid_elements: '*[class|style|id]'}).extended_valid_elements];
       })()
     JS
+    wait_for_text_editor("tinymce.get('own_rule')")
+    answer = page.evaluate_script(<<~JS, '<p>a</p><script src="/w.js" type="text/x" charset="utf-8"></script>')
+      (function(markup){
+        var editor = tinymce.get('own_rule');
+        editor.setContent(markup);
+        return editor.getContent();
+      })(arguments[0])
+    JS
 
-    expect(extended).to eq('video[*],script[src|type]')
+    expect(answer.delete("\n")).to eq('<p>a</p><script src="/w.js" type="text/x"></script>')
     expect(behind_valid_elements).not_to include('script')
-    expect(allowed).to eq(%w[src type])
+    expect(behind_a_rule_for_all).to end_with(',script[*]')
   end
 
   # As the page is being left, a text editor writes its raw body into its field, a script under

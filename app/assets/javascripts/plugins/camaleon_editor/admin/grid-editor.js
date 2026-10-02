@@ -1004,10 +1004,12 @@ jQuery(function(){
         // rule for the script, as the editor itself reads the lists it will be given: a rule the
         // page wrote for the script, a narrower one included, stays the last word (the editor goes
         // by the last rule it is given for an element), and a page that sets several editors up
-        // with the same settings gets the script added once.
+        // with the same settings gets the script added once. A rule for every element ("*[...]")
+        // is no rule for the script: it would let the editor keep a script without the
+        // attributes it loads by.
         var SCRIPTS = "script[*]";
         var keep_scripts = function(settings, def){
-            if(new tinymce.html.Schema($.extend({}, def, settings)).getElementRule("script")) return;
+            if(new tinymce.html.Schema($.extend({}, def, settings)).elements.script) return;
             var holder = settings.extended_valid_elements === undefined ? def : settings;
             var elements = holder.extended_valid_elements ? String(holder.extended_valid_elements) : "";
             holder.extended_valid_elements = (elements ? elements + "," : "") + SCRIPTS;
