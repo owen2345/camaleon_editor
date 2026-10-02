@@ -77,10 +77,11 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
-  # A quote opens a value only right behind the equals sign: inside a value written without quotes
-  # it is a character like any other, and the tag ends at its first bracket. Read as the start of
-  # a quoted value, an apostrophe there would run on to the next one of the content, a script and
-  # all.
+  # An apostrophe inside a value written without quotes opens no quoted value. Not in a script's
+  # opening tag, where a quote opens a value only behind the equals sign; not in any other tag,
+  # which the editor ends at its first bracket when the tag cannot go on behind the quote's pair.
+  # Read as the start of a quoted value, the apostrophe would run on to the next one of the
+  # content, a script and all.
   it 'reads an apostrophe inside an unquoted attribute value as part of the value' do
     in_a_script = "<script src=/widget.js?by=O'Brien></script><p>it's between</p>#{script}"
     in_a_link = "<p><a href=/people?name=O'Brien>a link</a></p>#{script}<p>don't</p>"
@@ -92,8 +93,8 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
-  # A value written without quotes runs to the next space or bracket, whatever it holds: an equals
-  # sign and a quote inside it open no quoted value.
+  # The same goes for a quote behind an equals sign inside such a value: the editor ends the tag
+  # at its first bracket, and the script behind it is found.
   it 'reads a quote behind an equals sign inside an unquoted value as part of the value' do
     content = %(<p><a href=/go?to="there>a link</a></p>#{script}<p>say "hi</p>)
 
@@ -132,6 +133,20 @@ RSpec.describe 'scripts in the text editor', :js do
     content = %(<p><a title="start x='y>a link</a></p>#{script}<p>it's after</p>)
 
     expect(through_the_text_editor(content)).to include(script, "<p>it's after</p>")
+    expect(scripts_in_the_text_editor).to eq(0)
+    expect(script_ran).to be_nil
+  end
+
+  # A tag is read as the editor's own tokenizer reads it, since the editor reads what the pattern
+  # steps over. A quote left open in a tag may find a pair further on, in another tag: the editor
+  # then ends the first tag at its first bracket, and a script between the two quotes is a script
+  # to it, set aside like any other.
+  it 'finds the script behind a tag whose open quote pairs with one further on' do
+    behind_a_tag = %(<p class="lead>before</p>#{script}<p class="x">after</p>)
+    in_the_stretch = %(<p><img title="> data-x="before#{script}after"></p>)
+
+    expect(through_the_text_editor(behind_a_tag)).to include(script, 'after</p>')
+    expect(through_the_text_editor(in_the_stretch)).to include(script)
     expect(scripts_in_the_text_editor).to eq(0)
     expect(script_ran).to be_nil
   end
