@@ -111,6 +111,19 @@ def text_editor_holds(markup)
   page.execute_script("#{POST_TEXT_EDITOR}.setContent(arguments[0]);", markup)
 end
 
+# What a script of the content left under `name`, had it run: nil when it did not. A text editor
+# has a document of its own, and a script that ran there left its mark there, not in the page: so
+# the page is asked, and the document of each of its text editors.
+def script_flag(name)
+  page.evaluate_script(<<~JS, name)
+    (function(name){
+      var editors = window.tinymce ? tinymce.editors : [];
+      var windows = [window].concat(jQuery.map(editors, function(editor){ return editor.getWin(); }));
+      return jQuery.map(windows, function(win){ return win[name]; })[0];
+    })(arguments[0])
+  JS
+end
+
 # What a post in several languages sends for its content. Core composes it from the fields of the
 # languages when one of them says it changed, which a text editor does when it loses focus.
 def composed_content

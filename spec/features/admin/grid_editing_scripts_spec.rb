@@ -6,7 +6,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   init_site
 
   def script_ran
-    page.evaluate_script('window.__cama_script_ran')
+    script_flag('__cama_script_ran')
   end
 
   let(:script) { '<script>window.__cama_script_ran = true;</script>' }

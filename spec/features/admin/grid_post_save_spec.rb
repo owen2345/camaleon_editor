@@ -238,7 +238,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
         expect(page).to have_css('.panel_grid_body .drg_item strong', text: 'changed in the text editor', visible: :all)
         expect(page).to have_css('.panel_grid_body .drg_item', count: 1)
-        expect(page.evaluate_script('window.__cama_widget_loaded')).to be_nil
+        expect(script_flag('__cama_widget_loaded')).to be_nil
 
         submit_post_form
 
@@ -304,7 +304,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
                                  count: 1, visible: :all)
         expect(page).to have_css('.panel_grid_body .drg_item b', text: 'bold', visible: :all)
         expect(page).to have_css('.panel_grid_body .drg_item script', count: 1, visible: :all)
-        expect(page.evaluate_script('window.__cama_widget_loaded')).to be_nil
+        expect(script_flag('__cama_widget_loaded')).to be_nil
       end
 
       # Other content written in the text editor is no grid to make. The grid built earlier comes
