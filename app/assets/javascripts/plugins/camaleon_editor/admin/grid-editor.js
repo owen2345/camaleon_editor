@@ -578,6 +578,10 @@ jQuery(function(){
             editor.find(".grid_editor_menu .toggle_panel_grid").click(function(){
                 if(!confirm(I18n("grid_editor.toggle_editor", "Are you sure to leave this editor?"))) return false;
                 editor.hide();
+                // The text editor gets the content from before the grid back, or what was written
+                // there since. An empty text editor is nothing to go back to: the text editor then
+                // keeps what the grid handed it, so a grid made over an empty post, or kept after
+                // the text editor was emptied, can be worked on as markup there.
                 if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
                 left_with = tinyEditor.getContent();
                 tinymce_panel.show();
