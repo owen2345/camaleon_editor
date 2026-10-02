@@ -195,6 +195,27 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(post_content).to eq(export)
     end
 
+    # A grid editor is made from what its field holds, and stands for that content until the grid
+    # changes. Once a block form has loaded a text editor, jQuery's val() answers for a field with
+    # its text editor's serialization: the field itself is read, whenever its grid editor is made.
+    it 'stands for the content as it was when a grid editor is made after a block form loaded a text editor' do
+      load_a_block_form_text_editor
+      page.execute_script(<<~JS, stored_content)
+        jQuery('<textarea id="later_field"></textarea>').appendTo('#form-post')[0].value = arguments[0];
+        tinymce.init(cama_get_tinymce_settings({selector: '#later_field'}));
+      JS
+      expect(page).to have_css('.panel_grid_editor + #later_field', visible: :all)
+
+      written = page.evaluate_script(<<~JS)
+        (function(){
+          tinymce.get('later_field').save();
+          return document.getElementById('later_field').value;
+        })()
+      JS
+
+      expect(written).to eq(stored_content)
+    end
+
     it 'saves the export as the draft' do
       trigger_grid_auto_save
       let_core_read_the_text_editors

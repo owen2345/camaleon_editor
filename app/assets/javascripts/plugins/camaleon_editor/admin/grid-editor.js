@@ -242,6 +242,11 @@ jQuery(function(){
         field.trigger("change");
     }
 
+    // What a field holds, read off the field itself. jQuery's val() is no such read once a block
+    // form has loaded a text editor: it then answers for a field with the content of its text
+    // editor, in that editor's serialization.
+    function field_value(field){ return $(field)[0].value || ""; }
+
     // grid editor plugin
     var gridEditor_id = 0;
     $.fn.gridEditor = function(tinyEditor){
@@ -258,7 +263,7 @@ jQuery(function(){
         // Content marked as a grid that cannot be read as one stays in the text editor: shown as an
         // empty grid, its first change would be auto-saved over the content nobody got to see.
         var saved_body = null;
-        var saved_content = textarea.val();
+        var saved_content = field_value(textarea);
         if($.fn.isGridEditorContent(saved_content)){
             saved_body = parse_grid_body(saved_content, true);
             if(!saved_body){
@@ -957,7 +962,7 @@ jQuery(function(){
     function init_grid_editor(){
         //auto switch on grid editor detected
         var auto_switch_editor = function(editor){
-            if($.fn.isGridEditorContent($(editor.targetElm).val()))
+            if($.fn.isGridEditorContent(field_value(editor.targetElm)))
                 $(editor.targetElm).gridEditor(editor);
         }
         tinymce_global_settings["init"].push(auto_switch_editor);
