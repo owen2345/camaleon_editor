@@ -48,7 +48,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     # A block or a column the author deletes fades out, and is in the grid until it is gone: the
-    # grid is exported then, and the export is what the post stores.
+    # grid is exported without it, and the export is what the post stores.
     it 'stores the grid without a block the author deleted' do
       accept_confirm { page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_remove').click();") }
       expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)
@@ -69,6 +69,34 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(export).to start_with(grid_post_content('<div class="panel_grid_body row'))
       expect(export).not_to include('data-col=')
       expect(post_content).to eq(export)
+    end
+
+    # What was deleted is out of the export from the click on, while it still fades out in the
+    # grid: a save sent before the fade ends stores the grid without it. It takes no click
+    # meanwhile.
+    it 'exports the grid without a deleted block or column at the click, while it still fades out' do
+      without_block, without_column = page.evaluate_script(<<~JS)
+        (function(){
+          window.confirm = function(){ return true; };
+          var seen = function(kind){
+            var fading = jQuery('.panel_grid_body .' + kind);
+            return [window.__cama_grid_exports.last, fading.length, fading.css('pointer-events')];
+          };
+          jQuery('.panel_grid_body .drg_item .grid_content_remove').click();
+          var without_block = seen('drg_item');
+          jQuery('.panel_grid_body .drg_column .grid_col_remove').click();
+          return [without_block, seen('drg_column')];
+        })()
+      JS
+      submit_post_form
+
+      expect(without_block[0]).to include('data-col="6"')
+      expect(without_block[0]).not_to include('embedded widget')
+      expect(without_block[1..]).to eq([1, 'none'])
+      expect(without_column[0]).to start_with(grid_post_content('<div class="panel_grid_body row'))
+      expect(without_column[0]).not_to include('data-col=')
+      expect(without_column[1..]).to eq([1, 'none'])
+      expect(post_content).to eq(without_column[0])
     end
 
     # The post form writes each text editor's content into its field to tell whether there is

@@ -344,14 +344,21 @@ jQuery(function(){
         var GRID_ROOT = "#"+editor_id+" > .panel_grid_body_w > .panel_grid_body"; // for the widgets that take a selector
         function grid_root(editor){ return $(editor).children(".panel_grid_body_w").children(".panel_grid_body"); }
 
+        // The mark of a column or a block the author deleted: in the grid while it fades out, and in
+        // no export (fade_out_of_grid).
+        var DELETED = "grid-deleted";
+
         // grid editor export
         function export_content(editor){
             var container = grid_root(editor).clone();
+            container.children("."+DELETED).remove();
             container.children().each(function(){
                 var col = $(this).removeClass("drg_column grid-col-built btn-default btn ui-draggable ui-draggable-handle ui-draggable-dragging ui-sortable-handle");
                 col.children(".header_box").remove();
                 // the column's own area and blocks: what a block holds is content, chrome-like names included
-                col.children(".grid_sortable_items").removeClass("ui-sortable").children().each(function(){ //contents
+                var area = col.children(".grid_sortable_items").removeClass("ui-sortable");
+                area.children("."+DELETED).remove();
+                area.children().each(function(){ //contents
                     $(this).removeClass("drg_item btn-default grid-item-built btn ui-draggable ui-draggable-dragging ui-sortable-handle ui-draggable-handle").children(".header_box").remove();
                 });
             });
@@ -688,13 +695,15 @@ jQuery(function(){
                 return kind && $.isFunction(kind.callback) ? kind : null;
             }
 
-            // A block or a column the author deleted fades out, and is in the grid until it is gone: the
-            // grid is exported then. Exported at the click, it would still hold what was deleted.
+            // A block or a column the author deleted fades out, and is in the grid until it is gone. It
+            // is out of what the grid exports from the click on: marked, and the grid exported at once.
+            // Exported once the fade ends, the grid would stand for what was deleted until then, and a
+            // save sent meanwhile would store it. What fades out takes no click: not a second delete,
+            // not a clone that would carry the mark.
             function fade_out_of_grid(element){
-                element.fadeOut(function(){
-                    $(this).remove();
-                    editor.trigger("auto_save");
-                });
+                element.addClass(DELETED).css("pointer-events", "none");
+                editor.trigger("auto_save");
+                element.fadeOut(function(){ $(this).remove(); });
             }
 
             // content dropdown options
