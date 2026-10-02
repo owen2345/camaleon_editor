@@ -22,7 +22,7 @@ RSpec.describe 'scripts in the text editor', :js do
   def through_the_text_editor(markup, inserted: nil)
     page.evaluate_script(<<~JS, markup, inserted).delete("\n")
       (function(markup, inserted){
-        var editor = tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id'));
+        var editor = #{POST_TEXT_EDITOR};
         editor.setContent(markup);
         if(inserted) editor.insertContent(inserted);
         window.__cama_scripts_in_text_editor = editor.getBody().getElementsByTagName('script').length;
@@ -128,7 +128,7 @@ RSpec.describe 'scripts in the text editor', :js do
   it 'writes its content as the page is being left, unless it is hidden for its field to be edited' do
     written, typed = page.evaluate_script(<<~JS, "<p>written in the text editor</p>#{script}")
       (function(markup){
-        var editor = tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id'));
+        var editor = #{POST_TEXT_EDITOR};
         var field = editor.getElement();
         window.onbeforeunload = null;
         editor.setContent(markup);
@@ -156,7 +156,7 @@ RSpec.describe 'scripts in the text editor', :js do
   it 'leaves pasted markup to the paste filter, which takes its script out' do
     answer = page.evaluate_script(<<~JS, "<p>pasted</p>#{script}").delete("\n")
       (function(markup){
-        var editor = tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id'));
+        var editor = #{POST_TEXT_EDITOR};
         editor.setContent('<p>written in the text editor</p>');
         editor.focus();
         var clipboard = new DataTransfer();

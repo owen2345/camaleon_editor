@@ -97,10 +97,12 @@ end
 # and a text editor of its own, and this is the first language's: the field they are composed into
 # has no editor.
 POST_TEXT_EDITOR_FIELD = "jQuery('#form-post textarea.tinymce_textarea:not(.translated-item)').first()"
+# The text editor of that field.
+POST_TEXT_EDITOR = "tinymce.get(#{POST_TEXT_EDITOR_FIELD}.attr('id'))".freeze
 
 # Hands the post's text editor its content, as an author who writes there does.
 def text_editor_holds(markup)
-  page.execute_script("tinymce.get(#{POST_TEXT_EDITOR_FIELD}.attr('id')).setContent(arguments[0]);", markup)
+  page.execute_script("#{POST_TEXT_EDITOR}.setContent(arguments[0]);", markup)
 end
 
 # What a post in several languages sends for its content. Core composes it from the fields of the

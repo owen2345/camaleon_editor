@@ -138,7 +138,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
       trigger_grid_auto_save
       text, raw, selection = page.evaluate_script(<<~JS)
         (function(){
-          var editor = tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id'));
+          var editor = #{POST_TEXT_EDITOR};
           editor.selection.select(editor.getBody(), true);
           return [editor.getContent({format: 'text'}), editor.getContent({format: 'raw'}), editor.selection.getContent()];
         })()
