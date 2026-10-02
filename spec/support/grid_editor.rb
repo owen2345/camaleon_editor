@@ -193,7 +193,7 @@ end
 # change_in its auto_save triggers, and what a text editor was last handed at that moment goes on
 # record. Nothing else triggers a change_in on a textarea, and the record does not look for the
 # editor beside the field: a rebuild that fails never puts its editor in the page. The record
-# listens ahead of the editor's own listeners: one of them sets the scripts of the content aside.
+# listens ahead of the editor's own listeners, which may rewrite what it was handed.
 def record_grid_exports
   page.execute_script(<<~JS)
     if(window.jQuery && !window.__cama_grid_exports){

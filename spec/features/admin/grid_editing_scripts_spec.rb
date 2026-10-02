@@ -47,8 +47,8 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     expect(script_ran).to be_nil
   end
 
-  # An Editor block is edited in a text editor of its own, which keeps the block's script out of
-  # its document and gives it back as it was.
+  # An Editor block is edited in a text editor of its own, which holds the block's script under a
+  # type that does not run and gives it back as it was.
   it 'keeps the script of an editor block edited in its form, and does not run it' do
     store_post_content(@post, grid_post_content(grid_with_block("<p>widget</p>#{script}", kind: 'editor')))
     open_post_in_editor(@post)

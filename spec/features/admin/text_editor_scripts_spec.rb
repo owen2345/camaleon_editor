@@ -3,10 +3,11 @@
 # A text editor takes the scripts out of the content it is handed. A grid's scripts are content for
 # the public page, and the grid hands its export to the text editor it stands in front of: a grid
 # that went through the text editor came back without them. So the plugin has the text editors keep
-# scripts, with the editor's own protect setting: out of the document, and given back as they were.
-# The setting goes by the markup, whatever it is: a grid, any other content, markup a script puts
-# in at the caret. A paste is another matter: the editor's paste filter takes its scripts out
-# before the markup goes in, as it always did.
+# scripts, as the editor keeps any element it is allowed: in its document, under a type that makes
+# it no script to the browser, and given back under its own type with its text as it was. The
+# editors go by the markup, whatever it is: a grid, any other content, markup a script puts in at
+# the caret. A paste is another matter: its markup comes from wherever it was copied, and the
+# plugin takes the scripts out of it.
 RSpec.describe 'scripts in the text editor', :js do
   init_site
 
@@ -20,249 +21,102 @@ RSpec.describe 'scripts in the text editor', :js do
   # What the post's text editor answers with after it was handed the markup, and after the markup
   # in `inserted` went in at the caret.
   def through_the_text_editor(markup, inserted: nil)
-    page.evaluate_script(<<~JS, markup, inserted).delete("\n")
+    page.evaluate_script(<<~JS, markup, inserted)
       (function(markup, inserted){
         var editor = #{POST_TEXT_EDITOR};
         editor.setContent(markup);
         if(inserted) editor.insertContent(inserted);
-        window.__cama_scripts_in_text_editor = editor.getBody().getElementsByTagName('script').length;
         return editor.getContent();
       })(arguments[0], arguments[1])
     JS
   end
 
-  def scripts_in_the_text_editor
-    page.evaluate_script('window.__cama_scripts_in_text_editor')
+  # The types the text editor holds the scripts of its content under.
+  def script_types_in_the_text_editor
+    page.evaluate_script(<<~JS)
+      jQuery.map(#{POST_TEXT_EDITOR}.getBody().getElementsByTagName('script'), function(script){
+        return script.type;
+      })
+    JS
+  end
+
+  # What the post's text editor answers with after the markup was pasted into it.
+  def pasted_into_the_text_editor(markup)
+    page.evaluate_script(<<~JS, markup)
+      (function(markup){
+        var editor = #{POST_TEXT_EDITOR};
+        editor.setContent('<p>written in the text editor</p>');
+        editor.focus();
+        var clipboard = new DataTransfer();
+        clipboard.setData('text/html', markup);
+        editor.getBody().dispatchEvent(new ClipboardEvent('paste', {clipboardData: clipboard, bubbles: true, cancelable: true}));
+        return editor.getContent();
+      })(arguments[0])
+    JS
   end
 
   def script_ran
-    page.evaluate_script('window.__cama_widget_loaded')
+    script_flag('__cama_widget_loaded')
   end
 
-  it 'gives back the scripts of a grid as they were, without holding or running them' do
+  it 'gives back the scripts of a grid as they were, and holds them under a type that does not run' do
     grid = grid_post_content(grid_with_block("<p>embedded widget</p>#{script}", kind: 'editor'))
 
-    expect(through_the_text_editor(grid)).to eq(grid)
-    expect(scripts_in_the_text_editor).to eq(0)
+    expect(through_the_text_editor(grid).delete("\n")).to eq(grid)
+    expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
     expect(script_ran).to be_nil
   end
 
   it 'gives back the scripts of content that is not a grid' do
     content = "<p>written in the text editor</p>#{script}"
 
-    expect(through_the_text_editor(content)).to eq(content)
-    expect(scripts_in_the_text_editor).to eq(0)
+    expect(through_the_text_editor(content).delete("\n")).to eq(content)
+    expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
     expect(script_ran).to be_nil
   end
 
-  # A script is one however its tags are written: a slash right behind the name, something behind
-  # the name of the closing tag. Each is set aside alone, and what stands between two stays content.
-  it 'gives back a script whose tags are written the less usual ways' do
-    content = '<p>before</p><script/src="//example.invalid/widget.js"></script><p>between</p>' \
-              '<script>window.__cama_widget_loaded = true;</script ignored><p>after</p>'
+  # A script's text is no markup to the editor: it comes back character for character, whatever it
+  # holds, under the type the script was written with.
+  it "gives back a script's text as it was, under its own type" do
+    data = %(<script type="application/ld+json">{\n  "name": "A & B <c>",\n  "url": "https://example.invalid/?a=1&b=2"\n}</script>)
+    template = '<script id="row" type="text/template"><tr class="row"><td>{{ name }}</td></tr></script>'
+    code = "<script>\n  if (1 < 2 && window.__cama_widget_loaded) {\n\tgo('</p>');   \n  }\n</script>"
 
-    expect(through_the_text_editor(content)).to eq(content)
-    expect(scripts_in_the_text_editor).to eq(0)
-    expect(script_ran).to be_nil
-    within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: 'between') }
-  end
-
-  # A script's opening tag ends at the bracket outside its quoted values, as a browser reads it: a
-  # value that spells a closing tag does not end the script.
-  it 'gives back a script whose opening tag quotes a closing tag' do
-    content = '<p>before</p><script data-end="</script>">window.__cama_widget_loaded = true;</script><p>after</p>'
-
-    expect(through_the_text_editor(content)).to eq(content)
-    expect(scripts_in_the_text_editor).to eq(0)
+    expect(through_the_text_editor("#{data}#{template}#{code}")).to eq([data, template, code].join("\n"))
+    expect(script_types_in_the_text_editor).to eq(%w[mce-application/ld+json mce-text/template mce-no/type])
     expect(script_ran).to be_nil
   end
 
-  # An apostrophe inside a value written without quotes opens no quoted value. Not in a script's
-  # opening tag, where a quote opens a value only behind the equals sign; not in any other tag,
-  # which the editor ends at its first bracket when the tag cannot go on behind the quote's pair.
-  # Read as the start of a quoted value, the apostrophe would run on to the next one of the
-  # content, a script and all.
-  it 'reads an apostrophe inside an unquoted attribute value as part of the value' do
-    in_a_script = "<script src=/widget.js?by=O'Brien></script><p>it's between</p>#{script}"
-    in_a_link = "<p><a href=/people?name=O'Brien>a link</a></p>#{script}<p>don't</p>"
+  # A script's attributes come back as the editor writes those of any element: each with its
+  # value, in double quotes, in the order they were written.
+  it "gives back a script's attributes in the editor's spelling" do
+    written = "<script async src='https://example.invalid/w.js?a=1&b=2' data-id=w1 defer></script>"
 
-    expect(through_the_text_editor(in_a_link)).to include(script, "<p>don't</p>")
-    expect(through_the_text_editor(in_a_script)).to include("<p>it's between</p>", script)
-    within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: "it's between") }
-    expect(scripts_in_the_text_editor).to eq(0)
-    expect(script_ran).to be_nil
+    expect(through_the_text_editor(written))
+      .to eq('<script async="" src="https://example.invalid/w.js?a=1&amp;b=2" data-id="w1" defer="defer"></script>')
   end
 
-  # The same goes for a quote behind an equals sign inside such a value: the editor ends the tag
-  # at its first bracket, and the script behind it is found.
-  it 'reads a quote behind an equals sign inside an unquoted value as part of the value' do
-    content = %(<p><a href=/go?to="there>a link</a></p>#{script}<p>say "hi</p>)
-
-    expect(through_the_text_editor(content)).to include(script, '<p>say "hi</p>')
-    expect(scripts_in_the_text_editor).to eq(0)
-    expect(script_ran).to be_nil
-  end
-
-  # A script hidden in a comment, the old way, may write another script out: for a browser the
-  # tags written inside the comment do not end the script, which goes on to its own closing tag.
-  # Cut at the first closing tag, it would come back without its end, and take the rest of the
-  # public page into its text.
-  it 'gives back whole a script that writes a script from inside a comment' do
-    content = '<p>before</p><script><!-- document.write(\'<script src="//example.invalid/widget.js"></script>\'); ' \
-              '//--></script><p>after</p>'
-
-    expect(through_the_text_editor(content)).to eq(content)
-    expect(scripts_in_the_text_editor).to eq(0)
-    expect(script_ran).to be_nil
-    within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: 'after') }
-  end
-
-  # A quote that nothing closes opens no value: the tag ends at its first bracket, as the editor
-  # reads it, and a script's tags before that bracket are part of the tag. Set aside there, the
-  # script would leave the editor's marker among the tag's attributes.
-  it 'leaves a tag whose quote nothing closes to the editor, the tags of a script inside it included' do
-    answer = through_the_text_editor('<p><a title="un <script>x()</script> closed>text</a></p><p>after</p>')
-
-    expect(answer).not_to include('protected')
-    expect(answer).to include('<p>after</p>')
-  end
-
-  # Behind such a quote the tag is read no further than its first bracket, whatever quotes it
-  # holds: a value that pairs off across that bracket does not take the script behind it along.
-  it 'finds the script behind a tag whose quote nothing closes, whatever quotes follow' do
-    content = %(<p><a title="start x='y>a link</a></p>#{script}<p>it's after</p>)
-
-    expect(through_the_text_editor(content)).to include(script, "<p>it's after</p>")
-    expect(scripts_in_the_text_editor).to eq(0)
-    expect(script_ran).to be_nil
-  end
-
-  # A tag is read as the editor's own tokenizer reads it, since the editor reads what the pattern
-  # steps over. A quote left open in a tag may find a pair further on, in another tag: the editor
-  # then ends the first tag at its first bracket, and a script between the two quotes is a script
-  # to it, set aside like any other.
-  it 'finds the script behind a tag whose open quote pairs with one further on' do
-    behind_a_tag = %(<p class="lead>before</p>#{script}<p class="x">after</p>)
-    in_the_stretch = %(<p><img title="> data-x="before#{script}after"></p>)
-
-    expect(through_the_text_editor(behind_a_tag)).to include(script, 'after</p>')
-    expect(through_the_text_editor(in_the_stretch)).to include(script)
-    expect(scripts_in_the_text_editor).to eq(0)
-    expect(script_ran).to be_nil
-  end
-
-  # Inside a comment, a quoted attribute value or a textarea, the editor reads a script's tags as
-  # text, and so does the pattern: such content goes through the text editor as it would without
-  # the setting, and a script element beside it is still set aside.
-  it 'leaves the text of a script inside a comment, an attribute value or a textarea as it is' do
-    commented = '<p>before</p><!-- <script src="//example.invalid/widget.js"></script> --><p>between</p>' \
-                "#{script}<p>after</p>"
-
-    expect(through_the_text_editor(commented)).to eq(commented)
-    expect(scripts_in_the_text_editor).to eq(0)
-    expect(script_ran).to be_nil
-    expect(through_the_text_editor('<p title="<script>x()</script>">in a title</p>'))
-      .to eq('<p title="&lt;script&gt;x()&lt;/script&gt;">in a title</p>')
-    expect(through_the_text_editor('<p><textarea><script>x()</script></textarea></p>'))
-      .to eq('<p><textarea>&lt;script&gt;x()&lt;/script&gt;</textarea></p>')
-  end
-
-  # The pattern goes by the editor's reading of markup where a browser's differs: a noscript and a
-  # CDATA section hold text, a comment ends at "--!>" as well, and one that opens with "<!-->" goes
-  # on to the next "-->". Each comes back as the editor gives it back without the setting.
-  it 'leaves the text of a script alone wherever the editor reads it as text' do
-    {
-      '<p>a</p><noscript><script>x()</script></noscript><p>b</p>' =>
-        '<p>a</p><noscript><script>x()</script></noscript><p>b</p>',
-      '<p>a</p><![CDATA[ <script>x()</script> ]]><p>b</p>' => '<p>a</p><![CDATA[ <script>x()</script> ]]><p>b</p>',
-      '<p>a</p><!-- <script>x()</script> --!><p>b</p>' => '<p>a</p><!-- <script>x()</script> --><p>b</p>',
-      '<p>a</p><!--> <script>x()</script> --><p>b</p>' => '<p>a</p><!-- > <script>x()</script> --><p>b</p>'
-    }.each { |markup, given_back| expect(through_the_text_editor(markup)).to eq(given_back) }
-
-    instruction = through_the_text_editor('<p>a</p><?php echo "<script>x()</script>"; ?><p>b</p>')
-    expect(instruction).to include('<?php echo')
-    expect(instruction).not_to include('mce:protected')
-  end
-
-  # A text element left open holds what follows it to the end of the content, for the editor and so
-  # for the pattern: a script written there is its text, and comes back as it does without the
-  # setting.
-  it 'leaves the text of a script alone in a text element left open' do
-    expect(through_the_text_editor('<p>a</p><textarea>t<script>x()</script><p>b</p>'))
-      .to eq('<p>a</p><p><textarea>t&lt;script&gt;x()&lt;/script&gt;&lt;p&gt;b&lt;/p&gt;</textarea></p>')
-  end
-
-  # A comment left open is text to the editor, up to the next thing that closes a comment: the
-  # marker a script behind it is set aside as would be just that, and would be stored inside the
-  # comment it closed. So a comment left open holds what follows it to the end of the content, and
-  # the content comes back as it does without the setting.
-  it 'sets no script aside behind a comment left open' do
-    answer = through_the_text_editor("<p>a</p><!-- left open #{script}<p>b</p>")
-
-    expect(answer).not_to include('protected')
-    expect(answer).to include('<p>b</p>')
-  end
-
-  # Setting a script aside takes its quotes out of the markup, and a quote left open in a tag
-  # before it may then find another pair, further on: the editor would read on from that tag to
-  # there, the script's marker included, and store the marker among the tag's attributes. A script
-  # whose marker would not be a comment of its own for the editor is left to the editor, which
-  # drops it as it does without the setting. The other scripts are kept.
-  it 'leaves the script whose marker would end up inside a tag to the editor, and keeps the others' do
-    tangled = %(<p><a title="lead>a link</a></p><script>var a = "b";</script><p>5" wide</p>)
-    answer = through_the_text_editor("#{script}#{tangled}")
-
-    expect(answer).not_to include('protected', 'var a')
-    expect(answer).to include(script, 'wide')
-  end
-
-  # The editor reads content as if a bracket closed it: a tag whose open quote finds its pair in
-  # the text at the very end, behind the last real bracket, runs on to there, and the editor takes
-  # the whole stretch for text. A marker in that stretch would be stored as text, so the check
-  # reads the end of the content as the editor does.
-  it 'reads the end of the content as the editor does before it sets a script aside' do
-    answer = through_the_text_editor("<p><a title='lead>a link</a></p>#{script}the dogs' bones")
-
-    expect(answer).not_to include('protected')
-    expect(answer).to include('bones')
-  end
-
-  # The check goes by where each marker stands, not by its text alone: content may already hold a
-  # comment that reads like the marker of a script further on, and that comment is not the marker.
-  it 'is not taken in by a comment that reads like the marker of a script further on' do
-    swallowed = '<script>var a = "b";</script>'
-    lookalike = page.evaluate_script("'<!--mce:protected ' + escape(arguments[0]) + '-->'", swallowed)
-    answer = through_the_text_editor(%(#{lookalike}<p><a title="lead>a link</a></p>#{swallowed}<p>5" wide</p>))
-
-    expect(answer).not_to include('protected')
-    expect(answer).to include('wide')
-  end
-
-  # A page may set its text editors up with a protect list of its own, which is used in place of
-  # core's default: the scripts' pattern joins that list, once, however many editors the page sets
-  # up with those settings. What each pattern of a list leaves of the markup shows which patterns
-  # the list holds.
-  it "adds the pattern to a page's own protect list once, and to the default one otherwise" do
+  # A page may set its text editors up with a list of elements of its own, which is used in place
+  # of core's default: the script joins that list, once, however many editors the page sets up
+  # with those settings.
+  it "adds the script to a page's own list of elements once, and to the default one otherwise" do
     own_list, default_list = page.evaluate_script(<<~JS)
       (function(){
-        var left_by = function(settings){
-          return jQuery.map(settings.protect, function(pattern){
-            return '<?php one(); ?><script>two()</script>'.replace(pattern, function(){ return ''; });
-          });
-        };
-        var own = {protect: [/<\\?php[\\s\\S]*?\\?>/g]};
+        var own = {extended_valid_elements: 'video[*]'};
         cama_get_tinymce_settings(own);
-        return [left_by(cama_get_tinymce_settings(own)), left_by(cama_get_tinymce_settings())];
+        return [cama_get_tinymce_settings(own).extended_valid_elements, cama_get_tinymce_settings().extended_valid_elements];
       })()
     JS
 
-    expect(own_list).to eq(['<script>two()</script>', '<?php one(); ?>'])
-    expect(default_list).to eq(['<?php one(); ?>'])
+    expect(own_list).to eq('video[*],script[*]')
+    expect(default_list.split(',')).to include('div[*]').and end_with('script[*]')
+    expect(default_list.scan('script').size).to eq(1)
   end
 
-  # As the page is being left, a text editor writes its raw body into its field, a script as the
-  # comment it is set aside as, and then its content (grid_post_save_spec has what a page that is
-  # not left would send otherwise). An editor hidden for its field to be edited writes neither.
+  # As the page is being left, a text editor writes its raw body into its field, a script under
+  # the type the editor holds it with, and then its content (grid_post_save_spec has what a page
+  # that is not left would send otherwise). An editor hidden for its field to be edited writes
+  # neither.
   it 'writes its content as the page is being left, unless it is hidden for its field to be edited' do
     written, typed = page.evaluate_script(<<~JS, "<p>written in the text editor</p>#{script}")
       (function(markup){
@@ -287,25 +141,22 @@ RSpec.describe 'scripts in the text editor', :js do
     answer = through_the_text_editor('<p>written in the text editor</p>', inserted: "<p>inserted</p>#{script}")
 
     expect(answer).to include('inserted', script)
-    expect(scripts_in_the_text_editor).to eq(0)
+    expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
     expect(script_ran).to be_nil
   end
 
-  it 'leaves pasted markup to the paste filter, which takes its script out' do
-    answer = page.evaluate_script(<<~JS, "<p>pasted</p>#{script}").delete("\n")
-      (function(markup){
-        var editor = #{POST_TEXT_EDITOR};
-        editor.setContent('<p>written in the text editor</p>');
-        editor.focus();
-        var clipboard = new DataTransfer();
-        clipboard.setData('text/html', markup);
-        editor.getBody().dispatchEvent(new ClipboardEvent('paste', {clipboardData: clipboard, bubbles: true, cancelable: true}));
-        return editor.getContent();
-      })(arguments[0])
-    JS
+  # The markup of a paste comes from wherever it was copied, a page that puts what it likes on the
+  # clipboard included, and a script would sit in the editor unseen. So the scripts are taken out
+  # of what is pasted; out of markup that says it was copied in the editor too, which any markup
+  # can say.
+  it 'takes the scripts out of pasted markup' do
+    ["<p>pasted</p>#{script}", "<!-- x-tinymce/html --><p>pasted</p>#{script}"].each do |markup|
+      answer = pasted_into_the_text_editor(markup)
 
-    expect(answer).to include('pasted', 'written in the text editor')
-    expect(answer).not_to include('script')
+      expect(answer).to include('pasted', 'written in the text editor')
+      expect(answer).not_to include('script')
+      expect(script_types_in_the_text_editor).to be_empty
+    end
     expect(script_ran).to be_nil
   end
 end

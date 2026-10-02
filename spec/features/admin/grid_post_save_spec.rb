@@ -178,7 +178,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
       expect(text).to include('embedded widget')
       expect(text).not_to include('<')
-      expect(raw).to include('<strong>bold</strong>', 'mce:protected')
+      expect(raw).to include('<strong>bold</strong>', '<script type="mce-no/type">')
       expect(selection).to include('<strong>bold</strong>')
     end
 
@@ -435,7 +435,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     # As the page is being left, each text editor writes its raw body into its field: its own
-    # markup, a script as the comment it was set aside as. On a page that is not left after all -
+    # markup, a script under the type the editor holds it with. On a page that is not left after all -
     # the author stays at the prompt about unsaved changes - the next change of a grid has core
     # compose from the fields. Each editor writes its content right behind its raw body, so the
     # fields hold content. Core's prompt is taken off: up to 2.9.4 it wrote the fields itself as it

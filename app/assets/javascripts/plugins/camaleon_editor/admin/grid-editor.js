@@ -965,113 +965,37 @@ jQuery(function(){
 
         // A text editor takes the scripts out of the content it is handed, and a grid's embed blocks
         // carry scripts: a grid that went through a text editor - the author left the grid editor for
-        // it, or edited an Editor block in its form - came back without them. The editor's own
-        // protect setting keeps them: out of its document, as comments that hold nothing that runs,
-        // and given back as they were. The setting goes by the markup, whatever it is: every text
-        // editor set up with core's settings on a page that loads the grid editor keeps the scripts
-        // of the content it is handed, a grid or not, and core's rules meet them when the content
-        // is saved. A paste goes through the editor's paste filter first, which takes its scripts
-        // out as it always did. A page's own protect list is kept: its settings win over core's
-        // defaults, so the pattern joins the list that will be used. One pattern serves every
-        // editor, and joins a list once: a page may set several editors up with the same settings.
-        var scripts = script_elements();
+        // it, or edited an Editor block in its form - came back without them. So the script joins the
+        // elements the editor is allowed, and the editor keeps it as it keeps any of them: in its
+        // document, under a type that makes it no script to the browser, and given back under its
+        // own type, with its text as it was. The editor goes by the markup, whatever it is: every
+        // text editor set up with core's settings on a page that loads the grid editor keeps the
+        // scripts of the content it is handed, a grid or not, and core's rules meet them when the
+        // content is saved. A page's own list of elements is kept: its settings win over core's
+        // defaults, so the script joins the list that will be used, and joins it once: a page may
+        // set several editors up with the same settings.
+        var SCRIPTS = "script[*]";
         var keep_scripts = function(settings, def){
-            var holder = settings.protect ? settings : def;
-            var list = holder.protect || [];
-            if($.inArray(scripts, list) < 0) holder.protect = list.concat([scripts]);
-        }
-        // The pattern reads markup a token at a time, as the editor does with the content it is
-        // handed, and steps over whole every token the editor reads as text or as a tag: the tags of
-        // a script written inside one stay the text they are there. Set aside, a commented-out script
-        // would end its comment early, and a title or a textarea would hold the editor's marker from
-        // then on. The tokens are the editor's own, where a browser's differ: a comment ends at
-        // "--!>" as well, a noscript holds text, and a tag whose quotes do not pair ends at its
-        // first bracket. An element of text left open holds what follows it to the end of the
-        // content, and so does a comment left open: text to the editor, until the marker of a
-        // script set aside behind it closes it. A script element is the one token set aside,
-        // taken as a browser takes it, since the editor never gets to read it: its name ends at a
-        // space, a slash or the bracket, its opening tag at the bracket outside its quoted values -
-        // a value may spell a closing tag - and whatever follows the name of the closing tag goes
-        // with that tag. The editor hands each pattern of the list to replace(), with a replacer that
-        // sets aside whatever the pattern matched: so this one answers replace() itself, and passes
-        // that replacer the scripts alone.
-        function script_elements(){
-            // A tag behind its name, as the editor's own tokenizer reads it, since the editor is the
-            // one that reads the tags the pattern steps over: attributes set apart by spaces, a
-            // value in quotes where its quotes pair and the tag can go on behind them, and a tag
-            // that ends at its first bracket otherwise. Read the editor's way, a tag holds no script
-            // the editor would find, and no script is set aside where the editor reads a tag.
-            var tag = /(?:(?:\s+[^"'>]+(?:"[^"]*"|'[^']*'|[^>]*))*|\/|\s+)>/.source;
-            // A script's own opening tag is read as a browser reads it. A value is quoted when a
-            // quote follows its equals sign, spaces apart. Written without quotes, it runs to the
-            // next space or bracket, whatever it holds: a quote, another equals sign.
-            var attributes = /(?:[^>=]|=\s*(?:"[^"]*"|'[^']*'|[^\s>"'][^\s>]*(?=[\s>])|(?=>)))*/.source;
-            // A script's text ends at the script's closing tag, with the one exception a browser
-            // makes: inside a "<!--" stretch of the text, a "<script" opens a stretch of its own,
-            // which a closing tag ends in place of the script. A script hidden in a comment, the
-            // old way, may so write another script out. Text a browser finds no end for is read to
-            // the first closing tag.
-            var opening = /<script(?=[\s\/>])/.source, closing = /<\/script(?=[\s\/>])/.source, any = /[\s\S]/.source;
-            var written = opening + "(?:(?!-->|" + closing + ")" + any + ")*(?:" + closing + "|(?=-->))";
-            var commented = "<!(?=--)(?:(?!-->|" + opening + "|" + closing + ")" + any + "|" + written + ")*(?:-->|(?=" + closing + "))";
-            var text = "(?:(?:(?!<!--|" + closing + ")" + any + "|" + commented + ")*|" + any + "*?)";
-            var tokens = new RegExp($.map([
-                /<!--[\s\S]*?(?:--!?>|$)/, // a comment; left open, the marker of a script behind it would close it
-                /<!\[CDATA\[[\s\S]*?\]\]>/, // a CDATA section
-                /<\?[^\s\/<>]+[\s\S]*?[?\/]>/, // a processing instruction
-                new RegExp(/<(noscript|iframe|noframes|noembed|title|style|textarea|xmp)/.source + tag + any + "*?(?:<\\/\\1[^>]*>|$)"), // an element whose content is text
-                new RegExp("(" + opening + "(?:" + attributes + ">)?" + text + closing + "[^>]*>)"), // a script element
-                new RegExp(/<[a-z][a-z0-9\-_:.]*/.source + tag) // any other tag
-            ], function(token){ return token.source; }).join("|"), "gi");
-            tokens[Symbol.replace] = function(markup, set_aside){
-                // A script ends at a bracket: what follows the last bracket of the markup holds none
-                // and is left unread. A long run of "<" there, with no bracket to end a tag at,
-                // would be read from each one to the end.
-                markup = String(markup);
-                var read = markup.lastIndexOf(">") + 1, unread = markup.slice(read);
-                markup = markup.slice(0, read);
-                // A script set aside takes its quotes out of the markup with it, and a quote left
-                // open in a tag before it may then find another pair, further on: the editor would
-                // read on from that tag, the marker included, and store the marker among the tag's
-                // attributes. So the markup is read once more with its markers in, each looked for
-                // where it was put: a comment of the content may read like one. A script whose
-                // marker is not a token of its own is left to the editor, as without the setting,
-                // and the rest is set aside again without it, until every marker stands apart. This
-                // reading takes in what the first one left unread, and a closing bracket behind it:
-                // the editor reads content as if one closed it, so a tag left open at the end may
-                // run on to there.
-                var pattern = this, replace = RegExp.prototype[Symbol.replace], left = {};
-                for(;;){
-                    var markers = [], shift = 0;
-                    var set = replace.call(pattern, markup, function(token, _text_element, script, at){
-                        if(!script || left[at]) return token;
-                        var marker = String(set_aside(script));
-                        if(/^<!--/.test(marker)) markers.push({text: marker, script: at, at: at + shift});
-                        shift += marker.length - token.length;
-                        return marker;
-                    });
-                    var next = 0, apart = true;
-                    var swallowed = function(marker){ left[marker.script] = true; apart = false; };
-                    if(markers.length) replace.call(pattern, set + unread + ">", function(token, _text_element, _script, at){
-                        while(next < markers.length && markers[next].at < at) swallowed(markers[next++]);
-                        if(next < markers.length && markers[next].at === at){
-                            if(token !== markers[next].text) swallowed(markers[next]);
-                            next++;
-                        }
-                        return token;
-                    });
-                    while(next < markers.length) swallowed(markers[next++]);
-                    if(apart) return set + unread;
-                }
-            };
-            return tokens;
+            var holder = settings.extended_valid_elements === undefined ? def : settings;
+            var elements = holder.extended_valid_elements ? String(holder.extended_valid_elements) : "";
+            if($.inArray(SCRIPTS, elements.split(",")) < 0) holder.extended_valid_elements = (elements ? elements + "," : "") + SCRIPTS;
         }
         tinymce_global_settings["settings"].push(keep_scripts);
 
+        // A paste is another matter. Its markup comes from wherever it was copied, a page that
+        // puts what it likes on the clipboard included, and a script would sit in the editor
+        // unseen. The editor's paste filter took scripts out by the editor's list of elements,
+        // which now holds the script: so they are taken out here, of whatever is pasted or dropped
+        // in. Markup copied in the editor itself loses them too: any markup can say it is that.
+        var paste_without_scripts = function(editor){
+            editor.on("PastePostProcess", function(e){ $(e.node).find("script").remove(); });
+        }
+        tinymce_global_settings["setups"].push(paste_without_scripts);
+
         // A field has one more writer. As the page is being left, each text editor writes its raw
-        // body there, with no event anybody could answer: the editor's own markup, a script as the
-        // comment it was set aside as. On a page that is not left after all - the author stays at
-        // the prompt about unsaved changes - the fields keep that, and a post in several languages
+        // body there, with no event anybody could answer: the editor's own markup, a script under
+        // the type the editor holds it with. On a page that is not left after all - the author stays
+        // at the prompt about unsaved changes - the fields keep that, and a post in several languages
         // composes what it sends from its fields at the next change of a grid or switch of
         // editors: the other languages would be stored as those raw bodies. So each editor writes
         // its content right behind its raw body. The listener is added once the editor is set up,
