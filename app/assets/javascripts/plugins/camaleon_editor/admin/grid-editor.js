@@ -1034,7 +1034,7 @@ jQuery(function(){
                     // A grid is first made from the field, which holds what the text editor last wrote
                     // there - when it lost focus, with a draft - and not what the author changed since.
                     field_follows(editor, $(editor.targetElm));
-                    var area = $(editor.targetElm).gridEditor(editor);
+                    $(editor.targetElm).gridEditor(editor);
                 }
             });
         }
