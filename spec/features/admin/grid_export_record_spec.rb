@@ -52,10 +52,8 @@ RSpec.describe 'the record of what the grid exports', :js do
   # val() hands a value to the text editor of a field that has one and leaves the field alone: the
   # grid's write no longer reaches the post's textarea, and the record cannot be read off it.
   it 'holds the export once a block form has loaded a text editor of its own' do
-    page.execute_script(<<~JS)
-      jQuery('<textarea></textarea>').appendTo('#form-post').tinymce(cama_get_tinymce_settings({height: '120px'}));
-      jQuery('.panel_grid_body .drg_item b').text('changed');
-    JS
+    load_a_block_form_text_editor
+    page.execute_script("jQuery('.panel_grid_body .drg_item b').text('changed');")
     trigger_grid_auto_save
 
     expect(saved_grid_content).to include('<b>changed</b>',

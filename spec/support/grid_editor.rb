@@ -111,6 +111,16 @@ def text_editor_holds(markup)
   page.execute_script("#{POST_TEXT_EDITOR}.setContent(arguments[0]);", markup)
 end
 
+# What a block's form does as it opens: it loads a text editor of its own through jQuery's
+# tinymce(). From then on jQuery goes by the page's text editors: val() reads and writes the text
+# editor of a field that has one and leaves the field alone, and remove() takes the text editor
+# of an element along.
+def load_a_block_form_text_editor
+  page.execute_script(
+    "jQuery('<textarea></textarea>').appendTo('body').tinymce(cama_get_tinymce_settings({height: '120px'}));"
+  )
+end
+
 # What a script of the content left under `name`, had it run: nil when it did not. A text editor
 # has a document of its own, and a script that ran there left its mark there, not in the page: so
 # the page is asked, and the document of each of its text editors.

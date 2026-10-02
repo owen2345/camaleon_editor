@@ -185,10 +185,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # A block form loads a text editor of its own through jQuery's tinymce(), and from then on
     # val() hands the grid's export to the post's text editor and leaves the field alone.
     it 'stores the export once a block form has loaded a text editor of its own' do
-      page.execute_script(<<~JS)
-        jQuery('<textarea></textarea>').appendTo('body').tinymce(cama_get_tinymce_settings({height: '120px'}));
-        jQuery('.panel_grid_body .drg_item b').text('changed');
-      JS
+      load_a_block_form_text_editor
+      page.execute_script("jQuery('.panel_grid_body .drg_item b').text('changed');")
       trigger_grid_auto_save
       export = saved_grid_content
       submit_post_form
