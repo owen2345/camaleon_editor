@@ -230,6 +230,12 @@ def record_grid_exports
   JS
 end
 
+# What the field behind the grid editor holds, read off the field itself: jQuery's val() answers
+# with the content of the field's text editor once a block form has loaded a text editor.
+def grid_field
+  page.evaluate_script("jQuery('.panel_grid_editor').next('textarea')[0].value")
+end
+
 # The grid as the last auto_save exported it, nil when none did since the editor page was opened.
 # Saving the post while the grid editor is shown stores it as it is.
 def saved_grid_content
@@ -243,7 +249,7 @@ def text_editor_content
   page.evaluate_script(<<~JS).delete("\n")
     (function(){
       tinymce.triggerSave();
-      return #{POST_TEXT_EDITOR_FIELD}.val();
+      return #{POST_TEXT_EDITOR_FIELD}[0].value;
     })()
   JS
 end

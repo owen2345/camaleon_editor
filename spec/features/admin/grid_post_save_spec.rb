@@ -158,7 +158,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
       trigger_grid_auto_save
       let_core_read_the_text_editors
 
-      expect(page.evaluate_script("jQuery('.panel_grid_editor').next('textarea')[0].value")).to eq(saved_grid_content)
+      expect(grid_field).to eq(saved_grid_content)
     end
 
     # The export is the answer to a read of the text editor's content as markup. A read of its
@@ -188,7 +188,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
       page.execute_script("jQuery('.panel_grid_body .drg_item b').text('changed');")
       trigger_grid_auto_save
       export = saved_grid_content
-      field = page.evaluate_script("jQuery('.panel_grid_editor').next('textarea')[0].value")
+      field = grid_field
       submit_post_form
 
       expect(export).to include(script, '<b>changed</b>')

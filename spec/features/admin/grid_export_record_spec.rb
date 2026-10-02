@@ -7,10 +7,6 @@
 RSpec.describe 'the record of what the grid exports', :js do
   init_site
 
-  def post_textarea
-    page.evaluate_script("jQuery('.panel_grid_editor').next('textarea').val()")
-  end
-
   # What core does when the text editor loses focus: the text editor's content goes into its
   # textarea.
   def let_the_text_editor_write
@@ -34,7 +30,7 @@ RSpec.describe 'the record of what the grid exports', :js do
     leave_for_the_text_editor
     let_the_text_editor_write
 
-    expect(post_textarea).to include('background-color: #ffcc00', '<strong>kept</strong>')
+    expect(grid_field).to include('background-color: #ffcc00', '<strong>kept</strong>')
     expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)', '<b>kept</b>',
                                           '<script>window.__cama_widget_loaded = true;</script>')
   end
