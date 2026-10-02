@@ -213,6 +213,22 @@ RSpec.describe 'saving a post from the grid editor', :js do
         expect(post_content.delete("\r")).to eq(export)
       end
 
+      # The root of the grid made again is the root written in the text editor: its attributes, and
+      # none the grid had before, the style taken out there included.
+      it 'gives the grid made again the root written in the text editor' do
+        change_in_the_text_editor(/<div class="panel_grid_body row"[^>]*>/,
+                                  '<div id="hero" class="panel_grid_body row wide">')
+        open_grid_editor
+
+        expect(page).to have_css('.panel_grid_editor .panel_grid_body#hero.wide .drg_item')
+        expect(page).to have_no_css('.panel_grid_editor .panel_grid_body[style]', visible: :all)
+
+        trigger_grid_auto_save
+
+        expect(saved_grid_content).to include('id="hero"', 'panel_grid_body row wide')
+        expect(saved_grid_content).not_to include('background-color')
+      end
+
       it 'keeps the author in the text editor when what was changed there is no longer a grid alone' do
         text_editor_holds("#{text_editor_content}<p>written after the grid</p>")
         changed = text_editor_content
