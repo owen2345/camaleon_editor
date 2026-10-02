@@ -1050,7 +1050,21 @@ jQuery(function(){
             editor.on("PreInit", function(){ editor.schema.getSpecialElements().script = script_end; });
         }
 
-        // Every text editor of the page gets the three, whatever it was set up with. The hooks
+        // A script's text is text of the editor's document, where a plugin of the editor that
+        // marks text - a no-break space made visible, the matches of a search - wraps it in
+        // elements of its own. Outside a script the editor takes those off as its content is
+        // read; inside one it would give them back as part of the script's text. So a script is
+        // read as its text alone. What is read is a copy the editor makes for the read: in the
+        // editor the marks stay, for the plugin to take off.
+        var script_text_alone = function(editor){
+            editor.on("PreProcess", function(e){
+                $(e.node).find("script").each(function(){
+                    if(this.firstElementChild) this.textContent = this.textContent;
+                });
+            });
+        }
+
+        // Every text editor of the page gets the four, whatever it was set up with. The hooks
         // core offers for an editor run from the setup of core's settings, and a page may pass a
         // setup of its own, which takes that one's place: the settings above would still allow
         // such an editor the script, with nothing to filter its pastes.
@@ -1058,6 +1072,7 @@ jQuery(function(){
             paste_without_scripts(added.editor);
             script_is_a_block(added.editor);
             script_ends_as_in_a_browser(added.editor);
+            script_text_alone(added.editor);
         });
 
         // A field has one more writer. As the page is being left, each text editor writes its raw

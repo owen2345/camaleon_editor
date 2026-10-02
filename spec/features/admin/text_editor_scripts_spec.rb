@@ -105,6 +105,30 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
+  # A script's text is text of the editor's document, where a plugin of the editor that marks text
+  # (a no-break space made visible, the matches of a search) wraps it in elements of its own.
+  # Outside a script the editor takes those off as its content is read; inside one they would come
+  # back as part of the script. Read, a script holds its text alone.
+  it "gives back a script's text as it was while the editor shows invisible characters" do
+    content = "<p>written in the text editor</p><script>var name =\u00a0'A B';</script>"
+
+    marked, shown, hidden = page.evaluate_script(<<~JS, content)
+      (function(markup){
+        var editor = #{POST_TEXT_EDITOR};
+        editor.setContent(markup);
+        editor.execCommand('mceVisualChars');
+        var marked = editor.getBody().querySelectorAll('script .mce-nbsp').length;
+        var shown = editor.getContent();
+        editor.execCommand('mceVisualChars');
+        return [marked, shown, editor.getContent()];
+      })(arguments[0])
+    JS
+
+    expect(marked).to eq(1)
+    expect(shown.delete("\n")).to eq(content)
+    expect(hidden.delete("\n")).to eq(content)
+  end
+
   # A script's attributes come back as the editor writes those of any element: each with its
   # value, in double quotes, in the order they were written.
   it "gives back a script's attributes in the editor's spelling" do
