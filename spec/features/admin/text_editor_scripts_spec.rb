@@ -102,6 +102,20 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
+  # A script hidden in a comment, the old way, may write another script out: for a browser the
+  # tags written inside the comment do not end the script, which goes on to its own closing tag.
+  # Cut at the first closing tag, it would come back without its end, and take the rest of the
+  # public page into its text.
+  it 'gives back whole a script that writes a script from inside a comment' do
+    content = '<p>before</p><script><!-- document.write(\'<script src="//example.invalid/widget.js"></script>\'); ' \
+              '//--></script><p>after</p>'
+
+    expect(through_the_text_editor(content)).to eq(content)
+    expect(scripts_in_the_text_editor).to eq(0)
+    expect(script_ran).to be_nil
+    within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: 'after') }
+  end
+
   # Inside a comment, a quoted attribute value or a textarea, the editor reads a script's tags as
   # text, and so does the pattern: such content goes through the text editor as it would without
   # the setting, and a script element beside it is still set aside.
