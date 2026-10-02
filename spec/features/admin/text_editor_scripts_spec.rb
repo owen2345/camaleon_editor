@@ -116,6 +116,16 @@ RSpec.describe 'scripts in the text editor', :js do
     within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: 'after') }
   end
 
+  # A quote that nothing closes opens no value: the tag ends at its first bracket, as the editor
+  # reads it, and a script's tags before that bracket are part of the tag. Set aside there, the
+  # script would leave the editor's marker among the tag's attributes.
+  it 'leaves a tag whose quote nothing closes to the editor, the tags of a script inside it included' do
+    answer = through_the_text_editor('<p><a title="un <script>x()</script> closed>text</a></p><p>after</p>')
+
+    expect(answer).not_to include('protected')
+    expect(answer).to include('<p>after</p>')
+  end
+
   # Inside a comment, a quoted attribute value or a textarea, the editor reads a script's tags as
   # text, and so does the pattern: such content goes through the text editor as it would without
   # the setting, and a script element beside it is still set aside.

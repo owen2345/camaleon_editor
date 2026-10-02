@@ -997,7 +997,12 @@ jQuery(function(){
             // What a tag holds behind its name, up to its bracket. A value is quoted when a quote
             // follows its equals sign, spaces apart. Written without quotes, it runs to the next
             // space or bracket, whatever it holds: a quote, another equals sign.
-            var attributes = /(?:[^>=]|=\s*(?:"[^"]*"|'[^']*'|[^\s>"'][^\s>]*(?=[\s>])|(?=>)))*/.source;
+            var attribute = /[^>=]|=\s*(?:"[^"]*"|'[^']*'|[^\s>"'][^\s>]*(?=[\s>])|(?=>))/.source;
+            // A quote that nothing closes opens no value. Read as a character, it leaves the tag to
+            // end at its first bracket, which is where the editor ends such a tag: a script's tags
+            // before that bracket are the tag's, and a script behind it is still found. Every tag
+            // then ends somewhere, and none is read to the end of the markup for nothing.
+            var open_quote = /=(?=\s*["'])(?!\s*(?:"[^"]*"|'[^']*'))/.source;
             // A script's text ends at the script's closing tag, with the one exception a browser
             // makes: inside a "<!--" stretch of the text, a "<script" opens a stretch of its own,
             // which a closing tag ends in place of the script. A script hidden in a comment, the
@@ -1012,8 +1017,8 @@ jQuery(function(){
                 /<!\[CDATA\[[\s\S]*?\]\]>/, // a CDATA section
                 /<\?[^\s\/<>]+[\s\S]*?[?\/]>/, // a processing instruction
                 /<(noscript|iframe|noframes|noembed|title|style|textarea|xmp)(?=[\s\/>])[\s\S]*?(?:<\/\1[^>]*>|$)/, // an element whose content is text
-                new RegExp("(" + opening + "(?:" + attributes + ">)?" + text + closing + "[^>]*>)"), // a script element
-                new RegExp(/<\/?[a-z]/.source + attributes + ">") // any other tag, with its quoted values
+                new RegExp("(" + opening + "(?:(?:" + attribute + ")*>)?" + text + closing + "[^>]*>)"), // a script element
+                new RegExp(/<\/?[a-z]/.source + "(?:" + attribute + "|" + open_quote + ")*>") // any other tag, with its quoted values
             ], function(token){ return token.source; }).join("|"), "gi");
             tokens[Symbol.replace] = function(markup, set_aside){
                 // A script ends at a bracket: what follows the last bracket of the markup holds none
