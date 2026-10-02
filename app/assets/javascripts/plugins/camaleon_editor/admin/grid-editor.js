@@ -624,8 +624,8 @@ jQuery(function(){
                         try {
                             var template_body = parse_grid_body(res);
                             if(!template_body) return import_failed();
-                            // the current grid is set aside as nodes, handlers included, in case the rebuild fails
-                            previous = {contents: grid.contents().detach(), grid_style: grid_style(grid)};
+                            // the current grid is set aside in case the rebuild fails
+                            previous = set_aside(grid);
                             fill_grid(grid, template_body);
                             parse_content(editor); // recover saved content
                             editor.trigger("auto_save");
@@ -636,8 +636,7 @@ jQuery(function(){
                             // back is guarded too: whatever it hits, the failure still gets reported.
                             try {
                                 if(previous){
-                                    set_grid_style(grid, previous.grid_style);
-                                    grid.empty().append(previous.contents);
+                                    previous.restore();
                                     editor.trigger("auto_save");
                                 }
                             } catch(restore_error) { if(window.console) console.error(restore_error); }
@@ -649,11 +648,10 @@ jQuery(function(){
                         }
                         if(!applied) return;
                         // Past the guard, where nothing can send the applied template back any more. The grid set
-                        // aside with its handlers and widgets for a rollback that did not come is released for good,
-                        // or jQuery's data store would hold every replaced grid for the life of the page; and only
-                        // now does the list close: every failure leaves it open. A listener of the modal's that
-                        // throws is no failure of the apply.
-                        previous.contents.remove();
+                        // aside for a rollback that did not come is released for good; and only now does the list
+                        // close: every failure leaves it open. A listener of the modal's that throws is no failure
+                        // of the apply.
+                        previous.release();
                         try { modal.modal("hide"); } catch(error) { if(window.console) console.error(error); }
                     }).fail(import_failed); });
                     return false;
@@ -808,13 +806,31 @@ jQuery(function(){
             if(exported !== null && grid_shown && e.format === "html" && !e.selection) e.content = exported;
         });
 
+        // The grid set aside while another is made in its place - a template applied, a grid made
+        // again from the text editor's content - for the case that making it throws: its contents
+        // as nodes, handlers and widgets included, and its root's attributes. restore() puts the
+        // grid back as it was. release() lets what was set aside go for good once the new grid
+        // stands, or jQuery's data store would hold it for the life of the page.
+        function set_aside(grid){
+            var contents = grid.contents().detach(), attributes = attributes_of(grid);
+            return {
+                restore: function(){
+                    grid.empty();
+                    set_attributes(grid, attributes);
+                    // detach() marked the scripts of what was set aside as run: append() leaves them alone
+                    grid.append(contents);
+                },
+                release: function(){ contents.remove(); }
+            };
+        }
+
         // The grid made again from a grid root parsed off the text editor's content: its attributes,
-        // its style, its columns. What it held is set aside as nodes, handlers included, and comes
-        // back when a parser throws part-way: a half-built grid is worse than the one left behind.
+        // its style, its columns. What it held is set aside, and comes back when a parser throws
+        // part-way: a half-built grid is worse than the one left behind.
         function rebuild_grid(body){
             var grid = grid_root(editor);
             var sortable = grid.hasClass("ui-sortable");
-            var previous = {contents: grid.contents().detach(), attributes: attributes_of(grid)};
+            var previous = set_aside(grid);
             try {
                 // as the editor was built: the root's own class, then what the content's root carries
                 set_attributes(grid, [{name: "class", value: "panel_grid_body row"}]);
@@ -822,14 +838,10 @@ jQuery(function(){
                 if(sortable) grid.addClass("ui-sortable");
             } catch(error) {
                 if(window.console) console.error(error);
-                grid.empty();
-                set_attributes(grid, previous.attributes);
-                // detach() marked the scripts of the grid set aside as run: append() leaves them alone
-                grid.append(previous.contents);
+                previous.restore();
                 return false;
             }
-            // released for good, or jQuery's data store would hold the grid for the life of the page
-            previous.contents.remove();
+            previous.release();
             return true;
         }
         function attributes_of(element){
