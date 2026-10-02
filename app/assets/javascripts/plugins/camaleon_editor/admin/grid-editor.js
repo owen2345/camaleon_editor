@@ -994,10 +994,10 @@ jQuery(function(){
         // sets aside whatever the pattern matched: so this one answers replace() itself, and passes
         // that replacer the scripts alone.
         function script_elements(){
-            // What a tag holds behind its name, up to its bracket. A quote opens a value only right
-            // behind the equals sign: inside a value written without quotes it is a character like
-            // any other.
-            var attributes = /(?:[^>=]|=(?!\s*["'])|=\s*"[^"]*"|=\s*'[^']*')*/.source;
+            // What a tag holds behind its name, up to its bracket. A value is quoted when a quote
+            // stands right behind its equals sign. Written without quotes, it runs to the next space
+            // or bracket, whatever it holds: a quote, another equals sign.
+            var attributes = /(?:[^>=]|=\s*(?:"[^"]*"|'[^']*'|[^\s>"'][^\s>]*(?=[\s>])|(?=>)))*/.source;
             var tokens = new RegExp($.map([
                 /<!--[\s\S]*?--!?>/, // a comment
                 /<!\[CDATA\[[\s\S]*?\]\]>/, // a CDATA section

@@ -92,6 +92,16 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
+  # A value written without quotes runs to the next space or bracket, whatever it holds: an equals
+  # sign and a quote inside it open no quoted value.
+  it 'reads a quote behind an equals sign inside an unquoted value as part of the value' do
+    content = %(<p><a href=/go?to="there>a link</a></p>#{script}<p>a "quoted" word</p>)
+
+    expect(through_the_text_editor(content)).to include(script, '<p>a "quoted" word</p>')
+    expect(scripts_in_the_text_editor).to eq(0)
+    expect(script_ran).to be_nil
+  end
+
   # Inside a comment, a quoted attribute value or a textarea, the editor reads a script's tags as
   # text, and so does the pattern: such content goes through the text editor as it would without
   # the setting, and a script element beside it is still set aside.
