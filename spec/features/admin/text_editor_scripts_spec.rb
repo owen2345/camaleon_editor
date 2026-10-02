@@ -96,6 +96,18 @@ RSpec.describe 'scripts in the text editor', :js do
       .to eq('<script async="" src="https://example.invalid/w.js?a=1&amp;b=2" data-id="w1" defer="defer"></script>')
   end
 
+  # The editor ends a script at the first closing tag it reads, where a browser reads on inside a
+  # comment of the script's text. A script that writes another one out comes back whole when it
+  # writes that closing tag as a script's text has to write one anywhere else.
+  it 'gives back whole a script that writes another script out with its closing tag escaped' do
+    content = '<p>before</p><script><!-- document.write(\'<script src="//example.invalid/widget.js"><\/script>\'); ' \
+              '//--></script><p>after</p>'
+
+    expect(through_the_text_editor(content).delete("\n")).to eq(content)
+    expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
+    within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: 'after') }
+  end
+
   # A page may set its text editors up with a list of elements of its own, which is used in place
   # of core's default: the script joins that list, once, however many editors the page sets up
   # with those settings.
