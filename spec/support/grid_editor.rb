@@ -111,6 +111,14 @@ POST_TEXT_EDITOR_FIELD = "jQuery('#form-post textarea.tinymce_textarea:not(.tran
 # The text editor of that field.
 POST_TEXT_EDITOR = "tinymce.get(#{POST_TEXT_EDITOR_FIELD}.attr('id'))".freeze
 
+# Waits until a text editor is set up: its content loaded, the hooks of its init run. `editor` is
+# the script that answers with the editor, or with nothing while there is none yet.
+def wait_for_text_editor(editor)
+  Timeout.timeout(Capybara.default_max_wait_time) do
+    sleep 0.05 until page.evaluate_script("!!(#{editor} || {}).initialized")
+  end
+end
+
 # Hands the post's text editor its content, as an author who writes there does.
 def text_editor_holds(markup)
   page.execute_script("#{POST_TEXT_EDITOR}.setContent(arguments[0]);", markup)

@@ -305,9 +305,7 @@ RSpec.describe 'scripts in the text editor', :js do
           selector: '#own_editor', setup: function(){}, block_elements: 'p div h1 h2 ul ol li table tr td blockquote'
         }));
       JS
-      Timeout.timeout(Capybara.default_max_wait_time) do
-        sleep 0.05 until page.evaluate_script("!!(#{own_editor} || {}).initialized")
-      end
+      wait_for_text_editor(own_editor)
     end
 
     it 'takes the scripts out of markup pasted into it' do

@@ -56,9 +56,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
 
     page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
     find('#ow_inline_modal .mce-tinymce')
-    Timeout.timeout(Capybara.default_max_wait_time) do
-      sleep 0.05 until page.evaluate_script("!!(jQuery('#ow_inline_modal textarea').tinymce() || {}).initialized")
-    end
+    wait_for_text_editor("jQuery('#ow_inline_modal textarea').tinymce()")
     find('#ow_inline_modal .modal_submit').click
 
     expect(page).to have_no_css('#ow_inline_modal')
