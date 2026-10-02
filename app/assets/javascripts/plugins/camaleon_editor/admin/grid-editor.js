@@ -995,9 +995,14 @@ jQuery(function(){
                 /<\/?[a-z](?:"[^"]*"|'[^']*'|[^>"'])*>/ // any other tag, with its quoted values
             ], function(token){ return token.source; }).join("|"), "gi");
             tokens[Symbol.replace] = function(markup, set_aside){
-                return RegExp.prototype[Symbol.replace].call(this, markup, function(token, _text_element, script){
+                // A script ends at a bracket: what follows the last bracket of the markup holds none
+                // and is left unread. A long run of "<" there, with no bracket to end a tag at,
+                // would be read from each one to the end.
+                markup = String(markup);
+                var read = markup.lastIndexOf(">") + 1;
+                return RegExp.prototype[Symbol.replace].call(this, markup.slice(0, read), function(token, _text_element, script){
                     return script ? set_aside(script) : token;
-                });
+                }) + markup.slice(read);
             };
             return tokens;
         }
