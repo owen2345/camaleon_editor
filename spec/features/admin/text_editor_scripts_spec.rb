@@ -42,16 +42,32 @@ RSpec.describe 'scripts in the text editor', :js do
     JS
   end
 
-  # What the post's text editor answers with after the markup was pasted into it.
-  def pasted_into_the_text_editor(markup)
+  # What a text editor, the post's unless another is given, answers with after the markup was
+  # pasted into it.
+  def pasted_into_the_text_editor(markup, editor: POST_TEXT_EDITOR)
     page.evaluate_script(<<~JS, markup)
       (function(markup){
-        var editor = #{POST_TEXT_EDITOR};
+        var editor = #{editor};
         editor.setContent('<p>written in the text editor</p>');
         editor.focus();
         var clipboard = new DataTransfer();
         clipboard.setData('text/html', markup);
         editor.getBody().dispatchEvent(new ClipboardEvent('paste', {clipboardData: clipboard, bubbles: true, cancelable: true}));
+        return editor.getContent();
+      })(arguments[0])
+    JS
+  end
+
+  # What a text editor answers with after it was handed the markup and its caret came to stand
+  # outside any block, at the very start of its content.
+  def with_the_caret_outside_any_block(markup, editor: POST_TEXT_EDITOR)
+    page.evaluate_script(<<~JS, markup)
+      (function(markup){
+        var editor = #{editor};
+        editor.setContent(markup);
+        editor.focus();
+        editor.selection.setCursorLocation(editor.getBody(), 0);
+        editor.nodeChanged();
         return editor.getContent();
       })(arguments[0])
     JS
@@ -156,18 +172,8 @@ RSpec.describe 'scripts in the text editor', :js do
   # and stays where it was written.
   it 'leaves a script at the top level of the content where it stands' do
     content = "#{script}<p>written in the text editor</p>"
-    answer = page.evaluate_script(<<~JS, content)
-      (function(markup){
-        var editor = #{POST_TEXT_EDITOR};
-        editor.setContent(markup);
-        editor.focus();
-        editor.selection.setCursorLocation(editor.getBody(), 0);
-        editor.nodeChanged();
-        return editor.getContent();
-      })(arguments[0])
-    JS
 
-    expect(answer.delete("\n")).to eq(content)
+    expect(with_the_caret_outside_any_block(content).delete("\n")).to eq(content)
   end
 
   # The post's text editor is handed the stored content as the form opens, and writes its content
@@ -207,5 +213,39 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(script_types_in_the_text_editor).to be_empty
     end
     expect(script_ran).to be_nil
+  end
+
+  # A page may set a text editor up with a setup of its own, which takes the place of core's, and
+  # with it of the hooks core's setup runs for the plugins; core's settings still allow that editor
+  # the script. So every text editor of a page that loads the grid editor has its pastes filtered
+  # and holds a script as a block, whatever it was set up with, a list of block elements of its
+  # own included.
+  context 'with a text editor set up with a setup and a list of block elements of its own' do
+    let(:own_editor) { "tinymce.get('own_editor')" }
+
+    before do
+      page.execute_script(<<~JS)
+        jQuery('<textarea id="own_editor"></textarea>').appendTo('body');
+        tinymce.init(cama_get_tinymce_settings({
+          selector: '#own_editor', setup: function(){}, block_elements: 'p div h1 h2 ul ol li table tr td blockquote'
+        }));
+      JS
+      Timeout.timeout(Capybara.default_max_wait_time) do
+        sleep 0.05 until page.evaluate_script("!!(#{own_editor} || {}).initialized")
+      end
+    end
+
+    it 'takes the scripts out of markup pasted into it' do
+      answer = pasted_into_the_text_editor("<p>pasted</p>#{script}", editor: own_editor)
+
+      expect(answer).to include('pasted', 'written in the text editor')
+      expect(answer).not_to include('script')
+    end
+
+    it 'leaves a script at the top level of its content where it stands' do
+      content = "#{script}<p>written in the text editor</p>"
+
+      expect(with_the_caret_outside_any_block(content, editor: own_editor).delete("\n")).to eq(content)
+    end
   end
 end

@@ -990,7 +990,6 @@ jQuery(function(){
         var paste_without_scripts = function(editor){
             editor.on("PastePostProcess", function(e){ $(e.node).find("script").remove(); });
         }
-        tinymce_global_settings["setups"].push(paste_without_scripts);
 
         // The editor gives whatever stands at the top level of its content a paragraph, unless it
         // is a block: a script written there would come back inside a paragraph nobody wrote. The
@@ -1003,7 +1002,15 @@ jQuery(function(){
                 blocks.script = blocks.SCRIPT = {};
             });
         }
-        tinymce_global_settings["setups"].push(script_is_a_block);
+
+        // Every text editor of the page gets the two, whatever it was set up with. The hooks core
+        // offers for an editor run from the setup of core's settings, and a page may pass a setup
+        // of its own, which takes that one's place: the settings above would still allow such an
+        // editor the script, with nothing to filter its pastes.
+        tinymce.on("AddEditor", function(added){
+            paste_without_scripts(added.editor);
+            script_is_a_block(added.editor);
+        });
 
         // A field has one more writer. As the page is being left, each text editor writes its raw
         // body there, with no event anybody could answer: the editor's own markup, a script under
