@@ -17,7 +17,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
   def open_stored_post(as: nil)
     store_post_content(@post, stored_content)
-    install_plugin_and_open_post_editor(as: as, post: @post)
+    open_post_in_editor(@post, as: as)
     find('.panel_grid_editor .panel_grid_body .drg_column .drg_item')
   end
 
@@ -362,7 +362,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
     before do
       store_post_content(@post, stored_content)
-      install_plugin_and_open_post_editor(post: @post)
+      open_post_in_editor(@post)
       open_grid_editor
       find('.panel_grid_editor .panel_grid_body', visible: :all)
     end
@@ -427,7 +427,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
     before do
       @site.set_meta('languages_site', %w[en es])
       store_post_content(@post, stored_content)
-      install_plugin_and_open_post_editor(post: @post)
+      open_post_in_editor(@post)
       page.assert_selector('.panel_grid_editor .panel_grid_body .drg_item', count: 2, visible: :all)
     end
 

@@ -48,8 +48,8 @@ def store_template_markup(template, markup)
   Plugins::CamaleonEditor::GridTemplate.where(id: template.id).update_all(description: markup)
 end
 
-def open_post_in_editor(post)
-  install_plugin_and_open_post_editor(post: post)
+def open_post_in_editor(post, as: nil)
+  install_plugin_and_open_post_editor(as: as, post: post)
 end
 
 # The session ends while the page stays open: what the page sends next is redirected to the login page.
