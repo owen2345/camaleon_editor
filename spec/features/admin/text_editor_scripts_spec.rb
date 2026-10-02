@@ -17,7 +17,6 @@ RSpec.describe 'scripts in the text editor', :js do
   before do
     store_post_content(@post, stored_content) if stored_content
     open_post_in_editor(@post)
-    find('.mce-btn', text: 'Grid Editor')
   end
 
   # What the post's text editor answers with after it was handed the markup, and after the markup

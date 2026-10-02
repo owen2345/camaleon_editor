@@ -19,7 +19,6 @@ RSpec.describe 'the grid editor in the admin post editor', :js do
   # a block kind another script registered is still there.
   it 'does its work once, however often its script is evaluated' do
     install_plugin_and_open_post_editor
-    find('.mce-btn', text: 'Grid Editor')
 
     evaluated_again, hooks_before, hooks_after, kind_kept = page.evaluate_script(<<~JS)
       (function(){

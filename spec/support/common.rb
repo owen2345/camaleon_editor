@@ -56,7 +56,9 @@ end
 # loads the grid editor's JS. Shared by the feature specs that drive the editor's builders.
 # as: a user built by the :user factory (whose password the instance still holds) instead of
 # the site's administrator. post: an existing post to edit instead of a new one.
-# From here on the grid's exports are on record (see record_grid_exports).
+# From here on the grid's exports are on record (see record_grid_exports), and the post's text
+# editor is set up: its toolbar shows as soon as the skin's stylesheet has loaded, which is before
+# the editor has its content and the hooks of its init have run.
 def install_plugin_and_open_post_editor(as: nil, post: nil)
   store_current_site(@site)
   plugin_install('camaleon_editor')
@@ -64,6 +66,7 @@ def install_plugin_and_open_post_editor(as: nil, post: nil)
   post_type = post ? post.post_type : @site.post_types.first
   visit "#{cama_root_relative_path}/admin/post_type/#{post_type.id}/posts/#{post ? "#{post.id}/edit" : 'new'}"
   record_grid_exports
+  wait_for_text_editor(POST_TEXT_EDITOR)
 end
 
 # Waits until the block answers true, for as long as Capybara waits for an element. For what
