@@ -75,9 +75,9 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # grid: a save sent before the fade ends stores the grid without it. It takes no click
     # meanwhile.
     it 'exports the grid without a deleted block or column at the click, while it still fades out' do
+      confirm_every_prompt
       without_block, without_column = page.evaluate_script(<<~JS)
         (function(){
-          window.confirm = function(){ return true; };
           var seen = function(kind){
             var fading = jQuery('.panel_grid_body .' + kind);
             return [window.__cama_grid_exports.last, fading.length, fading.css('pointer-events')];
@@ -102,8 +102,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # A listener of the grid's export may throw, a block plugin's among them: what was deleted
     # fades out and goes all the same, its fade under way before the grid is exported.
     it 'takes a deleted block out of the grid when a listener of the export throws' do
+      confirm_every_prompt
       page.execute_script(<<~JS)
-        window.confirm = function(){ return true; };
         jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
         try { jQuery('.panel_grid_body .drg_item .grid_content_remove').click(); } catch(error) {}
       JS
@@ -115,8 +115,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # A column cloned while one of its blocks fades out does not take that block along: the copy
     # would stay in the clone for good, marked as deleted and in no export.
     it 'leaves a deleted block out of a clone of its column' do
+      confirm_every_prompt
       page.execute_script(<<~JS)
-        window.confirm = function(){ return true; };
         jQuery('.panel_grid_body .drg_item .grid_content_remove').click();
         jQuery('.panel_grid_body .drg_column .grid_col_clone').click();
       JS
@@ -129,8 +129,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # it takes no block, which would go with it. The fade is slowed down for the drag to end within
     # it.
     it 'drops no block into a deleted column that still fades out' do
+      confirm_every_prompt
       page.execute_script(<<~JS)
-        window.confirm = function(){ return true; };
         jQuery.fx.speeds._default = 60000;
         jQuery('.panel_grid_body .drg_column .grid_col_clone').click();
         jQuery('.panel_grid_body .drg_column').last().find('.grid_col_remove').click();

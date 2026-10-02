@@ -87,6 +87,12 @@ def open_grid_editor
   accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
 end
 
+# Answers yes to every prompt the page asks from here on, for a script that clicks through several:
+# accept_confirm answers the one prompt of the step it wraps.
+def confirm_every_prompt
+  page.execute_script('window.confirm = function(){ return true; };')
+end
+
 # The way back: leaves the grid editor for the text editor, and answers the prompt its link asked.
 def leave_for_the_text_editor
   accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }

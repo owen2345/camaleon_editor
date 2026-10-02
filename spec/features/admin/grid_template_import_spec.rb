@@ -95,8 +95,8 @@ RSpec.describe 'importing a grid template', :js do
   it 'ignores a second apply while one is under way' do
     find('#grid_table_list .import_item') # the list has arrived
     watch_template_requests
+    confirm_every_prompt
     page.execute_script(<<~JS)
-      window.confirm = function(){ return true; };
       var link = jQuery('#grid_table_list .import_item').first();
       link.click();
       link.click();
