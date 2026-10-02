@@ -1015,7 +1015,7 @@ jQuery(function(){
         var keep_scripts = function(settings, def){
             if(new tinymce.html.Schema($.extend({}, def, settings)).elements.script) return;
             var holder = settings.extended_valid_elements === undefined ? def : settings;
-            var elements = holder.extended_valid_elements ? String(holder.extended_valid_elements) : "";
+            var elements = holder.extended_valid_elements || "";
             holder.extended_valid_elements = (elements ? elements + "," : "") + SCRIPTS;
         }
         tinymce_global_settings["settings"].push(keep_scripts);
