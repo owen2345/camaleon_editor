@@ -1036,7 +1036,10 @@ jQuery(function(){
                 // attributes. So the markup is read once more with its markers in, each looked for
                 // where it was put: a comment of the content may read like one. A script whose
                 // marker is not a token of its own is left to the editor, as without the setting,
-                // and the rest is set aside again without it, until every marker stands apart.
+                // and the rest is set aside again without it, until every marker stands apart. This
+                // reading takes in what the first one left unread, and a closing bracket behind it:
+                // the editor reads content as if one closed it, so a tag left open at the end may
+                // run on to there.
                 var pattern = this, replace = RegExp.prototype[Symbol.replace], left = {};
                 for(;;){
                     var markers = [], shift = 0;
@@ -1049,7 +1052,7 @@ jQuery(function(){
                     });
                     var next = 0, apart = true;
                     var swallowed = function(marker){ left[marker.script] = true; apart = false; };
-                    if(markers.length) replace.call(pattern, set, function(token, _text_element, _script, at){
+                    if(markers.length) replace.call(pattern, set + unread + ">", function(token, _text_element, _script, at){
                         while(next < markers.length && markers[next].at < at) swallowed(markers[next++]);
                         if(next < markers.length && markers[next].at === at){
                             if(token !== markers[next].text) swallowed(markers[next]);

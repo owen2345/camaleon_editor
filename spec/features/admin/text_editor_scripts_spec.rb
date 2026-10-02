@@ -216,6 +216,17 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(answer).to include(script, 'wide')
   end
 
+  # The editor reads content as if a bracket closed it: a tag whose open quote finds its pair in
+  # the text at the very end, behind the last real bracket, runs on to there, and the editor takes
+  # the whole stretch for text. A marker in that stretch would be stored as text, so the check
+  # reads the end of the content as the editor does.
+  it 'reads the end of the content as the editor does before it sets a script aside' do
+    answer = through_the_text_editor("<p><a title='lead>a link</a></p>#{script}the dogs' bones")
+
+    expect(answer).not_to include('protected')
+    expect(answer).to include('bones')
+  end
+
   # The check goes by where each marker stands, not by its text alone: content may already hold a
   # comment that reads like the marker of a script further on, and that comment is not the marker.
   it 'is not taken in by a comment that reads like the marker of a script further on' do
