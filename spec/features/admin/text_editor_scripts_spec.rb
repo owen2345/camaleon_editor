@@ -161,6 +161,23 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(default_list.scan('script').size).to eq(1)
   end
 
+  # A rule the page's own lists hold for the script is the page's say on scripts, a narrower one
+  # included: the editor goes by the last rule it is given for an element, so none is put behind it.
+  it "leaves a rule that a page's own lists hold for the script as the page wrote it" do
+    extended, behind_valid_elements, allowed = page.evaluate_script(<<~JS)
+      (function(){
+        var own = cama_get_tinymce_settings({extended_valid_elements: 'video[*],script[src|type]'});
+        var valid = cama_get_tinymce_settings({valid_elements: 'p,script[src]'});
+        var rule = new tinymce.html.Schema(own).getElementRule('script');
+        return [own.extended_valid_elements, valid.extended_valid_elements, rule.attributesOrder];
+      })()
+    JS
+
+    expect(extended).to eq('video[*],script[src|type]')
+    expect(behind_valid_elements).not_to include('script')
+    expect(allowed).to eq(%w[src type])
+  end
+
   # As the page is being left, a text editor writes its raw body into its field, a script under
   # the type the editor holds it with, and then its content (grid_post_save_spec has what a page
   # that is not left would send otherwise). An editor hidden for its field to be edited writes

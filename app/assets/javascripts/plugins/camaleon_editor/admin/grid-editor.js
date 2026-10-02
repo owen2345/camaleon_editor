@@ -977,13 +977,17 @@ jQuery(function(){
         // text editor set up with core's settings on a page that loads the grid editor keeps the
         // scripts of the content it is handed, a grid or not, and core's rules meet them when the
         // content is saved. A page's own list of elements is kept: its settings win over core's
-        // defaults, so the script joins the list that will be used, and joins it once: a page may
-        // set several editors up with the same settings.
+        // defaults, so the script joins the list that will be used. It joins a list that has no
+        // rule for the script, as the editor itself reads the lists it will be given: a rule the
+        // page wrote for the script, a narrower one included, stays the last word (the editor goes
+        // by the last rule it is given for an element), and a page that sets several editors up
+        // with the same settings gets the script added once.
         var SCRIPTS = "script[*]";
         var keep_scripts = function(settings, def){
+            if(new tinymce.html.Schema($.extend({}, def, settings)).getElementRule("script")) return;
             var holder = settings.extended_valid_elements === undefined ? def : settings;
             var elements = holder.extended_valid_elements ? String(holder.extended_valid_elements) : "";
-            if($.inArray(SCRIPTS, elements.split(",")) < 0) holder.extended_valid_elements = (elements ? elements + "," : "") + SCRIPTS;
+            holder.extended_valid_elements = (elements ? elements + "," : "") + SCRIPTS;
         }
         tinymce_global_settings["settings"].push(keep_scripts);
 
