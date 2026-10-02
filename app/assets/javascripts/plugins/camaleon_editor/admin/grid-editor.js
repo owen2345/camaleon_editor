@@ -239,6 +239,9 @@ jQuery(function(){
     // the title a break line is saved with (data-col_title), in every admin language
     var BREAK_LINE = "Break Line";
 
+    // the class an editor's grid root is built with: the editor finds its grid by the first name
+    var GRID_ROOT_CLASS = "panel_grid_body row";
+
     // The text editor writes its content into its field, and the field says it changed, as core has
     // it done when the text editor loses focus. For the moments the field has to follow at once: an
     // editor takes over from the other and speaks for the field from then on, or a grid is about to
@@ -346,7 +349,7 @@ jQuery(function(){
             "</div>"+
             "</div>"+
             "</div>"+
-            "<div class='panel_grid_body_w'><div class='panel_grid_body row'></div></div>"+
+            "<div class='panel_grid_body_w'><div class='"+GRID_ROOT_CLASS+"'></div></div>"+
             "</div>");
 
         // The editor's grid: the root its own wrapper holds, and that one alone. A block may hold grid
@@ -848,7 +851,7 @@ jQuery(function(){
             var previous = set_aside(grid);
             try {
                 // as the editor was built: the root's own class, then what the content's root carries
-                set_attributes(grid, [{name: "class", value: "panel_grid_body row"}]);
+                set_attributes(grid, [{name: "class", value: GRID_ROOT_CLASS}]);
                 grid_from(grid, body);
                 if(sortable) grid.addClass("ui-sortable");
             } catch(error) {
