@@ -21,8 +21,8 @@ def grid_body_markup(inner = grid_column_markup, attributes: '')
 end
 
 # A grid of one column holding one block.
-def grid_with_block(inner, kind: 'text')
-  grid_body_markup(grid_column_markup(grid_block_markup(inner, kind: kind)))
+def grid_with_block(inner, kind: 'text', attributes: '')
+  grid_body_markup(grid_column_markup(grid_block_markup(inner, kind: kind)), attributes: attributes)
 end
 
 # Post content is the grid behind the marker that names the libraries its blocks need.

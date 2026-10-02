@@ -18,9 +18,8 @@ RSpec.describe 'the record of what the grid exports', :js do
   end
 
   before do
-    block = grid_block_markup('<p><b>kept</b></p><script>window.__cama_widget_loaded = true;</script>',
-                              kind: 'editor')
-    grid = grid_body_markup(grid_column_markup(block), attributes: 'style="background-color: rgb(255, 204, 0);"')
+    grid = grid_with_block('<p><b>kept</b></p><script>window.__cama_widget_loaded = true;</script>',
+                           kind: 'editor', attributes: 'style="background-color: rgb(255, 204, 0);"')
     store_post_content(@post, grid_post_content(grid))
     open_post_in_editor(@post)
     find('.panel_grid_editor .panel_grid_body .drg_item')

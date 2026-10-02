@@ -10,8 +10,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
   let(:script) { '<script>window.__cama_widget_loaded = true;</script>' }
   let(:stored_content) do
-    block = grid_block_markup("<p>embedded widget</p>#{script}<p><b>bold</b></p>", kind: 'editor')
-    grid = grid_body_markup(grid_column_markup(block), attributes: 'style="background-color: rgb(255, 204, 0);"')
+    grid = grid_with_block("<p>embedded widget</p>#{script}<p><b>bold</b></p>",
+                           kind: 'editor', attributes: 'style="background-color: rgb(255, 204, 0);"')
     grid_post_content(grid)
   end
 
