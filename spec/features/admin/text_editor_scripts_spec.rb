@@ -238,8 +238,8 @@ RSpec.describe 'scripts in the text editor', :js do
   end
 
   # The editor gives whatever stands at the top level of its content a paragraph, once the caret
-  # comes to stand outside any block, unless it is a block itself. A script is one to the editor,
-  # and stays where it was written.
+  # comes to stand outside any block, unless its map of block elements has the element's name.
+  # The map has the script's: a script stays where it was written.
   it 'leaves a script at the top level of the content where it stands' do
     content = "#{script}<p>written in the text editor</p>"
 
@@ -349,8 +349,8 @@ RSpec.describe 'scripts in the text editor', :js do
   # A page may set a text editor up with a setup of its own, which takes the place of core's, and
   # with it of the hooks core's setup runs for the plugins; core's settings still allow that editor
   # the script. So every text editor of a page that loads the grid editor has its pastes filtered
-  # and holds a script as a block, whatever it was set up with, a list of block elements of its
-  # own included.
+  # and keeps a script out of a paragraph, whatever it was set up with, a list of block elements
+  # of its own included.
   context 'with a text editor set up with a setup and a list of block elements of its own' do
     let(:own_editor) { "tinymce.get('own_editor')" }
 
