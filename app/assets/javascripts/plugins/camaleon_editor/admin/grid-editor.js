@@ -1004,24 +1004,23 @@ jQuery(function(){
         // elements the editor is allowed, and the editor keeps it as it keeps any of them: in its
         // document, under a type that makes it no script to the browser, and given back under its
         // own type, with its text as it was. The editor goes by the markup, whatever it is: every
-        // text editor set up with core's settings on a page that loads the grid editor keeps the
-        // scripts of the content it is handed, a grid or not, and core's rules meet them when the
-        // content is saved. A page's own list of elements is kept: its settings win over core's
-        // defaults, so the script joins the list that will be used. It joins a list that has no
-        // rule for the script, as the editor itself reads the lists it will be given: a rule the
-        // page wrote for the script, a narrower one included, stays the last word (the editor goes
-        // by the last rule it is given for an element), and a page that sets several editors up
-        // with the same settings gets the script added once. A rule for every element ("*[...]")
+        // text editor of a page that loads the grid editor keeps the scripts of the content it is
+        // handed, a grid or not, and core's rules meet them when the content is saved. The script
+        // joins the list an editor is added with, before the editor reads it: whatever made the
+        // list - core's default, a list of the page's own, one the page put onto core's settings
+        // afterwards - and the settings the page wrote stay as they are. It joins a list that
+        // has no rule for the script, as the editor itself reads the lists it was given: a rule
+        // the page wrote for the script, a narrower one included, stays the last word (the editor
+        // goes by the last rule it is given for an element). A rule for every element ("*[...]")
         // is no rule for the script: it would let the editor keep a script without the
         // attributes it loads by.
         var SCRIPTS = "script[*]";
-        var keep_scripts = function(settings, def){
-            if(new tinymce.html.Schema($.extend({}, def, settings)).elements.script) return;
-            var holder = settings.extended_valid_elements === undefined ? def : settings;
-            var elements = holder.extended_valid_elements || "";
-            holder.extended_valid_elements = (elements ? elements + "," : "") + SCRIPTS;
+        var keep_scripts = function(editor){
+            var settings = editor.settings;
+            if(new tinymce.html.Schema(settings).elements.script) return;
+            var elements = settings.extended_valid_elements || "";
+            settings.extended_valid_elements = (elements ? elements + "," : "") + SCRIPTS;
         }
-        tinymce_global_settings["settings"].push(keep_scripts);
 
         // A paste is another matter. Its markup comes from wherever it was copied, a page that
         // puts what it likes on the clipboard included, and a script would sit in the editor
@@ -1102,11 +1101,13 @@ jQuery(function(){
             editor.on("PreProcess", function(e){ editor.dom.remove(editor.dom.select("script *", e.node), true); });
         }
 
-        // Every text editor of the page gets the four, whatever it was set up with. The hooks
-        // core offers for an editor run from the setup of core's settings, and a page may pass a
-        // setup of its own, which takes that one's place: the settings above would still allow
-        // such an editor the script, with nothing to filter its pastes.
+        // Every text editor of the page gets the five as it is added, before it reads its
+        // settings, whatever it was set up with. The hooks core offers reach less: the one for
+        // the settings runs as core's settings are made, the ones for an editor from the setup
+        // of those settings. A page may put lists of its own onto what core returned, pass a
+        // setup of its own, or set an editor up without core's settings.
         tinymce.on("AddEditor", function(added){
+            keep_scripts(added.editor);
             paste_without_scripts(added.editor);
             script_takes_no_paragraph(added.editor);
             script_ends_as_in_a_browser(added.editor);

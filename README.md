@@ -45,8 +45,10 @@ then, the post keeps what the text editor holds.
 
 Where the grid editor is loaded, the text editors keep the scripts of the content they are
 handed, where they used to take them out: a grid, an Editor block in its form, any other post
-content, markup written in the source view. Pasted markup still loses its scripts. A script
-stays inert in both editors and runs on the public page.
+content, markup written in the source view. That goes for every text editor of the page,
+whatever settings it was set up with; an editor whose own list of elements has a rule for the
+script keeps that rule. Pasted markup still loses its scripts. A script stays inert in both
+editors and runs on the public page.
 
 A text editor gives a script back where it stood, with its text as it was, and treats the
 element as it treats any other: the attributes come back in its spelling (double quotes,

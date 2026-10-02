@@ -167,49 +167,87 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(answer.delete("\n")).to eq(%q(<script>document.write('<script src="/w.js"></script><p>');</p><p>after</p>))
   end
 
-  # A page may set its text editors up with a list of elements of its own, which is used in place
-  # of core's default: the script joins that list, once, however many editors the page sets up
-  # with those settings.
-  it "adds the script to a page's own list of elements once, and to the default one otherwise" do
-    own_list, default_list = page.evaluate_script(<<~JS)
-      (function(){
-        var own = {extended_valid_elements: 'video[*]'};
-        cama_get_tinymce_settings(own);
-        return [cama_get_tinymce_settings(own).extended_valid_elements, cama_get_tinymce_settings().extended_valid_elements];
-      })()
-    JS
+  # The script joins the list of elements each text editor is added with, whatever made that list:
+  # core's default, a list of the page's own handed to core's settings or put onto them afterwards,
+  # settings that are not core's.
+  context "with text editors set up with settings of the page's own" do
+    # Sets a text editor up over a new field for each id. `settings` is the script of the settings
+    # the page sets them up with, which stay at hand as the page's; `selector` there finds the fields.
+    def set_up_text_editors(ids, settings)
+      page.execute_script(<<~JS, ids)
+        var selector = jQuery.map(arguments[0], function(id){
+          jQuery('<textarea>').attr('id', id).appendTo('body');
+          return '#' + id;
+        }).join(', ');
+        window.__cama_own_settings = #{settings};
+        tinymce.init(window.__cama_own_settings);
+      JS
+      ids.each { |id| wait_for_text_editor("tinymce.get('#{id}')") }
+    end
 
-    expect(own_list).to eq('video[*],script[*]')
-    expect(default_list.split(',')).to include('div[*]').and end_with('script[*]')
-    expect(default_list.scan('script').size).to eq(1)
-  end
+    # The list of elements a text editor was added with, by its field's id.
+    def list_of(id)
+      page.evaluate_script("tinymce.get('#{id}').settings.extended_valid_elements")
+    end
 
-  # A rule the page's own lists hold for the script is the page's say on scripts, a narrower one
-  # included: the editor goes by the last rule it is given for an element, so none is put behind
-  # it, and a script comes back with the attributes the page allows it. A rule for every element
-  # ("*[...]") is no say on scripts: behind it the script still joins the list.
-  it "leaves a rule that a page's own lists hold for the script as the page wrote it" do
-    behind_valid_elements, behind_a_rule_for_all = page.evaluate_script(<<~JS)
-      (function(){
-        var own = {selector: '#own_rule', extended_valid_elements: 'video[*],script[src|type]'};
-        jQuery('<textarea id="own_rule"></textarea>').appendTo('body');
-        tinymce.init(cama_get_tinymce_settings(own));
-        return [cama_get_tinymce_settings({valid_elements: 'p,script[src]'}).extended_valid_elements,
-                cama_get_tinymce_settings({valid_elements: '*[class|style|id]'}).extended_valid_elements];
-      })()
-    JS
-    wait_for_text_editor("tinymce.get('own_rule')")
-    answer = page.evaluate_script(<<~JS, '<p>a</p><script src="/w.js" type="text/x" charset="utf-8"></script>')
-      (function(markup){
-        var editor = tinymce.get('own_rule');
-        editor.setContent(markup);
-        return editor.getContent();
-      })(arguments[0])
-    JS
+    # What the text editor of a field answers with after it was handed the markup.
+    def through(id, markup)
+      page.evaluate_script(<<~JS, id, markup)
+        (function(id, markup){
+          var editor = tinymce.get(id);
+          editor.setContent(markup);
+          return editor.getContent();
+        })(arguments[0], arguments[1])
+      JS
+    end
 
-    expect(answer.delete("\n")).to eq('<p>a</p><script src="/w.js" type="text/x"></script>')
-    expect(behind_valid_elements).not_to include('script')
-    expect(behind_a_rule_for_all).to end_with(',script[*]')
+    # The settings a page sets its editors up with are the page's: they stay as it wrote them,
+    # however many editors it sets up with them, and so do core's defaults.
+    it "adds the script to a page's own list for each editor, and to the default one otherwise" do
+      set_up_text_editors(%w[own_a own_b],
+                          "cama_get_tinymce_settings({selector: selector, extended_valid_elements: 'video[*]'})")
+      default_list = page.evaluate_script("#{POST_TEXT_EDITOR}.settings.extended_valid_elements")
+
+      expect([list_of('own_a'), list_of('own_b')]).to all(eq('video[*],script[*]'))
+      expect(page.evaluate_script('window.__cama_own_settings.extended_valid_elements')).to eq('video[*]')
+      expect(default_list.split(',')).to include('div[*]').and end_with('script[*]')
+      expect(default_list.scan('script').size).to eq(1)
+      expect(page.evaluate_script('cama_get_tinymce_settings().extended_valid_elements')).not_to include('script')
+    end
+
+    it "keeps a script in an editor whose list the page put onto core's settings afterwards" do
+      set_up_text_editors(%w[late_list], <<~JS)
+        jQuery.extend(cama_get_tinymce_settings({selector: selector}), {extended_valid_elements: 'video[*]'})
+      JS
+
+      expect(through('late_list', "<p>a</p>#{script}").delete("\n")).to eq("<p>a</p>#{script}")
+    end
+
+    it "keeps a script in an editor set up without core's settings" do
+      set_up_text_editors(%w[not_cores], '{selector: selector}')
+
+      expect(through('not_cores', "<p>a</p>#{script}").delete("\n")).to eq("<p>a</p>#{script}")
+    end
+
+    # A rule the page's own lists hold for the script is the page's say on scripts, a narrower one
+    # included: the editor goes by the last rule it is given for an element, so none is put behind
+    # it, and a script comes back with the attributes the page allows it. A rule for every element
+    # ("*[...]") is no say on scripts: behind it the script still joins the list.
+    it "leaves a rule that a page's own lists hold for the script as the page wrote it" do
+      set_up_text_editors(%w[own_rule], <<~JS)
+        cama_get_tinymce_settings({selector: selector, extended_valid_elements: 'video[*],script[src|type]'})
+      JS
+      set_up_text_editors(%w[other_list],
+                          "cama_get_tinymce_settings({selector: selector, valid_elements: 'p,script[src]'})")
+      set_up_text_editors(%w[rule_for_all],
+                          "cama_get_tinymce_settings({selector: selector, valid_elements: '*[class|style|id]'})")
+      answer = through('own_rule', '<p>a</p><script src="/w.js" type="text/x" charset="utf-8"></script>')
+
+      expect(answer.delete("\n")).to eq('<p>a</p><script src="/w.js" type="text/x"></script>')
+      expect(list_of('own_rule')).to eq('video[*],script[src|type]')
+      expect(list_of('other_list')).not_to include('script')
+      expect(list_of('rule_for_all')).to end_with(',script[*]')
+    end
   end
 
   # As the page is being left, a text editor writes its raw body into its field, a script under
@@ -346,8 +384,8 @@ RSpec.describe 'scripts in the text editor', :js do
   end
 
   # A page may set a text editor up with a setup of its own, which takes the place of core's, and
-  # with it of the hooks core's setup runs for the plugins; core's settings still allow that editor
-  # the script. So every text editor of a page that loads the grid editor has its pastes filtered
+  # with it of the hooks core's setup runs for the plugins; that editor keeps scripts like the
+  # others. So every text editor of a page that loads the grid editor has its pastes filtered
   # and keeps a script out of a paragraph, whatever it was set up with, a list of block elements
   # of its own included.
   context 'with a text editor set up with a setup and a list of block elements of its own' do
