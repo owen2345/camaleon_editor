@@ -233,6 +233,22 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
+  # Once a block form has loaded a text editor, jQuery's remove() takes the text editor of an
+  # element along, found by the element's id. A pasted script carries whatever id its markup gives
+  # it, the id of the post's text editor for one: it is taken out like any other, and that editor
+  # stays.
+  it 'takes out a pasted script that carries the id of a text editor, and leaves that editor in place' do
+    load_a_block_form_text_editor
+    id = page.evaluate_script("#{POST_TEXT_EDITOR}.id")
+
+    answer = pasted_into_the_text_editor(script.sub('<script', %(<p>pasted</p><script id="#{id}")))
+
+    expect(answer).to include('pasted', 'written in the text editor')
+    expect(answer).not_to include('script')
+    expect(page.evaluate_script("!!#{POST_TEXT_EDITOR}")).to be(true)
+    expect(script_ran).to be_nil
+  end
+
   # A page may set a text editor up with a setup of its own, which takes the place of core's, and
   # with it of the hooks core's setup runs for the plugins; core's settings still allow that editor
   # the script. So every text editor of a page that loads the grid editor has its pastes filtered
