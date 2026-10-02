@@ -130,9 +130,7 @@ POST_TEXT_EDITOR = "tinymce.get(#{POST_TEXT_EDITOR_FIELD}.attr('id'))".freeze
 # Waits until a text editor is set up: its content loaded, the hooks of its init run. `editor` is
 # the script that answers with the editor, or with nothing while there is none yet.
 def wait_for_text_editor(editor)
-  Timeout.timeout(Capybara.default_max_wait_time) do
-    sleep 0.05 until page.evaluate_script("!!(#{editor} || {}).initialized")
-  end
+  wait_until { page.evaluate_script("!!(#{editor} || {}).initialized") }
 end
 
 # Hands the post's text editor its content, as an author who writes there does.
@@ -211,9 +209,9 @@ end
 # while it moves can land on the row beside it. This waits until no transition runs in the modal.
 def wait_for_modal_at_rest(selector)
   find("#{selector}.in")
-  Timeout.timeout(Capybara.default_max_wait_time) do
-    sleep 0.05 while page.evaluate_script(<<~JS, selector)
-      document.querySelector(arguments[0]).getAnimations({subtree: true}).some(function(animation){
+  wait_until do
+    page.evaluate_script(<<~JS, selector)
+      !document.querySelector(arguments[0]).getAnimations({subtree: true}).some(function(animation){
         return animation instanceof CSSTransition;
       })
     JS

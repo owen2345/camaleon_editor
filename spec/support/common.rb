@@ -66,12 +66,16 @@ def install_plugin_and_open_post_editor(as: nil, post: nil)
   record_grid_exports
 end
 
+# Waits until the block answers true, for as long as Capybara waits for an element. For what
+# the page says only to a script: Capybara's own waits look for elements.
+def wait_until
+  Timeout.timeout(Capybara.default_max_wait_time) { sleep 0.05 until yield }
+end
+
 # Wait until the page has no jQuery request in flight (adapted from camaleon_cms's
 # spec/support/wait_for_ajax.rb).
 def wait_for_ajax
-  Timeout.timeout(Capybara.default_max_wait_time) do
-    sleep 0.05 until page.evaluate_script('jQuery.active').zero?
-  end
+  wait_until { page.evaluate_script('jQuery.active').zero? }
 end
 
 # Accept the native JS confirm() dialog a destructive admin action raises. The dialog can lag a beat
