@@ -1025,13 +1025,11 @@ jQuery(function(){
         // unseen. The editor's paste filter took scripts out by the editor's list of elements,
         // which now holds the script: so they are taken out here, of whatever is pasted or dropped
         // in. Markup copied in the editor itself loses them too: any markup can say it is that.
-        // They are taken out natively: once a block form has loaded a text editor, jQuery's
-        // remove() also removes the text editor whose id an element carries, and a pasted script
-        // carries whatever id its markup gives it.
+        // They are taken out with the editor's own tools: once a block form has loaded a text
+        // editor, jQuery's remove() also removes the text editor whose id an element carries,
+        // and a pasted script carries whatever id its markup gives it.
         var paste_without_scripts = function(editor){
-            editor.on("PastePostProcess", function(e){
-                $(e.node).find("script").each(function(){ this.parentNode.removeChild(this); });
-            });
+            editor.on("PastePostProcess", function(e){ editor.dom.remove(editor.dom.select("script", e.node)); });
         }
 
         // The editor gives whatever stands at the top level of its content a paragraph, unless it
@@ -1092,14 +1090,11 @@ jQuery(function(){
         // marks text - a no-break space made visible, for one - wraps it in elements of its
         // own. Outside a script the editor takes those off as its content is read; inside one
         // it would give them back as part of the script's text. So a script is read as its text
-        // alone. What is read is a copy the editor makes for the read: in the editor the marks
-        // stay, for the plugin to take off.
+        // alone: the elements inside it are taken off around what they hold. What is read is a
+        // copy the editor makes for the read: in the editor the marks stay, for the plugin to
+        // take off.
         var script_text_alone = function(editor){
-            editor.on("PreProcess", function(e){
-                $(e.node).find("script").each(function(){
-                    if(this.firstElementChild) this.textContent = this.textContent;
-                });
-            });
+            editor.on("PreProcess", function(e){ editor.dom.remove(editor.dom.select("script *", e.node), true); });
         }
 
         // Every text editor of the page gets the four, whatever it was set up with. The hooks
