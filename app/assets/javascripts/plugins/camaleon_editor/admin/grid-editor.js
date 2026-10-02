@@ -699,11 +699,11 @@ jQuery(function(){
             // is out of what the grid exports from the click on: marked, and the grid exported at once.
             // Exported once the fade ends, the grid would stand for what was deleted until then, and a
             // save sent meanwhile would store it. What fades out takes no click: not a second delete,
-            // not a clone that would carry the mark.
+            // not a clone that would carry the mark. The fade is under way before the export: a
+            // listener of the export that throws does not keep what was deleted in the grid.
             function fade_out_of_grid(element){
-                element.addClass(DELETED).css("pointer-events", "none");
+                element.addClass(DELETED).css("pointer-events", "none").fadeOut(function(){ $(this).remove(); });
                 editor.trigger("auto_save");
-                element.fadeOut(function(){ $(this).remove(); });
             }
 
             // content dropdown options

@@ -99,6 +99,19 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(post_content).to eq(without_column[0])
     end
 
+    # A listener of the grid's export may throw, a block plugin's among them: what was deleted
+    # fades out and goes all the same, its fade under way before the grid is exported.
+    it 'takes a deleted block out of the grid when a listener of the export throws' do
+      page.execute_script(<<~JS)
+        window.confirm = function(){ return true; };
+        jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
+        try { jQuery('.panel_grid_body .drg_item .grid_content_remove').click(); } catch(error) {}
+      JS
+
+      expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)
+      expect(saved_grid_content).not_to include('embedded widget')
+    end
+
     # The post form writes each text editor's content into its field to tell whether there is
     # anything to save, two seconds after it opens and with every draft; so does a text editor
     # that loses focus.
