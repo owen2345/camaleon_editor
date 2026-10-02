@@ -41,9 +41,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     page.execute_script("jQuery('#cama_alert_modal').modal('hide');")
     expect(page).to have_no_css('#cama_alert_modal')
 
-    page.execute_script(<<~JS, grid)
-      tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id')).setContent(arguments[0]);
-    JS
+    text_editor_holds(grid)
     open_grid_editor
 
     expect(page).to have_css('.panel_grid_editor .panel_grid_body .drg_item', count: 1)
@@ -85,8 +83,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     open_post_in_editor(@post)
     find('.panel_grid_editor .panel_grid_body .drg_item')
 
-    accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
-    expect(page).to have_css('.mce-tinymce')
+    leave_for_the_text_editor
     page.execute_script(<<~JS)
       window.__cama_parses = 0;
       var parse = jQuery.parseHTML;

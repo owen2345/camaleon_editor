@@ -32,7 +32,7 @@ RSpec.describe 'the record of what the grid exports', :js do
 
   it 'holds the export, whatever the text editor the author went back to writes in the textarea' do
     trigger_grid_auto_save
-    accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
+    leave_for_the_text_editor
     let_the_text_editor_write
 
     expect(post_textarea).to include('background-color: #ffcc00', '<strong>kept</strong>')

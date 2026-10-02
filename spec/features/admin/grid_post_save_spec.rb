@@ -25,17 +25,6 @@ RSpec.describe 'saving a post from the grid editor', :js do
     find('.panel_grid_editor .panel_grid_body .drg_column .drg_item')
   end
 
-  def leave_for_the_text_editor
-    accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
-    find('.mce-tinymce')
-  end
-
-  def text_editor_holds(markup)
-    page.execute_script(<<~JS, markup)
-      tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id')).setContent(arguments[0]);
-    JS
-  end
-
   def change_in_the_text_editor(from, to)
     text_editor_holds(text_editor_content.sub(from) { to })
   end

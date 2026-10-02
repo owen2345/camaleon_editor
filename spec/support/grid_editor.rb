@@ -87,6 +87,19 @@ def open_grid_editor
   accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
 end
 
+# The way back: leaves the grid editor for the text editor, and answers the prompt its link asked.
+def leave_for_the_text_editor
+  accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
+  find('.mce-tinymce')
+end
+
+# Hands the post's text editor its content, as an author who writes there does.
+def text_editor_holds(markup)
+  page.execute_script(<<~JS, markup)
+    tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id')).setContent(arguments[0]);
+  JS
+end
+
 # The menu's label is the admin language's; the default is the English one.
 def open_templates_menu(label: 'Templates')
   find('.grid_editor_menu a.dropdown-toggle', text: label).click
