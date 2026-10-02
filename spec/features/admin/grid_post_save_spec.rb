@@ -101,6 +101,25 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(page.evaluate_script("jQuery('.panel_grid_editor').next('textarea')[0].value")).to eq(saved_grid_content)
     end
 
+    # The export is the answer to a read of the text editor's content as markup. A read of its
+    # text, of its raw body or of a selection asks for something else, and gets the text editor's
+    # own answer.
+    it "answers a read of its text, of its raw body or of a selection with the text editor's own" do
+      trigger_grid_auto_save
+      text, raw, selection = page.evaluate_script(<<~JS)
+        (function(){
+          var editor = tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id'));
+          editor.selection.select(editor.getBody(), true);
+          return [editor.getContent({format: 'text'}), editor.getContent({format: 'raw'}), editor.selection.getContent()];
+        })()
+      JS
+
+      expect(text).to include('embedded widget')
+      expect(text).not_to include('<')
+      expect(raw).to include('<strong>bold</strong>', 'mce:protected')
+      expect(selection).to include('<strong>bold</strong>')
+    end
+
     # A block form loads a text editor of its own through jQuery's tinymce(), and from then on
     # val() hands the grid's export to the post's text editor and leaves the field alone.
     it 'stores the export once a block form has loaded a text editor of its own' do
