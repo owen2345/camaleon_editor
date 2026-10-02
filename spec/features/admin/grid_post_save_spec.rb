@@ -277,6 +277,26 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
       expect(post_content).to eq('<p>written meanwhile</p>')
     end
+
+    # The author who leaves such a grid gets the content from before the grid back in the text
+    # editor. A grid written there is then the grid the grid editor shows, and that content is no
+    # longer what the text editor goes back to.
+    it 'goes back to a grid written in the text editor, not to the content from before the grid' do
+      trigger_grid_auto_save
+      leave_for_the_text_editor
+      handed_back = text_editor_content
+      written = grid_post_content(grid_with_block('<p>grid written in the text editor</p>'))
+      text_editor_holds(written)
+      open_grid_editor
+      find('.panel_grid_body .drg_item', visible: :all)
+      leave_for_the_text_editor
+      shown = text_editor_content
+      submit_post_form
+
+      expect(handed_back).to eq(stored_content)
+      expect(shown).to eq(written)
+      expect(post_content.delete("\r\n")).to eq(written)
+    end
   end
 
   # A post in several languages has one field for each, with a text editor and a grid editor of
