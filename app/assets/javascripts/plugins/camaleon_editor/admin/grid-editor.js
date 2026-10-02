@@ -1030,28 +1030,36 @@ jQuery(function(){
                 markup = String(markup);
                 var read = markup.lastIndexOf(">") + 1, unread = markup.slice(read);
                 markup = markup.slice(0, read);
-                var replace = RegExp.prototype[Symbol.replace], markers = [], shift = 0;
-                var set = replace.call(this, markup, function(token, _text_element, script, at){
-                    if(!script) return token;
-                    var marker = String(set_aside(script));
-                    if(/^<!--/.test(marker)) markers.push({text: marker, at: at + shift});
-                    shift += marker.length - token.length;
-                    return marker;
-                });
                 // A script set aside takes its quotes out of the markup with it, and a quote left
                 // open in a tag before it may then find another pair, further on: the editor would
-                // read on from that tag, the marker included. So the markup is read once more with
-                // its markers in. Where one of them is not a token of its own, nothing is set aside
-                // and the editor gets the markup as it would without the setting: the marker is not
-                // stored among a tag's attributes. A marker is looked for where it was put: a comment
-                // of the content may read like one.
-                var apart = 0;
-                if(markers.length) replace.call(this, set, function(token, _text_element, _script, at){
-                    var marker = markers[apart];
-                    if(marker && at === marker.at && token === marker.text) apart++;
-                    return token;
-                });
-                return (apart === markers.length ? set : markup) + unread;
+                // read on from that tag, the marker included, and store the marker among the tag's
+                // attributes. So the markup is read once more with its markers in, each looked for
+                // where it was put: a comment of the content may read like one. A script whose
+                // marker is not a token of its own is left to the editor, as without the setting,
+                // and the rest is set aside again without it, until every marker stands apart.
+                var pattern = this, replace = RegExp.prototype[Symbol.replace], left = {};
+                for(;;){
+                    var markers = [], shift = 0;
+                    var set = replace.call(pattern, markup, function(token, _text_element, script, at){
+                        if(!script || left[at]) return token;
+                        var marker = String(set_aside(script));
+                        if(/^<!--/.test(marker)) markers.push({text: marker, script: at, at: at + shift});
+                        shift += marker.length - token.length;
+                        return marker;
+                    });
+                    var next = 0, apart = true;
+                    var swallowed = function(marker){ left[marker.script] = true; apart = false; };
+                    if(markers.length) replace.call(pattern, set, function(token, _text_element, _script, at){
+                        while(next < markers.length && markers[next].at < at) swallowed(markers[next++]);
+                        if(next < markers.length && markers[next].at === at){
+                            if(token !== markers[next].text) swallowed(markers[next]);
+                            next++;
+                        }
+                        return token;
+                    });
+                    while(next < markers.length) swallowed(markers[next++]);
+                    if(apart) return set + unread;
+                }
             };
             return tokens;
         }

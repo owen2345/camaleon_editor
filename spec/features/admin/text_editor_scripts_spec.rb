@@ -205,14 +205,15 @@ RSpec.describe 'scripts in the text editor', :js do
 
   # Setting a script aside takes its quotes out of the markup, and a quote left open in a tag
   # before it may then find another pair, further on: the editor would read on from that tag to
-  # there, the script's marker included, and store the marker among the tag's attributes. Where a
-  # marker would not be a comment of its own for the editor, nothing is set aside, and the content
-  # comes back as it does without the setting.
-  it 'sets nothing aside where a marker would end up inside a tag' do
-    answer = through_the_text_editor(%(<p><a title="lead>a link</a></p><script>var a = "b";</script><p>5" wide</p>))
+  # there, the script's marker included, and store the marker among the tag's attributes. A script
+  # whose marker would not be a comment of its own for the editor is left to the editor, which
+  # drops it as it does without the setting. The other scripts are kept.
+  it 'leaves the script whose marker would end up inside a tag to the editor, and keeps the others' do
+    tangled = %(<p><a title="lead>a link</a></p><script>var a = "b";</script><p>5" wide</p>)
+    answer = through_the_text_editor("#{script}#{tangled}")
 
-    expect(answer).not_to include('protected')
-    expect(answer).to include('wide')
+    expect(answer).not_to include('protected', 'var a')
+    expect(answer).to include(script, 'wide')
   end
 
   # The check goes by where each marker stands, not by its text alone: content may already hold a
