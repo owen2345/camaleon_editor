@@ -127,11 +127,12 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
     # A column that fades out is still in the grid, where blocks are dragged from column to column:
     # it takes no block, which would go with it. The fade is slowed down for the drag to end within
-    # it.
+    # it, and the drag is seen to start: a block that was never dragged stays where it is too.
     it 'drops no block into a deleted column that still fades out' do
       confirm_every_prompt
       page.execute_script(<<~JS)
         jQuery.fx.speeds._default = 60000;
+        jQuery(document).on('sortstart', function(){ window.__cama_sort_started = true; });
         jQuery('.panel_grid_body .drg_column .grid_col_clone').click();
         jQuery('.panel_grid_body .drg_column').last().find('.grid_col_remove').click();
       JS
@@ -140,6 +141,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
       page.driver.browser.action.click_and_hold(handle).pause(duration: 0.4).move_to(deleted_area).pause(duration: 0.2)
           .move_by(0, 3).pause(duration: 0.2).release.perform
 
+      expect(page.evaluate_script('window.__cama_sort_started')).to be(true)
       expect(page).to have_css('.panel_grid_body .drg_column:not(.grid-deleted) .drg_item', count: 1)
       expect(saved_grid_content).to include('embedded widget')
     end
