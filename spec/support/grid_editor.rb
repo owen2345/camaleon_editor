@@ -104,6 +104,16 @@ def open_first_block_form
   page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
 end
 
+# A drag that moves nothing passes an example on what a drag must not do. So the page is watched
+# for a sort that starts, and the example says it saw one.
+def watch_for_a_sort
+  page.execute_script("jQuery(document).on('sortstart', function(){ window.__cama_sort_started = true; });")
+end
+
+def sort_started
+  page.evaluate_script('window.__cama_sort_started')
+end
+
 # The way back: leaves the grid editor for the text editor, and answers the prompt its link asked.
 def leave_for_the_text_editor
   accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }

@@ -24,13 +24,13 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   it 'does not run a block script while the block is dragged' do
     store_post_content(@post, grid_post_content(grid_with_block("<p>widget</p>#{script}")))
     open_post_in_editor(@post)
-    page.execute_script("jQuery(document).on('sortstart', function(){ window.__cama_sort_started = true; });")
+    watch_for_a_sort
 
     handle = first('.panel_grid_body .drg_item .header_box').native
     page.driver.browser.action.click_and_hold(handle).pause(duration: 0.4).move_by(0, 25).pause(duration: 0.2)
         .move_by(0, 25).pause(duration: 0.2).release.perform
 
-    expect(page.evaluate_script('window.__cama_sort_started')).to be(true)
+    expect(sort_started).to be(true)
     expect(script_ran).to be_nil
   end
 
