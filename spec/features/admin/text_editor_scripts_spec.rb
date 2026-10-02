@@ -215,6 +215,17 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(answer).to include('wide')
   end
 
+  # The check goes by where each marker stands, not by its text alone: content may already hold a
+  # comment that reads like the marker of a script further on, and that comment is not the marker.
+  it 'is not taken in by a comment that reads like the marker of a script further on' do
+    swallowed = '<script>var a = "b";</script>'
+    lookalike = page.evaluate_script("'<!--mce:protected ' + escape(arguments[0]) + '-->'", swallowed)
+    answer = through_the_text_editor(%(#{lookalike}<p><a title="lead>a link</a></p>#{swallowed}<p>5" wide</p>))
+
+    expect(answer).not_to include('protected')
+    expect(answer).to include('wide')
+  end
+
   # A page may set its text editors up with a protect list of its own, which is used in place of
   # core's default: the scripts' pattern joins that list, once, however many editors the page sets
   # up with those settings. What each pattern of a list leaves of the markup shows which patterns

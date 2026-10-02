@@ -1030,11 +1030,12 @@ jQuery(function(){
                 markup = String(markup);
                 var read = markup.lastIndexOf(">") + 1, unread = markup.slice(read);
                 markup = markup.slice(0, read);
-                var replace = RegExp.prototype[Symbol.replace], markers = [];
-                var set = replace.call(this, markup, function(token, _text_element, script){
+                var replace = RegExp.prototype[Symbol.replace], markers = [], shift = 0;
+                var set = replace.call(this, markup, function(token, _text_element, script, at){
                     if(!script) return token;
-                    var marker = set_aside(script);
-                    if(/^<!--/.test(marker)) markers.push(marker);
+                    var marker = String(set_aside(script));
+                    if(/^<!--/.test(marker)) markers.push({text: marker, at: at + shift});
+                    shift += marker.length - token.length;
                     return marker;
                 });
                 // A script set aside takes its quotes out of the markup with it, and a quote left
@@ -1042,10 +1043,12 @@ jQuery(function(){
                 // read on from that tag, the marker included. So the markup is read once more with
                 // its markers in. Where one of them is not a token of its own, nothing is set aside
                 // and the editor gets the markup as it would without the setting: the marker is not
-                // stored among a tag's attributes.
+                // stored among a tag's attributes. A marker is looked for where it was put: a comment
+                // of the content may read like one.
                 var apart = 0;
-                if(markers.length) replace.call(this, set, function(token){
-                    if(token === markers[apart]) apart++;
+                if(markers.length) replace.call(this, set, function(token, _text_element, _script, at){
+                    var marker = markers[apart];
+                    if(marker && at === marker.at && token === marker.text) apart++;
                     return token;
                 });
                 return (apart === markers.length ? set : markup) + unread;
