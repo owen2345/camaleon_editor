@@ -122,6 +122,29 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(default_list).to eq(['<?php one(); ?>'])
   end
 
+  # As the page is being left, a text editor writes its raw body into its field, a script as the
+  # comment it is set aside as, and then its content (grid_post_save_spec has what a page that is
+  # not left would send otherwise). An editor hidden for its field to be edited writes neither.
+  it 'writes its content as the page is being left, unless it is hidden for its field to be edited' do
+    written, typed = page.evaluate_script(<<~JS, "<p>written in the text editor</p>#{script}")
+      (function(markup){
+        var editor = tinymce.get(jQuery('#form-post textarea.tinymce_textarea').first().attr('id'));
+        var field = editor.getElement();
+        window.onbeforeunload = null;
+        editor.setContent(markup);
+        window.dispatchEvent(new Event('beforeunload'));
+        var written = field.value;
+        editor.hide();
+        field.value = 'typed in the field';
+        window.dispatchEvent(new Event('beforeunload'));
+        return [written, field.value];
+      })(arguments[0])
+    JS
+
+    expect(written.delete("\n")).to eq("<p>written in the text editor</p>#{script}")
+    expect(typed).to eq('typed in the field')
+  end
+
   it 'keeps the script of markup put in at the caret' do
     answer = through_the_text_editor('<p>written in the text editor</p>', inserted: "<p>inserted</p>#{script}")
 
