@@ -125,6 +125,25 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)
     end
 
+    # A column that fades out is still in the grid, where blocks are dragged from column to column:
+    # it takes no block, which would go with it. The fade is slowed down for the drag to end within
+    # it.
+    it 'drops no block into a deleted column that still fades out' do
+      page.execute_script(<<~JS)
+        window.confirm = function(){ return true; };
+        jQuery.fx.speeds._default = 60000;
+        jQuery('.panel_grid_body .drg_column .grid_col_clone').click();
+        jQuery('.panel_grid_body .drg_column').last().find('.grid_col_remove').click();
+      JS
+      handle = first('.panel_grid_body .drg_item .header_box').native
+      deleted_area = find('.panel_grid_body .drg_column.grid-deleted > .grid_sortable_items').native
+      page.driver.browser.action.click_and_hold(handle).pause(duration: 0.4).move_to(deleted_area).pause(duration: 0.2)
+          .move_by(0, 3).pause(duration: 0.2).release.perform
+
+      expect(page).to have_css('.panel_grid_body .drg_column:not(.grid-deleted) .drg_item', count: 1)
+      expect(saved_grid_content).to include('embedded widget')
+    end
+
     # The post form writes each text editor's content into its field to tell whether there is
     # anything to save, two seconds after it opens and with every draft; so does a text editor
     # that loses focus.
