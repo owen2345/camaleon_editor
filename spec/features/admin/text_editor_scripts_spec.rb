@@ -203,6 +203,18 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(answer).to include('<p>b</p>')
   end
 
+  # Setting a script aside takes its quotes out of the markup, and a quote left open in a tag
+  # before it may then find another pair, further on: the editor would read on from that tag to
+  # there, the script's marker included, and store the marker among the tag's attributes. Where a
+  # marker would not be a comment of its own for the editor, nothing is set aside, and the content
+  # comes back as it does without the setting.
+  it 'sets nothing aside where a marker would end up inside a tag' do
+    answer = through_the_text_editor(%(<p><a title="lead>a link</a></p><script>var a = "b";</script><p>5" wide</p>))
+
+    expect(answer).not_to include('protected')
+    expect(answer).to include('wide')
+  end
+
   # A page may set its text editors up with a protect list of its own, which is used in place of
   # core's default: the scripts' pattern joins that list, once, however many editors the page sets
   # up with those settings. What each pattern of a list leaves of the markup shows which patterns

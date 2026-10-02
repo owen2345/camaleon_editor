@@ -1028,10 +1028,27 @@ jQuery(function(){
                 // and is left unread. A long run of "<" there, with no bracket to end a tag at,
                 // would be read from each one to the end.
                 markup = String(markup);
-                var read = markup.lastIndexOf(">") + 1;
-                return RegExp.prototype[Symbol.replace].call(this, markup.slice(0, read), function(token, _text_element, script){
-                    return script ? set_aside(script) : token;
-                }) + markup.slice(read);
+                var read = markup.lastIndexOf(">") + 1, unread = markup.slice(read);
+                markup = markup.slice(0, read);
+                var replace = RegExp.prototype[Symbol.replace], markers = [];
+                var set = replace.call(this, markup, function(token, _text_element, script){
+                    if(!script) return token;
+                    var marker = set_aside(script);
+                    if(/^<!--/.test(marker)) markers.push(marker);
+                    return marker;
+                });
+                // A script set aside takes its quotes out of the markup with it, and a quote left
+                // open in a tag before it may then find another pair, further on: the editor would
+                // read on from that tag, the marker included. So the markup is read once more with
+                // its markers in. Where one of them is not a token of its own, nothing is set aside
+                // and the editor gets the markup as it would without the setting: the marker is not
+                // stored among a tag's attributes.
+                var apart = 0;
+                if(markers.length) replace.call(this, set, function(token){
+                    if(token === markers[apart]) apart++;
+                    return token;
+                });
+                return (apart === markers.length ? set : markup) + unread;
             };
             return tokens;
         }
