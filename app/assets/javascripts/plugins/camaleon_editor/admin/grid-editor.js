@@ -705,7 +705,7 @@ jQuery(function(){
             // keep what was deleted in the grid.
             function fade_out_of_grid(element){
                 element.children(".grid_sortable_items").filter(":ui-sortable").sortable("disable");
-                element.addClass(DELETED).css("pointer-events", "none").fadeOut(function(){ $(this).remove(); });
+                element.addClass(DELETED).css("pointer-events", "none").fadeDestroy();
                 editor.trigger("auto_save");
             }
 
