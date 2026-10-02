@@ -987,6 +987,22 @@ jQuery(function(){
         }
         tinymce_global_settings["settings"].push(keep_scripts);
 
+        // A field has one more writer. As the page is being left, each text editor writes its raw
+        // body there, with no event anybody could answer: the editor's own markup, a script as the
+        // comment it was set aside as. On a page that is not left after all - the author stays at
+        // the prompt about unsaved changes - the fields keep that, and a post in several languages
+        // composes what it sends from its fields at the next change of a grid or switch of
+        // editors: the other languages would be stored as those raw bodies. So each editor writes
+        // its content right behind its raw body. The listener is added once the editor is set up,
+        // after the editor's own; an editor hidden for its field to be edited is left alone, as
+        // the editor leaves it.
+        var content_at_unload = function(editor){
+            var write = function(){ if(!editor.isHidden()) editor.save({set_dirty: false}); };
+            editor.editorManager.on("BeforeUnload", write);
+            editor.on("remove", function(){ editor.editorManager.off("BeforeUnload", write); });
+        }
+        tinymce_global_settings["init"].push(content_at_unload);
+
         // grid editor button
         var grid_editor_button = function(editor){
             editor.addButton('grid_editor', {
