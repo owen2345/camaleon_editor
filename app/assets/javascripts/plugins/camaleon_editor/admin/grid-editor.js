@@ -1030,14 +1030,15 @@ jQuery(function(){
 
         // The editor gives whatever stands at the top level of its content a paragraph, unless it
         // is a block: a script written there would come back inside a paragraph nobody wrote. The
-        // editor's parser counts a script among the blocks for that very purpose; the list of
-        // block elements the rest of the editor goes by does not hold it. So the script joins
-        // that list, before the editor is handed its content.
-        var script_is_a_block = function(editor){
-            editor.on("PreInit", function(){
-                var blocks = editor.schema.getBlockElements();
-                blocks.script = blocks.SCRIPT = {};
-            });
+        // editor's parser counts a script among the blocks for that very purpose; the map of
+        // block elements the rest of the editor goes by does not hold it. What puts the
+        // paragraph there asks whether that map has an element's name. Every other reader asks
+        // what the map holds for the name: the editor's own test for a block, Indent, and its
+        // search, which leaves the text of a script alone as long as the script is no block.
+        // So the map gets the script's name with nothing behind it, before the editor is handed
+        // its content: no paragraph goes around a script, and nothing else takes it for a block.
+        var script_takes_no_paragraph = function(editor){
+            editor.on("PreInit", function(){ editor.schema.getBlockElements().SCRIPT = false; });
         }
 
         // Where a script ends. The editor ends it at the first closing tag it reads, or at a tag
@@ -1074,11 +1075,11 @@ jQuery(function(){
         }
 
         // A script's text is text of the editor's document, where a plugin of the editor that
-        // marks text - a no-break space made visible, the matches of a search - wraps it in
-        // elements of its own. Outside a script the editor takes those off as its content is
-        // read; inside one it would give them back as part of the script's text. So a script is
-        // read as its text alone. What is read is a copy the editor makes for the read: in the
-        // editor the marks stay, for the plugin to take off.
+        // marks text - a no-break space made visible, for one - wraps it in elements of its
+        // own. Outside a script the editor takes those off as its content is read; inside one
+        // it would give them back as part of the script's text. So a script is read as its text
+        // alone. What is read is a copy the editor makes for the read: in the editor the marks
+        // stay, for the plugin to take off.
         var script_text_alone = function(editor){
             editor.on("PreProcess", function(e){
                 $(e.node).find("script").each(function(){
@@ -1093,7 +1094,7 @@ jQuery(function(){
         // such an editor the script, with nothing to filter its pastes.
         tinymce.on("AddEditor", function(added){
             paste_without_scripts(added.editor);
-            script_is_a_block(added.editor);
+            script_takes_no_paragraph(added.editor);
             script_ends_as_in_a_browser(added.editor);
             script_text_alone(added.editor);
         });

@@ -106,9 +106,9 @@ RSpec.describe 'scripts in the text editor', :js do
   end
 
   # A script's text is text of the editor's document, where a plugin of the editor that marks text
-  # (a no-break space made visible, the matches of a search) wraps it in elements of its own.
-  # Outside a script the editor takes those off as its content is read; inside one they would come
-  # back as part of the script. Read, a script holds its text alone.
+  # (a no-break space made visible, for one) wraps it in elements of its own. Outside a script the
+  # editor takes those off as its content is read; inside one they would come back as part of the
+  # script. Read, a script holds its text alone.
   it "gives back a script's text as it was while the editor shows invisible characters" do
     content = "<p>written in the text editor</p><script>var name =\u00a0'A B';</script>"
 
@@ -233,6 +233,28 @@ RSpec.describe 'scripts in the text editor', :js do
     content = "#{script}<p>written in the text editor</p>"
 
     expect(with_the_caret_outside_any_block(content).delete("\n")).to eq(content)
+  end
+
+  # The editor's search goes through the text of the content and leaves out the text of an element
+  # that shows none, a script's for one, as long as the element is no block to it. The script is
+  # kept out of a paragraph without becoming a block to the search: its text is not found, and
+  # Replace does not rewrite it unseen.
+  it "leaves a script's text out of the editor's find and replace" do
+    content = "<p>pick a color</p><script>var tint = 'color';</script>"
+
+    found, replaced = page.evaluate_script(<<~JS, content)
+      (function(markup){
+        var editor = #{POST_TEXT_EDITOR}, search = editor.plugins.searchreplace;
+        editor.setContent(markup);
+        var found = search.find('color', false, false);
+        search.replace('colour', true, true);
+        search.done();
+        return [found, editor.getContent()];
+      })(arguments[0])
+    JS
+
+    expect(found).to eq(1)
+    expect(replaced.delete("\n")).to eq("<p>pick a colour</p><script>var tint = 'color';</script>")
   end
 
   # The post's text editor is handed the stored content as the form opens, and writes its content
