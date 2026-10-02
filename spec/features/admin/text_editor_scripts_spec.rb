@@ -247,9 +247,9 @@ RSpec.describe 'scripts in the text editor', :js do
   end
 
   # Markup put in at the caret leaves the caret behind its last piece of content, and the editor
-  # steps back over what it takes for a block to find it: a script that ends the markup is stepped
-  # over, so what the author types next goes behind the text before the script, not behind the
-  # script.
+  # steps back over what it takes for a block to find it: a script loaded by its src that ends the
+  # markup is stepped over, so what the author types next goes behind the text before the script,
+  # not behind the script.
   it 'leaves the caret before a script that ends markup put in at the caret' do
     widget = '<div class="widget"><div>body</div><script src="/widget.js"></script></div>'
 

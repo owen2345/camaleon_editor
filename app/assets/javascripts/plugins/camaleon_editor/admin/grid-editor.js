@@ -1043,8 +1043,10 @@ jQuery(function(){
         // script is no block, ask what the map holds for it. So the map gets that name with
         // nothing behind it: no paragraph goes around a script, and the search and Indent leave
         // it alone. In lower case the script is a block, as it is to the parser: markup put in
-        // at the caret leaves the caret before a script that ends it, not behind the script.
-        // Both before the editor is handed its content.
+        // at the caret that ends in a script loaded by its src leaves the caret before that
+        // script, not behind it as bare text. (Behind a script with text of its own the editor
+        // stops at that text, and the caret stays behind the markup.) Both before the editor is
+        // handed its content.
         var script_takes_no_paragraph = function(editor){
             editor.on("PreInit", function(){
                 var blocks = editor.schema.getBlockElements();
