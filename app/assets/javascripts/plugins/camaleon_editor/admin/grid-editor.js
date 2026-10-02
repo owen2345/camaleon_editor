@@ -960,6 +960,13 @@ jQuery(function(){
 
     // init all required actions for grid editor availability
     function init_grid_editor(){
+        // The hooks are added once, however often this script is evaluated. A page loaded in place
+        // (the Admin AJAX plugin swaps the admin's content for a response that brings the script
+        // along) evaluates it again, while the lists it adds to, and the editors' manager, are
+        // the page's and stay: every hook would be there twice, the toolbar's button included.
+        // That button's entry tells that the hooks are in place.
+        if($.inArray("grid_editor", tinymce_global_settings["custom_toolbar"]) >= 0) return;
+
         //auto switch on grid editor detected
         var auto_switch_editor = function(editor){
             if($.fn.isGridEditorContent(field_value(editor.targetElm)))
