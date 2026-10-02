@@ -77,6 +77,21 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
+  # A quote opens a value only right behind the equals sign: inside a value written without quotes
+  # it is a character like any other, and the tag ends at its first bracket. Read as the start of
+  # a quoted value, an apostrophe there would run on to the next one of the content, a script and
+  # all.
+  it 'reads an apostrophe inside an unquoted attribute value as part of the value' do
+    in_a_script = "<script src=/widget.js?by=O'Brien></script><p>it's between</p>#{script}"
+    in_a_link = "<p><a href=/people?name=O'Brien>a link</a></p>#{script}<p>don't</p>"
+
+    expect(through_the_text_editor(in_a_link)).to include(script, "<p>don't</p>")
+    expect(through_the_text_editor(in_a_script)).to include("<p>it's between</p>", script)
+    within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: "it's between") }
+    expect(scripts_in_the_text_editor).to eq(0)
+    expect(script_ran).to be_nil
+  end
+
   # Inside a comment, a quoted attribute value or a textarea, the editor reads a script's tags as
   # text, and so does the pattern: such content goes through the text editor as it would without
   # the setting, and a script element beside it is still set aside.

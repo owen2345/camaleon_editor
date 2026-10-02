@@ -990,13 +990,17 @@ jQuery(function(){
         // sets aside whatever the pattern matched: so this one answers replace() itself, and passes
         // that replacer the scripts alone.
         function script_elements(){
+            // What a tag holds behind its name, up to its bracket. A quote opens a value only right
+            // behind the equals sign: inside a value written without quotes it is a character like
+            // any other.
+            var attributes = /(?:[^>=]|=(?!\s*["'])|=\s*"[^"]*"|=\s*'[^']*')*/.source;
             var tokens = new RegExp($.map([
                 /<!--[\s\S]*?--!?>/, // a comment
                 /<!\[CDATA\[[\s\S]*?\]\]>/, // a CDATA section
                 /<\?[^\s\/<>]+[\s\S]*?[?\/]>/, // a processing instruction
                 /<(noscript|iframe|noframes|noembed|title|style|textarea|xmp)(?=[\s\/>])[\s\S]*?(?:<\/\1[^>]*>|$)/, // an element whose content is text
-                /(<script(?=[\s\/>])(?:(?:"[^"]*"|'[^']*'|[^>"'])*>)?[\s\S]*?<\/script(?=[\s\/>])[^>]*>)/, // a script element
-                /<\/?[a-z](?:"[^"]*"|'[^']*'|[^>"'])*>/ // any other tag, with its quoted values
+                new RegExp("(<script(?=[\\s\\/>])(?:" + attributes + ">)?[\\s\\S]*?<\\/script(?=[\\s\\/>])[^>]*>)"), // a script element
+                new RegExp("<\\/?[a-z]" + attributes + ">") // any other tag, with its quoted values
             ], function(token){ return token.source; }).join("|"), "gi");
             tokens[Symbol.replace] = function(markup, set_aside){
                 // A script ends at a bracket: what follows the last bracket of the markup holds none
