@@ -1003,13 +1003,47 @@ jQuery(function(){
             });
         }
 
-        // Every text editor of the page gets the two, whatever it was set up with. The hooks core
-        // offers for an editor run from the setup of core's settings, and a page may pass a setup
-        // of its own, which takes that one's place: the settings above would still allow such an
-        // editor the script, with nothing to filter its pastes.
+        // Where a script ends. The editor ends it at the first closing tag it reads, or at a tag
+        // that only begins like one. A browser reads a script's text otherwise: "<!--" opens a
+        // comment there, "<script" inside the comment a script of the text's own, and a closing
+        // tag then ends that script, not the element. A script hidden in a comment, the old way,
+        // may so write another script out: the editor cut it at the tag it writes and showed the
+        // rest as text, and the public page, a browser, read on from the cut over what followed.
+        // The editor looks the end of such an element up in its schema, a pattern it asks for the
+        // next closing tag (its media plugin sets a video's there): the script's entry now
+        // answers as a browser reads, by the marks the HTML standard gives a script's text.
+        var script_end = {
+            lastIndex: 0,
+            exec: function(markup){
+                var marks = /<!(?=--)|-->|<\/?script(?=[\t\n\f\r \/>])/gi, closing = /<\/script[^>]*>/gi;
+                var TEXT = 0, COMMENT = 1, WRITTEN = 2, state = TEXT, mark;
+                marks.lastIndex = this.lastIndex;
+                while((mark = marks.exec(markup))){
+                    var found = mark[0].toLowerCase();
+                    if(found === "<!"){ if(state === TEXT) state = COMMENT; }
+                    else if(found === "-->") state = TEXT;
+                    else if(found === "<script"){ if(state === COMMENT) state = WRITTEN; }
+                    else if(state === WRITTEN) state = COMMENT;
+                    else {
+                        closing.lastIndex = mark.index;
+                        return closing.exec(markup);
+                    }
+                }
+                return null;
+            }
+        };
+        var script_ends_as_in_a_browser = function(editor){
+            editor.on("PreInit", function(){ editor.schema.getSpecialElements().script = script_end; });
+        }
+
+        // Every text editor of the page gets the three, whatever it was set up with. The hooks
+        // core offers for an editor run from the setup of core's settings, and a page may pass a
+        // setup of its own, which takes that one's place: the settings above would still allow
+        // such an editor the script, with nothing to filter its pastes.
         tinymce.on("AddEditor", function(added){
             paste_without_scripts(added.editor);
             script_is_a_block(added.editor);
+            script_ends_as_in_a_browser(added.editor);
         });
 
         // A field has one more writer. As the page is being left, each text editor writes its raw

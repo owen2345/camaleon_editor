@@ -114,16 +114,34 @@ RSpec.describe 'scripts in the text editor', :js do
       .to eq('<script async="" src="https://example.invalid/w.js?a=1&amp;b=2" data-id="w1" defer="defer"></script>')
   end
 
-  # The editor ends a script at the first closing tag it reads, where a browser reads on inside a
-  # comment of the script's text. A script that writes another one out comes back whole when it
-  # writes that closing tag as a script's text has to write one anywhere else.
-  it 'gives back whole a script that writes another script out with its closing tag escaped' do
-    content = '<p>before</p><script><!-- document.write(\'<script src="//example.invalid/widget.js"><\/script>\'); ' \
-              '//--></script><p>after</p>'
+  # The editor ends a script at the first closing tag it reads, or at a tag that only begins like
+  # one. A browser reads a script's text otherwise: "<!--" opens a comment there, "<script" inside
+  # the comment a script of the text's own, and a closing tag then ends that script, not the
+  # element. A script hidden in a comment, the old way, may so write another script out. The
+  # editor is given a browser's reading: what a browser takes for the script comes back whole, and
+  # what stands behind it stays content.
+  it 'reads where a script ends as a browser does' do
+    written_out = '<script src="//example.invalid/widget.js"></script>'
+    [
+      "<script><!-- document.write('#{written_out}'); //--></script>",
+      "<script><!-- document.write('#{written_out.sub('</', '<\/')}'); //--></script>",
+      '<script>var tag = "</scriptx>";</script>',
+      '<script><!-- hidden --> var tag = "<script>";</script>'
+    ].each do |script|
+      content = "<p>before</p>#{script}<p>after</p>"
 
-    expect(through_the_text_editor(content).delete("\n")).to eq(content)
-    expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
-    within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('p', text: 'after') }
+      expect(through_the_text_editor(content).delete("\n")).to eq(content)
+      expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
+      within_frame(find('.mce-edit-area iframe')) { expect(page).to have_css('body > p', text: 'after') }
+    end
+  end
+
+  # Outside such a comment the first closing tag ends the script, for a browser too: a script that
+  # writes one out unescaped ends there, and the rest of it is content.
+  it 'ends a script at the first closing tag outside a comment of its text, as a browser does' do
+    answer = through_the_text_editor(%q(<script>document.write('<script src="/w.js"></script>');</script><p>after</p>))
+
+    expect(answer.delete("\n")).to eq(%q(<script>document.write('<script src="/w.js"></script><p>');</p><p>after</p>))
   end
 
   # A page may set its text editors up with a list of elements of its own, which is used in place
