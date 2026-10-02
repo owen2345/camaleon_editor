@@ -14,8 +14,10 @@ RSpec.describe 'the grid editor block forms', :js do
     page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
   end
 
-  # The list of a block's items opens the form of one in a second modal
+  # The list of a block's items opens the form of one in a second modal. The list is still sliding
+  # into place when its link can be found: the click waits, or it may land beside the link.
   def add_block_item(label)
+    wait_for_modal_at_rest('#ow_inline_modal')
     find('#ow_inline_modal a.add_item', text: label).click
   end
 
