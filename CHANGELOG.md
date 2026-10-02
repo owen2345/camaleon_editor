@@ -7,7 +7,8 @@
 Text editors keep scripts and no longer rewrite the grid at save or after a cancelled page leave. A grid shown again follows the text editor; a deleted block or column stays deleted. [#20](https://github.com/owen2345/camaleon_editor/pull/20).
 
 **Notes for upgraders**
-- Without unfiltered HTML, changed content holding a script is refused; the editor used to drop it.
+- Needs tinymce-rails 4.7.4+.
+- Without unfiltered HTML, changed content with a script is refused.
 - Grid posts keep the export's `<b>` and `rgb()`.
 
 ### Tooling: the grid specs read the grid's own export
