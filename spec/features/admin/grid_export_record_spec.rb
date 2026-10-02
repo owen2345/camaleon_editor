@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 # The specs read what the grid exported from a record of their own, not from the post's textarea:
-# a text editor the author went back to writes there in its own serialization, and the grid's
-# write stops reaching the field once a block form has loaded a text editor. This is the record
-# held to both.
+# a text editor the author went back to writes there in its own serialization. This is the record
+# held to that, and to the grid's export once a block form has loaded a text editor, from which
+# jQuery's val() no longer reads or writes the field.
 RSpec.describe 'the record of what the grid exports', :js do
   init_site
 
@@ -48,8 +48,8 @@ RSpec.describe 'the record of what the grid exports', :js do
   end
 
   # A block form loads a text editor of its own through jQuery's tinymce(), and from then on
-  # val() hands a value to the text editor of a field that has one and leaves the field alone: the
-  # grid's write no longer reaches the post's textarea, and the record cannot be read off it.
+  # val() hands a value to the text editor of a field that has one and leaves the field alone.
+  # The grid still hands its export to the text editor first, which is what the record holds.
   it 'holds the export once a block form has loaded a text editor of its own' do
     load_a_block_form_text_editor
     page.execute_script("jQuery('.panel_grid_body .drg_item b').text('changed');")

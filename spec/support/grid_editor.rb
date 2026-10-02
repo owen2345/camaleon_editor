@@ -208,9 +208,6 @@ end
 # auto_save. The text editor writes its content there when it loses focus, with every draft and as
 # the form is sent: the grid's export while the grid editor is shown, and its own serialization (a
 # newline between tags, #rrggbb for rgb(), <strong> for <b>) once the author went back to it.
-# And once a block form has loaded a text editor of its own through jQuery's tinymce(),
-# val() hands the grid's export to the text editor alone: the field keeps what it held until the
-# text editor next writes.
 #
 # So the export is not read off the field. The grid hands it to the text editor right before the
 # change_in its auto_save triggers, and what a text editor was last handed at that moment goes on

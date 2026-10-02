@@ -693,10 +693,14 @@ jQuery(function(){
             }
 
             // trigger auto save changes
+            // The field is written itself, as it is read (field_value): once a block form has
+            // loaded a text editor, jQuery's val() would hand the export to the text editor a
+            // second time and leave the field as it was.
             editor.bind("auto_save", function(){
                 var txt = exported = "<div>[grid_editor data='"+$.fn.gridEditor_libraries.join(",")+"']</div>"+export_content($(this));
                 tinyEditor.setContent(txt);
-                textarea.val(txt).trigger("change_in");
+                textarea[0].value = txt;
+                textarea.trigger("change_in");
             });
 
             // The registry entry of a block's kind, when it has a builder: the form the block is edited
