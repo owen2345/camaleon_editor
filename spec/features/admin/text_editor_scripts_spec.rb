@@ -126,6 +126,16 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(answer).to include('<p>after</p>')
   end
 
+  # Behind such a quote the tag is read no further than its first bracket, whatever quotes it
+  # holds: a value that pairs off across that bracket does not take the script behind it along.
+  it 'finds the script behind a tag whose quote nothing closes, whatever quotes follow' do
+    content = %(<p><a title="start x='y>a link</a></p>#{script}<p>it's after</p>)
+
+    expect(through_the_text_editor(content)).to include(script, "<p>it's after</p>")
+    expect(scripts_in_the_text_editor).to eq(0)
+    expect(script_ran).to be_nil
+  end
+
   # Inside a comment, a quoted attribute value or a textarea, the editor reads a script's tags as
   # text, and so does the pattern: such content goes through the text editor as it would without
   # the setting, and a script element beside it is still set aside.
