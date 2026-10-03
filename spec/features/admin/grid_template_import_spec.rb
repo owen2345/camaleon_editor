@@ -338,9 +338,7 @@ RSpec.describe 'importing a grid template', :js do
     full_width = '<div class="col-md-12" data-col="12" data-col_title="100%">' \
                  '<div class="grid_sortable_items"></div></div>'
     @template.update!(description: %(<div class="panel_grid_body row">#{full_width}</div>))
-    page.execute_script(<<~JS)
-      jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
-    JS
+    make_the_grid_export_throw
     open_templates_list
     apply_listed_template
 
@@ -364,9 +362,7 @@ RSpec.describe 'importing a grid template', :js do
     expect(saved_grid_content).to include(pasted)
 
     @template.update!(description: grid_body_markup(grid_column_markup(col: 12, title: '100%')))
-    page.execute_script(<<~JS)
-      jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
-    JS
+    make_the_grid_export_throw
     open_templates_list
     apply_listed_template
 
@@ -385,9 +381,7 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
 
     store_template_markup(@template, grid_body_markup(grid_column_markup(col: 12, title: '100%')))
-    page.execute_script(<<~JS)
-      jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
-    JS
+    make_the_grid_export_throw
     open_templates_list
     apply_listed_template
 

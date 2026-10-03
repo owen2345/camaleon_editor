@@ -320,6 +320,11 @@ def trigger_grid_auto_save
   page.execute_script("jQuery('.panel_grid_editor').trigger('auto_save');")
 end
 
+# A listener of the grid's export that throws, as a block plugin's might, from here on.
+def make_the_grid_export_throw
+  page.execute_script("jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });")
+end
+
 # Changes the text of the grid's first block, as a block's form would, and has the grid export.
 def change_the_grid
   page.execute_script("jQuery('.panel_grid_body .drg_item b').text('changed');")

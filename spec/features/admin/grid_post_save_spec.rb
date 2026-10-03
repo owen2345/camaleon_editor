@@ -163,10 +163,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # fades out and goes all the same, its fade under way before the grid is exported.
     it 'takes a deleted block out of the grid when a listener of the export throws' do
       confirm_every_prompt
-      page.execute_script(<<~JS)
-        jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
-        try { jQuery('.panel_grid_body .drg_item .grid_content_remove').click(); } catch(error) {}
-      JS
+      make_the_grid_export_throw
+      page.execute_script("try { jQuery('.panel_grid_body .drg_item .grid_content_remove').click(); } catch(error) {}")
 
       expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)
       expect(saved_grid_content).not_to include('embedded widget')
