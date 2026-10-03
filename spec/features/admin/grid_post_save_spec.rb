@@ -26,11 +26,13 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
   # A listener of the text editor's that throws at every read of its content, from here until
   # the reads are restored: a listener a plugin adds may, and a switch of editors reads first.
-  def break_the_text_editor_reads
-    page.execute_script(<<~JS)
+  # `only_plain` spares the reads a save makes, and breaks the plain ones alone.
+  def break_the_text_editor_reads(only_plain: false)
+    page.execute_script(<<~JS, only_plain)
+      var only_plain = arguments[0];
       window.__cama_break_reads = true;
-      #{POST_TEXT_EDITOR}.on('GetContent', function(){
-        if(window.__cama_break_reads) throw new Error('the reads are broken');
+      #{POST_TEXT_EDITOR}.on('GetContent', function(e){
+        if(window.__cama_break_reads && !(only_plain && e.save)) throw new Error('the reads are broken');
       });
     JS
   end
@@ -51,6 +53,19 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
       expect(page).to have_css('.mce-tinymce')
       expect(page).to have_no_css('.panel_grid_editor')
+    end
+
+    # Shown again from the text editor, the grid editor reads the text editor's content first: a
+    # read that throws is told too, and the author stays in the text editor.
+    it 'tells the author when the grid editor cannot be shown again from the text editor' do
+      leave_for_the_text_editor
+      break_the_text_editor_reads(only_plain: true)
+      open_grid_editor
+      restore_the_text_editor_reads
+
+      expect(page).to have_css('#cama_alert_modal', text: 'could not be opened')
+      expect(page).to have_no_css('.panel_grid_editor')
+      expect(page).to have_css('.mce-tinymce')
     end
 
     it 'stores the grid as the grid exported it, a block script included' do

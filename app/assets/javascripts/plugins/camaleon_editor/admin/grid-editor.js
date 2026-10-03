@@ -1166,16 +1166,17 @@ jQuery(function(){
                     if(!confirm(I18n("grid_editor.switch_editor", "Are you sure to change the editor?"))) return false;
                     // A grid is first made from the field, which holds what the text editor last wrote
                     // there - when it lost focus, with a draft - and not what the author changed since.
-                    // A listener of the editor's may throw at that write: the author, who has just
-                    // answered the prompt, is told, as when the grid itself cannot be made.
+                    // A listener of the editor's may throw at that write, or at the read a grid shown
+                    // again makes of the text editor: the author, who has just answered the prompt,
+                    // is told, as when the grid itself cannot be made.
                     try {
                         field_follows(editor, $(editor.targetElm));
+                        $(editor.targetElm).gridEditor(editor);
                     } catch(error) {
                         if(window.console) console.error(error);
                         editor_failed();
-                        return false;
                     }
-                    $(editor.targetElm).gridEditor(editor);
+                    return false;
                 }
             });
         }
