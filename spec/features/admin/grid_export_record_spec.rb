@@ -12,6 +12,8 @@ RSpec.describe 'the record of what the grid exports', :js do
                            kind: 'editor', attributes: 'style="background-color: rgb(255, 204, 0);"')
     store_post_content(@post, grid_post_content(grid))
     open_post_in_editor(@post)
+    # the stored grid is open: with none, a record that holds nothing would say nothing
+    find('.panel_grid_editor .panel_grid_body .drg_item')
   end
 
   it 'holds nothing until the grid exports' do
