@@ -67,7 +67,6 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     item = %(<div class="gallery-item" data-url="#{CGI.escapeHTML(url)}"><div class="g-title">One</div></div>)
     store_post_content(@post, grid_post_content(grid_with_block(item, kind: 'gallery')))
     open_post_in_editor(@post)
-    find('.panel_grid_body .drg_item') # the grid is rebuilt
     page.execute_script("jQuery.fn.gridEditor_options.gallery = {title: 'Gallery', callback: grid_gallery_builder};")
     open_first_block_form
     find('#ow_inline_modal .modal_submit').click

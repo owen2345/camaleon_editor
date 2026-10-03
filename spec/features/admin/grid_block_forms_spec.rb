@@ -112,7 +112,6 @@ RSpec.describe 'the grid editor block forms', :js do
 
     # The entry is still in the page, hidden: a click that reaches it all the same breaks nothing
     it 'opens nothing and goes nowhere when the Edit entry is clicked all the same' do
-      find('.panel_grid_body .drg_item') # the grid is rebuilt
       page.execute_script(<<~JS)
         window.__cama_errors = [];
         window.addEventListener('error', function(event){ window.__cama_errors.push(event.message); });
