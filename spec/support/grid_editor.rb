@@ -287,9 +287,11 @@ end
 #
 # So the export is not read off the field. The grid hands it to the text editor right before the
 # change_in its auto_save triggers, and what a text editor was last handed at that moment goes on
-# record. Nothing else triggers a change_in on a textarea, and the record does not look for the
-# editor beside the field: a rebuild that fails never puts its editor in the page. The record
-# listens ahead of the editor's own listeners, which may rewrite what it was handed.
+# record, when the field that said so holds it: core triggers change_in on other fields too (the
+# slug; each language's summary, at a draft save), and none of them holds what an editor was
+# handed. The record does not look for the editor beside the field: a rebuild that fails never
+# puts its editor in the page. It listens ahead of the editor's own listeners, which may rewrite
+# what it was handed.
 def record_grid_exports
   page.execute_script(<<~JS)
     if(window.jQuery && !window.__cama_grid_exports){
@@ -301,7 +303,9 @@ def record_grid_exports
         jQuery.each(tinymce.editors, function(_index, editor){ watch(editor); });
         tinymce.on('AddEditor', function(event){ watch(event.editor); });
       }
-      jQuery(document).on('change_in', 'textarea', function(){ record.last = record.handed; });
+      jQuery(document).on('change_in', 'textarea', function(){
+        if(this.value === record.handed) record.last = record.handed;
+      });
     }
   JS
 end
