@@ -99,18 +99,13 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
                                 visible: :all)
 
     # what a drop hands each sortable: a copy of the entry, placed in it, as the sort ends
-    page.execute_script(<<~JS)
-      var editor = jQuery('.panel_grid_editor');
-      var grid = editor.children('.panel_grid_body_w').children('.panel_grid_body');
-      var stop = function(sortable, item){ sortable.sortable('option', 'stop').call(sortable[0], {}, {item: item}); };
-      var column = editor.find('.grid_editor_menu [data-col="6"]').first().clone().appendTo(grid);
-      stop(grid, column);
-      var area = column.children('.grid_sortable_items');
-      var block = editor.find('.grid_editor_menu [data-kind="text"]').first().clone().appendTo(area);
-      stop(area, block);
-      stop(grid, column);
-      stop(area, block);
-    JS
+    page.execute_script("jQuery('.grid_editor_menu [data-col=\"6\"]').first().clone().appendTo(#{GRID_ROOT});")
+    end_a_sort(GRID_ROOT, "#{GRID_ROOT}.children('.drg_column').first()")
+    page.execute_script("jQuery('.grid_editor_menu [data-kind=\"text\"]').first().clone()" \
+                        ".appendTo(#{FIRST_COLUMN_AREA});")
+    end_a_sort(FIRST_COLUMN_AREA, "#{FIRST_COLUMN_AREA}.children('.drg_item').first()")
+    end_a_sort(GRID_ROOT, "#{GRID_ROOT}.children('.drg_column').first()")
+    end_a_sort(FIRST_COLUMN_AREA, "#{FIRST_COLUMN_AREA}.children('.drg_item').first()")
 
     expect(page).to have_css('.panel_grid_body .drg_column > .header_box .dropdown', count: 1, visible: :all)
     expect(page).to have_css('.panel_grid_body .drg_item > .header_box .dropdown', count: 1, visible: :all)
@@ -122,13 +117,8 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     open_post_in_editor(@post)
 
     # what the grid's sortables do as a sort ends, for the column and for its block
-    page.execute_script(<<~JS)
-      var grid = jQuery('.panel_grid_editor > .panel_grid_body_w > .panel_grid_body');
-      var column = grid.children('.drg_column').first();
-      grid.sortable('option', 'stop').call(grid[0], {}, {item: column});
-      var area = column.children('.grid_sortable_items');
-      area.sortable('option', 'stop').call(area[0], {}, {item: area.children('.drg_item').first()});
-    JS
+    end_a_sort(GRID_ROOT, "#{GRID_ROOT}.children('.drg_column').first()")
+    end_a_sort(FIRST_COLUMN_AREA, "#{FIRST_COLUMN_AREA}.children('.drg_item').first()")
 
     expect(page).to have_css('.panel_grid_body .drg_column > .header_box .dropdown', count: 1, visible: :all)
     expect(page).to have_css('.panel_grid_body .drg_item > .header_box .dropdown', count: 1, visible: :all)

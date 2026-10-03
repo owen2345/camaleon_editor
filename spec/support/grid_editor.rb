@@ -136,6 +136,19 @@ def hold_the_first_block
   page.driver.browser.action.click_and_hold(handle).pause(duration: 0.4)
 end
 
+# The grid's root, as the editor finds it, and the area of its first column: the two sortables.
+GRID_ROOT = "jQuery('.panel_grid_editor > .panel_grid_body_w > .panel_grid_body')"
+FIRST_COLUMN_AREA = "#{GRID_ROOT}.children('.drg_column').first().children('.grid_sortable_items')".freeze
+
+# What a sortable of the grid does as a sort ends on an item: `sortable` and `item` are scripts
+# that answer with the two.
+def end_a_sort(sortable, item)
+  page.execute_script(<<~JS)
+    var sortable = #{sortable};
+    sortable.sortable('option', 'stop').call(sortable[0], {}, {item: #{item}});
+  JS
+end
+
 # The way back: leaves the grid editor for the text editor, and answers the prompt its link asked.
 def leave_for_the_text_editor
   accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
