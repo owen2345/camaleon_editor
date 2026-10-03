@@ -60,10 +60,12 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(current_url_fragment).to be_nil
     end
 
-    # Shown again from the text editor, the grid editor reads the text editor's content first: a
-    # read that throws is told too, and the author stays in the text editor.
+    # Shown again from the text editor whose document changed, the grid editor reads the text
+    # editor's content first: a read that throws is told too, and the author stays in the text
+    # editor.
     it 'tells the author when the grid editor cannot be shown again from the text editor' do
       leave_for_the_text_editor
+      change_in_the_text_editor('bold', 'changed in the text editor')
       break_the_text_editor_reads(only_plain: true)
       open_grid_editor
       restore_the_text_editor_reads
