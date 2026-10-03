@@ -196,15 +196,18 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     # The Settings entries, a block's and the grid's, open a modal and export nothing: links to
-    # "#" all the same, they go nowhere when the modal cannot be opened.
+    # "#" all the same, they go nowhere when the modal cannot be opened. The errors the page
+    # reports say that the modal did throw at each click, as the example assumes.
     it 'leaves the page where it was when the style settings cannot be opened' do
       page.execute_script("window.open_modal = function(){ throw new Error('modal broke'); };")
+      watch_the_page_errors
       open_the_menu_of('.drg_item')
       find('.panel_grid_body .drg_item a.grid_style_settings').click
       expect(current_url_fragment).to be_nil
 
       open_grid_style_settings
       expect(current_url_fragment).to be_nil
+      expect(page_errors.length).to eq(2)
     end
 
     # A column cloned while one of its blocks fades out does not take that block along: the copy
