@@ -500,9 +500,10 @@ jQuery(function(){
             return title === BREAK_LINE ? I18n("grid_editor.break_line", "Break Line") : title;
         }
 
-        // A column or a block dropped in from the palette is a copy of the palette's entry, parsed
-        // without its menu: the sort that places it is what gives it its menu, and gives it once,
-        // where the columns and blocks of a rebuilt grid, and the copies a clone makes, have theirs.
+        // A column or a block dropped in from the palette is a copy of the palette's entry, which is
+        // parsed without its menu (skip_options): the sort that places the copy is what gives it its
+        // menu, and gives it once, where the columns and blocks of a rebuilt grid, and the copies a
+        // clone makes, have theirs.
         function has_menu(element){
             return element.children(".header_box").children(".dropdown").length > 0;
         }
@@ -749,8 +750,8 @@ jQuery(function(){
                 editor.trigger("auto_save");
             }
 
-            // content dropdown options: links to "#", each going nowhere first, whatever its handler
-            // does (the column options below the same)
+            // the content options, links to "#": each goes nowhere first, whatever its handler does
+            // (the column options below the same; the menu's toggle, which ends this chain, is no link)
             grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
                 e.preventDefault();
                 if(confirm(I18n("grid_editor.del_content", "Are you sure to delete this content?"))) {
