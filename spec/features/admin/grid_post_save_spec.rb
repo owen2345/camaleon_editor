@@ -52,7 +52,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # where they were: the link goes nowhere, whatever the read does.
     it 'leaves the text editor shown when its content cannot be read on the way back to it' do
       break_the_text_editor_reads
-      accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
+      leave_for_the_text_editor
       restore_the_text_editor_reads
 
       expect(page).to have_css('.mce-tinymce')
