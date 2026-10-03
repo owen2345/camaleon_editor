@@ -402,8 +402,6 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
   end
 
-  # A grid opened over other content has exported nothing yet: the text editor's content stays what
-  # the post stores until the grid's first change.
   context 'with content that is not a grid, when the text editor cannot be read' do
     let(:stored_content) { '<p>written in the text editor</p>' }
 
@@ -426,6 +424,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
   end
 
+  # A grid opened over other content has exported nothing yet: the text editor's content stays what
+  # the post stores until the grid's first change.
   context 'with a grid opened over other content' do
     let(:stored_content) { '<p>written in the text editor</p>' }
 
