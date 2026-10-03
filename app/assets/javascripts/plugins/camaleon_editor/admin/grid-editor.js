@@ -605,9 +605,8 @@ jQuery(function(){
                 field_follows(tinyEditor, textarea);
                 return false;
             });
-            // Every entry below is a link to "#": its default is taken off first, so that a listener
-            // of the export that throws leaves the page where it is (the Edit entry does the same).
             editor.find(".grid_editor_menu .clear").click(function(e){
+                // first: the link goes nowhere, whatever a listener of the export does
                 e.preventDefault();
                 if(!confirm(I18n("grid_editor.clear_editor", "Are you sure to clear the editor?"))) return false;
                 grid_root(editor).html("");
@@ -746,7 +745,8 @@ jQuery(function(){
                 editor.trigger("auto_save");
             }
 
-            // content dropdown options
+            // content dropdown options: links to "#", each going nowhere first, whatever a listener
+            // of the export it triggers does (the column options below the same)
             grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
                 e.preventDefault();
                 if(confirm(I18n("grid_editor.del_content", "Are you sure to delete this content?"))) {
