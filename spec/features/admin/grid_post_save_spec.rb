@@ -57,7 +57,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
       expect(page).to have_css('.mce-tinymce')
       expect(page).to have_no_css('.panel_grid_editor')
-      expect(page.current_url).not_to end_with('#')
+      expect(current_url_fragment).to be_nil
     end
 
     # Shown again from the text editor, the grid editor reads the text editor's content first: a
