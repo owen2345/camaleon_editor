@@ -89,8 +89,35 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page.evaluate_script('window.__cama_parses')).to eq(0)
   end
 
-  # A column or a block dropped in from the palette is given its menu as the sort that placed it
-  # ends. Those of a grid rebuilt from content have theirs already: sorting one adds no second.
+  # A column or a block dropped in from the palette is a copy of the palette's entry, which
+  # carries no menu and is not marked as built: the copy is given its menu as the sort that
+  # placed it ends, and once.
+  it 'gives a column and a block dropped in from the palette their one menu, kept as they are sorted' do
+    install_plugin_and_open_post_editor
+    open_grid_editor
+    expect(page).to have_css('.grid_editor_menu .drg_column, .grid_editor_menu .drg_item')
+    expect(page).to have_no_css('.grid_editor_menu .grid-col-built, .grid_editor_menu .grid-item-built',
+                                visible: :all)
+
+    # what a drop hands each sortable: a copy of the entry, placed in it, as the sort ends
+    page.execute_script(<<~JS)
+      var editor = jQuery('.panel_grid_editor');
+      var grid = editor.children('.panel_grid_body_w').children('.panel_grid_body');
+      var stop = function(sortable, item){ sortable.sortable('option', 'stop').call(sortable[0], {}, {item: item}); };
+      var column = editor.find('.grid_editor_menu [data-col="6"]').first().clone().appendTo(grid);
+      stop(grid, column);
+      var area = column.children('.grid_sortable_items');
+      var block = editor.find('.grid_editor_menu [data-kind="text"]').first().clone().appendTo(area);
+      stop(area, block);
+      stop(grid, column);
+      stop(area, block);
+    JS
+
+    expect(page).to have_css('.panel_grid_body .drg_column > .header_box .dropdown', count: 1, visible: :all)
+    expect(page).to have_css('.panel_grid_body .drg_item > .header_box .dropdown', count: 1, visible: :all)
+  end
+
+  # Those of a grid rebuilt from content have their menu already: sorting one adds no second.
   it 'leaves a column and a block of a rebuilt grid their one menu when they are sorted' do
     store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
     open_post_in_editor(@post)
