@@ -180,6 +180,16 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(selection).to include('<strong>bold</strong>')
     end
 
+    # The text editor answers with the export while its grid editor is the one shown. A grid
+    # editor out of the page - an admin page loaded in place takes the post's form with it - is
+    # shown to nobody: the text editor speaks for itself again.
+    it 'leaves the text editor to answer for itself once the grid editor is out of the page' do
+      page.execute_script("jQuery('.panel_grid_editor').detach();")
+
+      expect(text_editor_content).to include('<strong>bold</strong>')
+      expect(text_editor_content).not_to include('<b>bold</b>')
+    end
+
     # A block form loads a text editor of its own through jQuery's tinymce(), and from then on
     # jQuery's val() hands a value to the text editor of a field that has one and leaves the field
     # alone. The grid writes its field itself: the field holds the export whatever was loaded.
