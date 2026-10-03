@@ -43,15 +43,17 @@ grid to make: the grid comes back as it was left and is what is saved, and that 
 the text editor. A grid opened over a post's other content takes over at its first change: until
 then, the post keeps what the text editor holds.
 
+As the page is being left, each text editor that TinyMCE would write then (one shown, whose
+settings let it) writes its content into its field as a save does, the grid's export while the
+grid editor is shown. TinyMCE wrote the editor's raw markup, which a page the author stays on
+after all kept in its fields.
+
 Where the grid editor is loaded, the text editors keep the scripts of the content they are
 handed, where they used to take them out: a grid, an Editor block in its form, any other post
 content, markup written in the source view. That goes for every text editor of the page,
 whatever settings it was set up with; an editor whose own list of elements has a rule for the
 script keeps that rule. Pasted markup still loses its scripts. A script stays inert in both
-editors and runs on the public page. As the page is being left, each of those editors writes its
-content into its field as a save does (the grid's export, while the grid editor is shown), where
-TinyMCE wrote the editor's raw markup: a page the author stays on after all keeps content in its
-fields.
+editors and runs on the public page.
 
 A text editor gives a script back where it stood, on a line of its own, with its text as it was
 and no paragraph put around it. The attributes come back in the editor's spelling (double
