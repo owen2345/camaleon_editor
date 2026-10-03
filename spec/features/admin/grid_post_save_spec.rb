@@ -173,9 +173,11 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     # The other entries that export the grid are links to "#" as well: Clone of a block or of a
-    # column, Delete of a column, Clear. Clicked for real, each goes nowhere all the same.
+    # column, Delete of a column, Clear. Clicked for real, each goes nowhere all the same. The
+    # errors the page reports say that the listener threw at each click, as the example assumes.
     it 'leaves the page where it was whichever entry a listener of the export throws at' do
       make_the_grid_export_throw
+      watch_the_page_errors
       open_the_menu_of('.drg_item')
       find('.panel_grid_body .drg_item .grid_content_clone').click
       expect(current_url_fragment).to be_nil
@@ -190,6 +192,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
       accept_confirm { find('.grid_editor_menu .clear').click }
       expect(current_url_fragment).to be_nil
+      expect(page_errors.length).to eq(4)
     end
 
     # A column cloned while one of its blocks fades out does not take that block along: the copy

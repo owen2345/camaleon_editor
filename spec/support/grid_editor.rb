@@ -161,6 +161,19 @@ def current_url_fragment
   URI(page.current_url).fragment
 end
 
+# Keeps the errors the page reports from here on (a listener that throws at a real click reports
+# one), for page_errors to answer with.
+def watch_the_page_errors
+  page.execute_script(<<~JS)
+    window.__cama_errors = [];
+    window.addEventListener('error', function(event){ window.__cama_errors.push(event.message); });
+  JS
+end
+
+def page_errors
+  page.evaluate_script('window.__cama_errors')
+end
+
 # The field of the post's text editor. In a post of several languages each language has a field
 # and a text editor of its own, and this is the first language's: the field they are composed into
 # has no editor.

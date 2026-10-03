@@ -105,13 +105,10 @@ RSpec.describe 'the grid editor block forms', :js do
 
     # The entry is still in the page, hidden: a click that reaches it all the same breaks nothing
     it 'opens nothing and goes nowhere when the Edit entry is clicked all the same' do
-      page.execute_script(<<~JS)
-        window.__cama_errors = [];
-        window.addEventListener('error', function(event){ window.__cama_errors.push(event.message); });
-        document.querySelector('.panel_grid_body .drg_item .grid_content_edit').click();
-      JS
+      watch_the_page_errors
+      page.execute_script("document.querySelector('.panel_grid_body .drg_item .grid_content_edit').click();")
 
-      expect(page.evaluate_script('window.__cama_errors')).to eq([])
+      expect(page_errors).to eq([])
       expect(current_url_fragment).to be_nil
       expect(page).to have_no_css('.modal')
     end
