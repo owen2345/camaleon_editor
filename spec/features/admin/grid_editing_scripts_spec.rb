@@ -26,9 +26,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     open_post_in_editor(@post)
     watch_for_a_sort
 
-    handle = first('.panel_grid_body .drg_item .header_box').native
-    page.driver.browser.action.click_and_hold(handle).pause(duration: 0.4).move_by(0, 25).pause(duration: 0.2)
-        .move_by(0, 25).pause(duration: 0.2).release.perform
+    drag_the_first_block
 
     expect(sort_started).to be(true)
     expect(script_ran).to be_nil

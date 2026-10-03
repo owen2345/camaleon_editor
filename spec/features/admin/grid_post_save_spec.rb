@@ -157,10 +157,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
         jQuery('.panel_grid_body .drg_column .grid_col_clone').click();
         jQuery('.panel_grid_body .drg_column').last().find('.grid_col_remove').click();
       JS
-      handle = first('.panel_grid_body .drg_item .header_box').native
       deleted_area = find('.panel_grid_body .drg_column.grid-deleted > .grid_sortable_items').native
-      page.driver.browser.action.click_and_hold(handle).pause(duration: 0.4).move_to(deleted_area).pause(duration: 0.2)
-          .move_by(0, 3).pause(duration: 0.2).release.perform
+      drag_the_first_block(to: deleted_area)
 
       expect(sort_started).to be(true)
       expect(page).to have_css('.panel_grid_body .drg_column:not(.grid-deleted) .drg_item', count: 1)

@@ -122,6 +122,20 @@ def sort_started
   page.evaluate_script('window.__cama_sort_started')
 end
 
+# Drags the grid's first block by its header, slowly enough for a sort to start, and lets it go:
+# two steps down, or onto `to` (an element) and a step further.
+def drag_the_first_block(to: nil)
+  drag = hold_the_first_block
+  to ? drag.move_to(to).pause(duration: 0.2).move_by(0, 3) : drag.move_by(0, 25).pause(duration: 0.2).move_by(0, 25)
+  drag.pause(duration: 0.2).release.perform
+end
+
+# The first block held by its header, for long enough that jQuery UI takes the hold for a drag.
+def hold_the_first_block
+  handle = first('.panel_grid_body .drg_item .header_box').native
+  page.driver.browser.action.click_and_hold(handle).pause(duration: 0.4)
+end
+
 # The way back: leaves the grid editor for the text editor, and answers the prompt its link asked.
 def leave_for_the_text_editor
   accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
