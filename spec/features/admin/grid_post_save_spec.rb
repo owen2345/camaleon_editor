@@ -174,7 +174,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # throws, it still goes nowhere, and the page stays where it was.
     it 'leaves the page where it was when a listener of the export throws at a delete' do
       make_the_grid_export_throw
-      find('.panel_grid_body .drg_item > .header_box .dropdown-toggle').click
+      open_the_menu_of('.drg_item')
       accept_confirm { find('.panel_grid_body .drg_item .grid_content_remove').click }
 
       expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)

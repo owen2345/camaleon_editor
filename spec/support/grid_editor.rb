@@ -226,6 +226,12 @@ def open_templates_menu(label: 'Templates')
   find('.grid_editor_menu a.dropdown-toggle', text: label).click
 end
 
+# Opens the options menu of the grid's first column ('.drg_column') or block ('.drg_item'), and
+# answers with its toggle.
+def open_the_menu_of(part)
+  first(".panel_grid_body #{part} > .header_box .dropdown-toggle").tap(&:click)
+end
+
 def open_templates_list(label: 'Templates')
   open_templates_menu(label: label)
   find('.grid_editor_menu .list_templates').click

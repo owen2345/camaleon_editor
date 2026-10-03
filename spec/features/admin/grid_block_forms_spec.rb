@@ -80,7 +80,7 @@ RSpec.describe 'the grid editor block forms', :js do
     end
 
     it 'offers to delete, clone and style the block, not to edit it' do
-      find('.drg_item > .header_box .dropdown-toggle').click
+      open_the_menu_of('.drg_item')
 
       within '.drg_item > .header_box .dropdown-menu' do
         expect(page).to have_css('a.grid_content_remove')
@@ -92,8 +92,7 @@ RSpec.describe 'the grid editor block forms', :js do
 
     # A script may register a kind after the grid is rebuilt: the menu follows the registry as it opens
     it 'offers to edit the block once a script registers its kind' do
-      toggle = find('.drg_item > .header_box .dropdown-toggle')
-      toggle.click
+      toggle = open_the_menu_of('.drg_item')
       expect(page).to have_css('.drg_item > .header_box a.grid_content_remove')
       expect(page).to have_no_css('.drg_item > .header_box a.grid_content_edit')
 
