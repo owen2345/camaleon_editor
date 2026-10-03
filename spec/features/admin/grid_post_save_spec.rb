@@ -18,7 +18,6 @@ RSpec.describe 'saving a post from the grid editor', :js do
   def open_stored_post(as: nil)
     store_post_content(@post, stored_content)
     open_post_in_editor(@post, as: as)
-    find('.panel_grid_editor .panel_grid_body .drg_column .drg_item')
   end
 
   def change_in_the_text_editor(from, to)

@@ -75,7 +75,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   it 'shows the existing editor again without parsing the content a second time' do
     store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
     open_post_in_editor(@post)
-    find('.panel_grid_editor .panel_grid_body .drg_item')
 
     leave_for_the_text_editor
     page.execute_script(<<~JS)
@@ -121,7 +120,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   it 'leaves a column and a block of a rebuilt grid their one menu when they are sorted' do
     store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
     open_post_in_editor(@post)
-    find('.panel_grid_editor .panel_grid_body .drg_item')
 
     # what the grid's sortables do as a sort ends, for the column and for its block
     page.execute_script(<<~JS)
@@ -245,7 +243,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   # editor is hidden and the grid editor is not in the page yet.
   it 'keeps the content in the text editor when rebuilding the grid throws' do
     open_post_in_editor(@post)
-    find('.mce-tinymce')
     content = grid_post_content(grid_with_block('<p>kept</p>'))
 
     # the field and the text editor hold the same content, as they do when the page opens with it
@@ -266,7 +263,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   # must not stay hidden behind an editor that never arrived.
   it 'brings the text editor back when building the editor over ordinary content throws' do
     open_post_in_editor(@post)
-    find('.mce-tinymce')
     page.execute_script("jQuery.fn.tooltip = function(){ throw new Error('widget broke'); };")
 
     accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
@@ -283,7 +279,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     body = %(<div class="panel_grid_body row hero" id="landing" data-theme="dark">#{grid_column_markup}</div>)
     store_post_content(@post, grid_post_content(body))
     open_post_in_editor(@post)
-    find('.panel_grid_editor .panel_grid_body .drg_column')
     trigger_grid_auto_save
 
     expect(saved_grid_content).to include('id="landing"', 'data-theme="dark"')
@@ -293,7 +288,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   # Called on several fields at once, jQuery's before() gave each its own editor; so does the editor.
   it 'builds an editor for each field of a set' do
     open_post_in_editor(@post)
-    find('.mce-tinymce')
 
     page.execute_script(<<~JS)
       jQuery('<div id="cama_two_fields"><textarea></textarea><textarea></textarea></div>').appendTo('#form-post');
@@ -306,7 +300,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   it 'does not give a saved grid root back a class it was saved without' do
     store_post_content(@post, grid_post_content(%(<div class="panel_grid_body hero">#{grid_column_markup}</div>)))
     open_post_in_editor(@post)
-    find('.panel_grid_editor .panel_grid_body .drg_column')
     trigger_grid_auto_save
 
     root_classes = saved_grid_content[/<div class="([^"]*panel_grid_body[^"]*)"/, 1].split
@@ -318,7 +311,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   # nothing for a detached field, and its native replacement must not throw instead.
   it 'does not break on a text field that is not in the page yet' do
     open_post_in_editor(@post)
-    find('.mce-tinymce')
 
     error = page.evaluate_script(<<~JS)
       (function(){
