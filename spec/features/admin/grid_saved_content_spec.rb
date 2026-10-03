@@ -56,7 +56,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   it 'has a post in several languages send the content mended in the text editor' do
     grid = grid_post_content(grid_with_block('<p>kept</p>'))
     @site.set_meta('languages_site', %w[en es])
-    store_post_content(@post, "<!--:en-->#{grid}<p>written after the grid</p><!--:--><!--:es--><p>spanish</p><!--:-->")
+    store_post_content(@post, { en: "#{grid}<p>written after the grid</p>", es: '<p>spanish</p>' }.to_translate)
     open_post_in_editor(@post)
     expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
     close_alert

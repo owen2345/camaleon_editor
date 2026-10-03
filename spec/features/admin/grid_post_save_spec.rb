@@ -475,7 +475,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
   # A post in several languages has one field for each, with a text editor and a grid editor of
   # its own, and core composes what the post stores from them.
   context 'with a post in two languages' do
-    let(:stored_content) { "<!--:en-->#{grid_in('english')}<!--:--><!--:es-->#{grid_in('spanish')}<!--:-->" }
+    let(:stored_content) { { en: grid_in('english'), es: grid_in('spanish') }.to_translate }
 
     def grid_in(language)
       grid_post_content(grid_with_block("<p>#{language}</p>#{script}<p><b>bold</b></p>", kind: 'editor'))
@@ -508,7 +508,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
       submit_post_form
 
       expect(export).to include('<p>english</p>', script, '<b>changed</b>')
-      expect(post_content).to eq("<!--:en-->#{export}<!--:--><!--:es-->#{grid_in('spanish')}<!--:-->")
+      expect(post_content).to eq({ en: export, es: grid_in('spanish') }.to_translate)
     end
 
     # As the page is being left, each text editor's own write would put its raw body into its
@@ -523,7 +523,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
       export = saved_grid_content
       submit_post_form
 
-      expect(post_content).to eq("<!--:en-->#{export}<!--:--><!--:es-->#{grid_in('spanish')}<!--:-->")
+      expect(post_content).to eq({ en: export, es: grid_in('spanish') }.to_translate)
     end
 
     # Core composes what the post sends when a field says it changed, which a text editor does
