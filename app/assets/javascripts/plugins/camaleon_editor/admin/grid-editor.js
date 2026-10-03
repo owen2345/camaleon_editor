@@ -1040,7 +1040,9 @@ jQuery(function(){
         // the editor will read it, with its own parser and its own lists: a browser reads some
         // markup otherwise - a script behind a plaintext tag or an unfinished one, inside a
         // comment a noscript ends early for the editor, inside a template - and would find no
-        // script where the editor does. Asked for the markup once read instead, the editor would
+        // script where the editor does; and where the editor reads a comment to its end that a
+        // browser ends at once, the comment goes with the script it spells, which the browser
+        // would read behind it. Asked for the markup once read instead, the editor would
         // read it in its own document first, where a handler of an element that fails to load
         // runs over the admin's page. The listener is added once the editor's plugins have added
         // theirs, so it reads what they leave: the paste plugin's own filters run before it, and
@@ -1054,6 +1056,12 @@ jQuery(function(){
                     var settings = {validate: editor.settings.validate !== false};
                     var parser = new tinymce.html.DomParser(settings, editor.schema);
                     parser.addNodeFilter("script", function(nodes){ for(var i = nodes.length - 1; i >= 0; i--) nodes[i].remove(); });
+                    // A comment or a CDATA section the editor reads to its end, where a browser ends
+                    // it at once ("<!--->", "<![CDATA[ >") and reads what follows as markup, would
+                    // carry a script past the filter: one that spells a script goes with it.
+                    parser.addNodeFilter("#comment,#cdata", function(nodes){
+                        for(var i = nodes.length - 1; i >= 0; i--) if(/<script/i.test(nodes[i].value)) nodes[i].remove();
+                    });
                     var root = parser.parse(e.content, {forced_root_block: false, isRootContent: true});
                     e.content = new tinymce.html.Serializer(settings, editor.schema).serialize(root);
                 });
