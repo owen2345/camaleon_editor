@@ -285,8 +285,9 @@ jQuery(function(){
         // first auto_save, then the last export. A grid opened over other content has none before
         // its first auto_save, and the text editor's content stays what is saved until then.
         var exported = saved_body ? saved_content : null;
-        // What the text editor held when the author left the grid editor for it.
-        var left_with = null, left_with_raw = null;
+        // What the text editor held when the author left the grid editor for it: its content, and
+        // the markup of its document.
+        var left_with = null, left_with_body = null;
         gridEditor_id ++;
         var tinymce_panel = $(tinyEditor.editorContainer).hide();
         var editor_id = "grid_editor_"+gridEditor_id;
@@ -607,7 +608,7 @@ jQuery(function(){
                 // the text editor was emptied, can be worked on as markup there.
                 if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
                 left_with = tinyEditor.getContent();
-                left_with_raw = tinyEditor.getContent({format: "raw"});
+                left_with_body = tinyEditor.getBody().innerHTML;
                 field_follows(tinyEditor, textarea);
                 return false;
             });
@@ -913,20 +914,19 @@ jQuery(function(){
         // was clicked in: its panel is hidden once the grid is the one shown.
         editor.bind("show_again", function(_event, text_editor){
             var hidden = grid_hidden();
-            if(hidden){
-                // The raw read is a copy of the editor's document, where the content is a serialization
-                // of it, a third of a second per megabyte: the same document gives the same content, so
-                // the content is read and compared only where the document changed.
-                if(tinyEditor.getContent({format: "raw"}) !== left_with_raw){
-                    var content = tinyEditor.getContent();
-                    if(content !== left_with && !follow_text_editor(content)) return;
-                }
+            // The body's markup is the editor's document as it stands, where the content is a
+            // serialization of it, a third of a second per megabyte: the same document gives the same
+            // content, so the content is read and compared only where the document changed. (TinyMCE's
+            // raw read is no such copy: it takes a selection mark out wherever the text spells one.)
+            if(hidden && tinyEditor.getBody().innerHTML !== left_with_body){
+                var content = tinyEditor.getContent();
+                if(content !== left_with && !follow_text_editor(content)) return;
             }
             $(text_editor.editorContainer).hide();
             editor.show();
             if(hidden) field_follows(tinyEditor, textarea);
-            // what the author left with has been compared; the next leave sets it again
-            left_with = left_with_raw = null;
+            // what the author left with is let go; the next leave sets it again
+            left_with = left_with_body = null;
         });
 
         // drag columns

@@ -360,6 +360,31 @@ RSpec.describe 'saving a post from the grid editor', :js do
         expect(post_content).to eq(stored_content)
       end
 
+      # The grid editor asks the text editor's document before its content, which costs more:
+      # a mark of the editor's own in the document (a bogus element) is no change to the content.
+      it 'stores the post as it was when only a mark of the text editor changed' do
+        page.execute_script(<<~JS)
+          #{POST_TEXT_EDITOR}.getBody().firstChild.insertAdjacentHTML('afterbegin', '<span data-mce-bogus="1"></span>');
+        JS
+        open_grid_editor
+        submit_post_form
+
+        expect(post_content).to eq(stored_content)
+      end
+
+      # The document is asked as it stands: TinyMCE's raw read leaves a selection mark out wherever
+      # the text spells one, and would take a change to such text for none.
+      it 'makes the grid again from text changed to spell a mark of the editor' do
+        page.execute_script(<<~JS)
+          var editor = #{POST_TEXT_EDITOR};
+          editor.getBody().querySelector('p').appendChild(editor.getDoc().createTextNode(' data-mce-selected="1"'));
+        JS
+        open_grid_editor
+        submit_post_form
+
+        expect(post_content).to include('embedded widget data-mce-selected="1"')
+      end
+
       it 'makes the grid again from what was changed in the text editor, and stores that' do
         change_in_the_text_editor('bold', 'changed in the text editor')
         changed = text_editor_content
