@@ -1055,19 +1055,19 @@ jQuery(function(){
                     if(!/<script/i.test(e.content)) return;
                     // read with the editor's own settings, as its parser reads what is put in
                     var parser = new tinymce.html.DomParser(editor.settings, editor.schema);
-                    parser.addNodeFilter("script", function(nodes){ for(var i = nodes.length - 1; i >= 0; i--) nodes[i].remove(); });
                     var root = parser.parse(e.content, {forced_root_block: false, isRootContent: true});
-                    // A comment or a CDATA section the editor reads to its end, where a browser ends
-                    // it at its first ">" ("<!--->", "<![CDATA[ >") and reads what follows as markup,
-                    // would carry a script past the filter; and a processing instruction written
-                    // back ("<?xml ?>" as "<?xml?>") is taken by the editor's next read up to the
-                    // first "/>", a tag further, which can make a script of raw text behind it.
-                    // None of the three is content: a paste that spells a script loses them.
-                    var carriers = [];
+                    // The scripts go, and with them what could carry one past the filter: a comment
+                    // or a CDATA section the editor reads to its end, where a browser ends it at its
+                    // first ">" ("<!--->", "<![CDATA[ >") and reads what follows as markup; and a
+                    // processing instruction written back ("<?xml ?>" as "<?xml?>"), which the
+                    // editor's next read takes up to the first "/>", a tag further, so that raw text
+                    // behind it can come out as a script. None of the three is content. Collected
+                    // first: none holds another, so the order they go in is of no matter.
+                    var removed = [];
                     for(var node = root.firstChild; node; node = node.walk()){
-                        if(node.type === 4 || node.type === 7 || node.type === 8) carriers.push(node);
+                        if(node.name === "script" || node.type === 4 || node.type === 7 || node.type === 8) removed.push(node);
                     }
-                    for(var i = carriers.length - 1; i >= 0; i--) carriers[i].remove();
+                    for(var i = 0; i < removed.length; i++) removed[i].remove();
                     e.content = new tinymce.html.Serializer({validate: editor.settings.validate}, editor.schema).serialize(root);
                 });
             });
