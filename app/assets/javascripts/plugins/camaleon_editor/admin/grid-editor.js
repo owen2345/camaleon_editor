@@ -966,7 +966,7 @@ jQuery(function(){
             },
             stop: function (e, ui) {
                 ui.item.css({left: "", opacity: "", right: "", bottom: "", top: "", position: ""}).removeAttr("data-original-title").removeAttr("aria-describedby");
-                if(!has_menu(jQuery(ui.item))) parse_content_column(ui.item)
+                if(!has_menu(ui.item)) parse_content_column(ui.item)
                 editor.trigger("auto_save");
             }
         });
@@ -994,7 +994,7 @@ jQuery(function(){
                 },
                 stop: function (e, ui) {
                     ui.item.removeClass('col-md-12').css({left: "", opacity: "", right: "", bottom: "", top: "", position: ""}).removeAttr("data-original-title").removeAttr("aria-describedby");
-                    if(!has_menu(jQuery(ui.item))) parse_content_content(ui.item)
+                    if(!has_menu(ui.item)) parse_content_content(ui.item)
                     editor.trigger("auto_save");
                 }
             });
