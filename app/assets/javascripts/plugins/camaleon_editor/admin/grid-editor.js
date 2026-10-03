@@ -482,10 +482,11 @@ jQuery(function(){
             return editor;
         }
 
-        // The grid made from the root of saved content: what the root carries, its style and its
-        // markup, then the editor's headers and menus. Filled rather than swapped in as live nodes,
-        // which would run the content's scripts.
-        function grid_from(grid, root){
+        // The editor's grid made from the root of saved content: what the root carries, its style
+        // and its markup, then the editor's headers and menus. Filled rather than swapped in as
+        // live nodes, which would run the content's scripts.
+        function grid_from(root){
+            var grid = grid_root(editor);
             keep_root_attributes(grid, root);
             fill_grid(grid, root);
             parse_content(editor);
@@ -701,7 +702,7 @@ jQuery(function(){
 
             // if saved content is a grid_editor content, then rebuilt or recover this content
             if(saved_body){
-                grid_from(grid_root(editor), saved_body);
+                grid_from(saved_body);
             }else{
                 editor.data("tiny_backup", tinyEditor.getContent())
             }
@@ -856,7 +857,7 @@ jQuery(function(){
                 // as the editor was built: the root's own class, then what the content's root carries,
                 // then the class its sortable gave it, which stays on the widget's root
                 set_attributes(grid, [{name: "class", value: GRID_ROOT_CLASS}]);
-                grid_from(grid, body);
+                grid_from(body);
                 grid.addClass("ui-sortable");
             } catch(error) {
                 if(window.console) console.error(error);
