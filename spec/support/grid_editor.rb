@@ -246,9 +246,10 @@ def open_templates_menu(label: 'Templates')
 end
 
 # Opens the options menu of the grid's first column ('.drg_column') or block ('.drg_item'), and
-# answers with its toggle, found again if the page replaces it.
+# answers with its toggle, found again if the page replaces it (Capybara's allow_reload, which it
+# calls a beta option; its FindAllFirst cop rewrites the find(…, match: :first) that reloads too).
 def open_the_menu_of(part)
-  toggle = first(".panel_grid_body #{part} > .header_box .dropdown-toggle")
+  toggle = first(".panel_grid_body #{part} > .header_box .dropdown-toggle", allow_reload: true)
   toggle.click
   toggle
 end
