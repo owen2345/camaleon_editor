@@ -341,8 +341,10 @@ RSpec.describe 'scripts in the text editor', :js do
   # a script behind a plaintext tag or an unfinished tag, one inside a comment that a noscript, an
   # svg style or a video (raw text to the editor's media plugin) ends early for the editor, one
   # inside a template - and would see no script where the editor does. The other way round too:
-  # a comment or a CDATA section the editor reads to its end, where a browser ends it at once
-  # ("<!--->", "<![CDATA[ >") and reads a script behind it, goes with the script it spells. And
+  # a comment or a CDATA section the editor reads to its end, where a browser ends it at its first
+  # ">" ("<!--->", "<![CDATA[ >") and reads a script behind it, goes with the script it spells (a
+  # processing instruction read the same way, "<?x >", comes back with its text encoded, and so
+  # carries none). And
   # they are found in the markup as the editor's paste plugin leaves it: its own filters run first,
   # and the one that takes style attributes out of tags (in a WebKit browser) can glue a script tag
   # together out of a tag that spelled none.
@@ -354,7 +356,8 @@ RSpec.describe 'scripts in the text editor', :js do
                "<p>pasted</p><svg><style><!-- </style>#{script} --></style></svg>",
                "<p>pasted</p><video><!-- </video>#{script} --></video>",
                "<p>pasted</p><template>#{script}</template>", "<p>pasted</p>#{glued}",
-               "<p>pasted</p><!--->#{script}-->", "<p>pasted</p><![CDATA[ >#{script} ]]>"]
+               "<p>pasted</p><!--->#{script}-->", "<p>pasted</p><![CDATA[ >#{script} ]]>",
+               "<p>pasted</p><?x >#{script}?>"]
     markups.each do |markup|
       answer = pasted_into_the_text_editor(markup)
 
