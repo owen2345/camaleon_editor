@@ -1065,7 +1065,7 @@ jQuery(function(){
                     // processing instruction written back ("<?xml ?>" as "<?xml?>"), which the
                     // editor's next read takes up to the first "/>", a tag further, so that raw text
                     // behind it can come out as a script. None of the three is content. Collected
-                    // first: none holds another, so the order they go in is of no matter.
+                    // first: remove() unlinks a node, and a walk gone on from it would end there.
                     var removed = [];
                     for(var node = root.firstChild; node; node = node.walk()){
                         if(node.name === "script" || node.type === 4 || node.type === 7 || node.type === 8) removed.push(node);
