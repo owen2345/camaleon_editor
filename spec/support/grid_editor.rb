@@ -233,9 +233,11 @@ def open_templates_menu(label: 'Templates')
 end
 
 # Opens the options menu of the grid's first column ('.drg_column') or block ('.drg_item'), and
-# answers with its toggle.
+# answers with its toggle, found again if the page replaces it.
 def open_the_menu_of(part)
-  first(".panel_grid_body #{part} > .header_box .dropdown-toggle").tap(&:click)
+  toggle = first(".panel_grid_body #{part} > .header_box .dropdown-toggle")
+  toggle.click
+  toggle
 end
 
 def open_templates_list(label: 'Templates')
