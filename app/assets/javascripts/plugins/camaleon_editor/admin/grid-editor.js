@@ -1053,8 +1053,8 @@ jQuery(function(){
             editor.on("PreInit", function(){
                 editor.on("PastePreProcess", function(e){
                     if(!/<script/i.test(e.content)) return;
-                    var settings = {validate: editor.settings.validate !== false};
-                    var parser = new tinymce.html.DomParser(settings, editor.schema);
+                    // read with the editor's own settings, as its parser reads what is put in
+                    var parser = new tinymce.html.DomParser(editor.settings, editor.schema);
                     parser.addNodeFilter("script", function(nodes){ for(var i = nodes.length - 1; i >= 0; i--) nodes[i].remove(); });
                     // A comment or a CDATA section the editor reads to its end, where a browser ends
                     // it at once ("<!--->", "<![CDATA[ >") and reads what follows as markup, would
@@ -1063,7 +1063,7 @@ jQuery(function(){
                         for(var i = nodes.length - 1; i >= 0; i--) if(/<script/i.test(nodes[i].value)) nodes[i].remove();
                     });
                     var root = parser.parse(e.content, {forced_root_block: false, isRootContent: true});
-                    e.content = new tinymce.html.Serializer(settings, editor.schema).serialize(root);
+                    e.content = new tinymce.html.Serializer({validate: editor.settings.validate}, editor.schema).serialize(root);
                 });
             });
         }
