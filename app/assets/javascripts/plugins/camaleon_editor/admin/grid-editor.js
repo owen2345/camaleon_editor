@@ -836,8 +836,10 @@ jQuery(function(){
         // editor makes of the export it was handed is not the export: <b> and rgb() are respelled,
         // bare table rows are flattened (a block's script it keeps: see keep_scripts). So while
         // the grid editor is the one shown, the text editor answers with the export itself, whoever
-        // asks for its content. Back in the text editor (the grid editor hidden), the text editor
-        // speaks for itself.
+        // asks for its content as markup: that is the read written into the field. Asked for its
+        // text, its raw body or a selection, the text editor speaks for itself, as it does while
+        // the grid has exported nothing (see exported) and back in the text editor (the grid
+        // editor hidden).
         tinyEditor.on("GetContent", function(e){
             var grid_shown = $.contains(document, editor[0]) && !grid_hidden(editor);
             if(exported !== null && grid_shown && e.format === "html" && !e.selection) e.content = exported;
