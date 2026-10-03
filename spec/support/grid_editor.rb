@@ -134,16 +134,14 @@ def wait_for_text_editor(editor)
 end
 
 # Sets a text editor up over a new field for each id, and waits until each is set up. `settings`
-# is the script of the settings the page sets them up with, which stay at hand as the page's;
-# `selector` there finds the fields.
+# is the script of the settings the page sets them up with; `selector` there finds the fields.
 def set_up_text_editors(ids, settings)
   page.execute_script(<<~JS, ids)
     var selector = jQuery.map(arguments[0], function(id){
       jQuery('<textarea>').attr('id', id).appendTo('body');
       return '#' + id;
     }).join(', ');
-    window.__cama_own_settings = #{settings};
-    tinymce.init(window.__cama_own_settings);
+    tinymce.init(#{settings});
   JS
   ids.each { |id| wait_for_text_editor("tinymce.get('#{id}')") }
 end

@@ -179,8 +179,10 @@ RSpec.describe 'scripts in the text editor', :js do
     # The settings a page sets its editors up with are the page's: they stay as it wrote them,
     # however many editors it sets up with them, and so do core's defaults.
     it "adds the script to a page's own list for each editor, and to the default one otherwise" do
-      set_up_text_editors(%w[own_a own_b],
-                          "cama_get_tinymce_settings({selector: selector, extended_valid_elements: 'video[*]'})")
+      # the settings object the page made stays at hand as the page's
+      set_up_text_editors(%w[own_a own_b], <<~JS)
+        window.__cama_own_settings = cama_get_tinymce_settings({selector: selector, extended_valid_elements: 'video[*]'})
+      JS
       default_list = page.evaluate_script("#{POST_TEXT_EDITOR}.settings.extended_valid_elements")
 
       expect([list_of('own_a'), list_of('own_b')]).to all(eq('video[*],script[*]'))
