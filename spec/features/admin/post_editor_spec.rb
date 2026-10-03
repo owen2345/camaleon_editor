@@ -20,7 +20,7 @@ RSpec.describe 'the grid editor in the admin post editor', :js do
   it 'does its work once, however often its script is evaluated' do
     install_plugin_and_open_post_editor
 
-    evaluated_again, hooks_before, hooks_after, kind_kept = page.evaluate_script(<<~JS)
+    evaluated_again, hooks_before = page.evaluate_script(<<~JS)
       (function(){
         var hooks = function(){
           return jQuery.map(['init', 'settings', 'setups', 'custom_toolbar'], function(list){
@@ -30,9 +30,15 @@ RSpec.describe 'the grid editor in the admin post editor', :js do
         var before = hooks(), tabs_builder = window.grid_tab_builder;
         jQuery.fn.gridEditor_options.faq = {title: 'FAQ', callback: function(){}};
         jQuery.ajax({url: jQuery('script[src*="editor-manifest"]').attr('src'), dataType: 'script', async: false});
-        return [window.grid_tab_builder !== tabs_builder, before, hooks(), 'faq' in jQuery.fn.gridEditor_options];
+        // the script does its work once the document is ready, which jQuery may run later: the
+        // reads of what it did queue behind it
+        window.__cama_after = null;
+        jQuery(function(){ window.__cama_after = [hooks(), 'faq' in jQuery.fn.gridEditor_options]; });
+        return [window.grid_tab_builder !== tabs_builder, before];
       })()
     JS
+    wait_until { page.evaluate_script('window.__cama_after !== null') }
+    hooks_after, kind_kept = page.evaluate_script('window.__cama_after')
     set_up_text_editors(%w[later_editor], 'cama_get_tinymce_settings({selector: selector})')
     buttons = page.evaluate_script(<<~JS)
       jQuery(tinymce.get('later_editor').editorContainer).find('.mce-btn').filter(function(){
