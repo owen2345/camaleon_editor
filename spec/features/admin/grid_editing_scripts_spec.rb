@@ -219,10 +219,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     end
 
     it 'keeps the markup of a label through an edit' do
-      store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'], kind: 'tab')))
-      store_post_content(@post, post_content.sub(payload, '<b>Bold</b> tab'))
-      open_post_in_editor(@post)
-      open_first_block_form
+      open_block_form(blocks['tab'].sub(payload, '<b>Bold</b> tab'), kind: 'tab')
 
       expect(page).to have_css('#ow_inline_modal td.name', text: '<b>Bold</b> tab')
       expect(page).to have_no_css('#ow_inline_modal td.name b')
