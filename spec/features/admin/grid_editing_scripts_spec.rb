@@ -220,7 +220,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
 
     it 'keeps the markup of a label through an edit' do
       store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'], kind: 'tab')))
-      @post.reload.update_column(:content, @post.content.sub(payload, '<b>Bold</b> tab')) # rubocop:disable Rails/SkipsModelValidations
+      store_post_content(@post, post_content.sub(payload, '<b>Bold</b> tab'))
       open_post_in_editor(@post)
       open_first_block_form
 
