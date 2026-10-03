@@ -140,12 +140,12 @@ end
 GRID_ROOT = "jQuery('.panel_grid_editor > .panel_grid_body_w > .panel_grid_body')"
 FIRST_COLUMN_AREA = "#{GRID_ROOT}.children('.drg_column').first().children('.grid_sortable_items')".freeze
 
-# What a sortable of the grid does as a sort ends on an item: `sortable` and `item` are scripts
-# that answer with the two.
-def end_a_sort(sortable, item)
-  page.execute_script(<<~JS)
+# What a sortable of the grid does as a sort ends on the first of its items: `sortable` is the
+# script that answers with it, `items` the selector of its items.
+def end_a_sort(sortable, items)
+  page.execute_script(<<~JS, items)
     var sortable = #{sortable};
-    sortable.sortable('option', 'stop').call(sortable[0], {}, {item: #{item}});
+    sortable.sortable('option', 'stop').call(sortable[0], {}, {item: sortable.children(arguments[0]).first()});
   JS
 end
 

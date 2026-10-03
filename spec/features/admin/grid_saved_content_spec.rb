@@ -98,12 +98,12 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
 
     # what a drop hands each sortable: a copy of the entry, placed in it, as the sort ends
     page.execute_script("jQuery('.grid_editor_menu [data-col=\"6\"]').first().clone().appendTo(#{GRID_ROOT});")
-    end_a_sort(GRID_ROOT, "#{GRID_ROOT}.children('.drg_column').first()")
+    end_a_sort(GRID_ROOT, '.drg_column')
     page.execute_script("jQuery('.grid_editor_menu [data-kind=\"text\"]').first().clone()" \
                         ".appendTo(#{FIRST_COLUMN_AREA});")
-    end_a_sort(FIRST_COLUMN_AREA, "#{FIRST_COLUMN_AREA}.children('.drg_item').first()")
-    end_a_sort(GRID_ROOT, "#{GRID_ROOT}.children('.drg_column').first()")
-    end_a_sort(FIRST_COLUMN_AREA, "#{FIRST_COLUMN_AREA}.children('.drg_item').first()")
+    end_a_sort(FIRST_COLUMN_AREA, '.drg_item')
+    end_a_sort(GRID_ROOT, '.drg_column')
+    end_a_sort(FIRST_COLUMN_AREA, '.drg_item')
 
     expect(page).to have_css('.panel_grid_body .drg_column > .header_box .dropdown', count: 1, visible: :all)
     expect(page).to have_css('.panel_grid_body .drg_item > .header_box .dropdown', count: 1, visible: :all)
@@ -115,8 +115,8 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     open_post_in_editor(@post)
 
     # what the grid's sortables do as a sort ends, for the column and for its block
-    end_a_sort(GRID_ROOT, "#{GRID_ROOT}.children('.drg_column').first()")
-    end_a_sort(FIRST_COLUMN_AREA, "#{FIRST_COLUMN_AREA}.children('.drg_item').first()")
+    end_a_sort(GRID_ROOT, '.drg_column')
+    end_a_sort(FIRST_COLUMN_AREA, '.drg_item')
 
     expect(page).to have_css('.panel_grid_body .drg_column > .header_box .dropdown', count: 1, visible: :all)
     expect(page).to have_css('.panel_grid_body .drg_item > .header_box .dropdown', count: 1, visible: :all)
