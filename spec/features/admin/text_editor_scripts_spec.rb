@@ -363,23 +363,26 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
-  # The markup of a paste is read in no document of the page's before its scripts are taken out.
-  # What a browser makes of markup read in the document of a page runs there: a handler of an
-  # image or of a video's source that fails to load, for one, in the editor's window over the
-  # admin's page. An element the editor's window defines says, the moment it is made there,
-  # whether the markup was read in that document.
+  # The markup of a paste is read in no document of the page's, with or without a script in it
+  # to take out. What a browser makes of markup read in the document of a page runs there: a
+  # handler of an image or of a video's source that fails to load, for one, in the editor's
+  # window over the admin's page. An element the editor's window defines says, the moment it is
+  # made there, whether the markup was read in that document.
   it 'runs no handler of pasted markup' do
     page.execute_script("#{POST_TEXT_EDITOR}.getWin().eval(arguments[0]);", <<~JS)
       customElements.define('cama-pasted-witness', class extends HTMLElement {
         constructor(){ super(); window.__cama_pasted_markup_read = true; }
       });
     JS
-    markup = '<p>pasted</p><video><cama-pasted-witness></cama-pasted-witness>' \
-             '<source src="x://y" onerror="window.__cama_pasted_handler_ran = true"></video>'
+    witness = '<p>pasted</p><video><cama-pasted-witness></cama-pasted-witness>' \
+              '<source src="x://y" onerror="window.__cama_pasted_handler_ran = true"></video>'
 
-    expect(pasted_into_the_text_editor(markup)).to include('pasted', 'written in the text editor')
-    expect(script_flag('__cama_pasted_markup_read')).to be_nil
-    expect(script_flag('__cama_pasted_handler_ran')).to be_nil
+    [witness, witness + script].each do |markup|
+      expect(pasted_into_the_text_editor(markup)).to include('pasted', 'written in the text editor')
+      expect(script_flag('__cama_pasted_markup_read')).to be_nil
+      expect(script_flag('__cama_pasted_handler_ran')).to be_nil
+    end
+    expect(script_ran).to be_nil
   end
 
   # A page may set a text editor up with a setup of its own, which takes the place of core's, and
