@@ -43,10 +43,10 @@ grid to make: the grid comes back as it was left and is what is saved, and that 
 the text editor. A grid opened over a post's other content takes over at its first change: until
 then, the post keeps what the text editor holds.
 
-As the page is being left, each text editor that TinyMCE would write then (one shown, whose
-settings let it) writes its content into its field as a save does, the grid's export while the
-grid editor is shown. TinyMCE wrote the editor's raw markup, which a page the author stays on
-after all kept in its fields.
+As the page is being left, each text editor that TinyMCE would write then (one not hidden for its
+field to be edited, whose settings let it) writes its content into its field as a save does, the
+grid's export while the grid editor is shown. TinyMCE wrote the editor's raw markup, which a page
+the author stays on after all kept in its fields.
 
 Where the grid editor is loaded, the text editors keep the scripts of the content they are
 handed, where they used to take them out: a grid, an Editor block in its form, any other post
