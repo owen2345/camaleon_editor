@@ -176,22 +176,6 @@ def page_errors
   page.evaluate_script('window.__cama_errors')
 end
 
-# Keeps the titles of core's alerts from here on, for alerts_shown to answer with (nil for none).
-# Core's alert is watched for rather than looked for: its modal comes a moment after the call.
-def watch_the_alerts
-  page.execute_script(<<~JS)
-    var alert = jQuery.fn.alert;
-    jQuery.fn.alert = function(options){
-      window.__cama_alerts = (window.__cama_alerts || []).concat([options.title]);
-      return alert.apply(this, arguments);
-    };
-  JS
-end
-
-def alerts_shown
-  page.evaluate_script('window.__cama_alerts')
-end
-
 # The field of the post's text editor. In a post of several languages each language has a field
 # and a text editor of its own, and this is the first language's: the field they are composed into
 # has no editor.

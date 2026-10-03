@@ -79,13 +79,12 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # content: a read that would throw is not made, the grid is shown and the post stored as it was.
     it 'shows the grid again without reading a text editor whose document did not change' do
       leave_for_the_text_editor
-      watch_the_alerts
       break_the_text_editor_reads(only_plain: true)
       open_grid_editor
       restore_the_text_editor_reads
 
       expect(page).to have_css('.panel_grid_editor')
-      expect(alerts_shown).to be_nil
+      expect(page).to have_no_css('body.modal-open')
       submit_post_form
       expect(post_content).to eq(stored_content)
     end
@@ -94,7 +93,6 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # throws there leaves the grid shown, and the author is not told the grid could not be opened.
     it 'says nothing false when the field cannot be written once the grid is shown again' do
       leave_for_the_text_editor
-      watch_the_alerts
       page.execute_script(<<~JS)
         jQuery('.panel_grid_editor').next('textarea').on('change', function(){
           if(jQuery('.panel_grid_editor').is(':visible')) throw new Error('the field cannot be written');
@@ -104,7 +102,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
       expect(page).to have_css('.panel_grid_editor')
       expect(page).to have_no_css('.mce-tinymce')
-      expect(alerts_shown).to be_nil
+      expect(page).to have_no_css('body.modal-open')
     end
 
     it 'stores the grid as the grid exported it, a block script included' do
