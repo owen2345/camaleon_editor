@@ -37,8 +37,8 @@ def store_post_content(post, content)
 end
 
 # What the post stores for its content by now.
-def post_content(post = @post)
-  CamaleonCms::Post.find(post.id).content
+def post_content
+  CamaleonCms::Post.find(@post.id).content
 end
 
 # Same for a template: with no signed-in author behind the write, the model's markup gate would
