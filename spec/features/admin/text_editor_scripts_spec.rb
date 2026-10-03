@@ -167,6 +167,15 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(answer.delete("\n")).to eq(%q(<script>document.write('<script src="/w.js"></script><p>');</p><p>after</p>))
   end
 
+  # A script nothing ends holds all that follows it, for a browser too: here the one closing tag
+  # ends the script its text spells inside a comment, and what stands behind is still that text.
+  it 'reads a script that nothing ends up to the end of the content, as a browser does' do
+    content = '<p>before</p><script><!-- <script> </script><b>after</b>'
+
+    expect(through_the_text_editor(content).delete("\n")).to eq("#{content}</script>")
+    expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
+  end
+
   # The script joins the list of elements each text editor is added with, whatever made that list:
   # core's default, a list of the page's own handed to core's settings or put onto them afterwards,
   # settings that are not core's.
