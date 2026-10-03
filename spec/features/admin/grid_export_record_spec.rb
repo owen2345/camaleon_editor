@@ -7,12 +7,6 @@
 RSpec.describe 'the record of what the grid exports', :js do
   init_site
 
-  # What core does when the text editor loses focus: the text editor's content goes into its
-  # textarea.
-  def let_the_text_editor_write
-    page.execute_script("jQuery.each(tinymce.editors, function(_index, editor){ editor.fire('blur'); });")
-  end
-
   before do
     grid = grid_with_block('<p><b>kept</b></p><script>window.__cama_widget_loaded = true;</script>',
                            kind: 'editor', attributes: 'style="background-color: rgb(255, 204, 0);"')
@@ -28,7 +22,6 @@ RSpec.describe 'the record of what the grid exports', :js do
   it 'holds the export, whatever the text editor the author went back to writes in the textarea' do
     trigger_grid_auto_save
     leave_for_the_text_editor
-    let_the_text_editor_write
 
     expect(grid_field).to include('background-color: #ffcc00', '<strong>kept</strong>')
     expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)', '<b>kept</b>',
