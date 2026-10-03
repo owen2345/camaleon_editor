@@ -30,14 +30,52 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(text_editor_content).to eq(content)
   end
 
-  # Going to the text editor and back shows the editor built earlier: the content is not read again.
-  it 'shows the existing editor again without reading the content a second time' do
+  # The author repairs such content in the text editor, and the button builds the grid from the
+  # current content of the text editor. The field holds the last write of the editor (at a focus
+  # loss or with a draft), which can still be the old content.
+  it 'opens the grid from what the text editor holds once the content was mended there' do
+    grid = grid_post_content(grid_with_block('<p>kept</p>'))
+    store_post_content(@post, "#{grid}<p>written after the grid</p>")
+    open_post_in_editor(@post)
+    expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
+    close_alert
+
+    text_editor_holds(grid)
+    open_grid_editor
+
+    expect(page).to have_css('.panel_grid_editor .panel_grid_body .drg_item', count: 1)
+    expect(page).to have_no_css('body.modal-open')
+
+    submit_post_form
+    expect(post_content).to include('<p>kept</p>')
+    expect(post_content).not_to include('written after the grid')
+  end
+
+  # In a post in more than one language, the field of a language is a copy. The post sends the
+  # content that core composed when a copy last triggered a change. The button triggers that change.
+  it 'has a post in several languages send the content mended in the text editor' do
+    grid = grid_post_content(grid_with_block('<p>kept</p>'))
+    @site.set_meta('languages_site', %w[en es])
+    store_post_content(@post, { en: "#{grid}<p>written after the grid</p>", es: '<p>spanish</p>' }.to_translate)
+    open_post_in_editor(@post)
+    expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
+    close_alert
+
+    text_editor_holds(grid)
+    open_grid_editor
+    expect(page).to have_css('.panel_grid_editor .panel_grid_body .drg_item', count: 1)
+
+    expect(composed_content).to include('<p>kept</p>', '<p>spanish</p>')
+    expect(composed_content).not_to include('written after the grid')
+  end
+
+  # A visit to the text editor with no changes there shows the same grid editor again, and does not
+  # parse the content again. (With changes, the grid is built again: see grid_post_save_spec.)
+  it 'shows the existing editor again without parsing the content a second time' do
     store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
     open_post_in_editor(@post)
-    find('.panel_grid_editor .panel_grid_body .drg_item')
 
-    accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
-    expect(page).to have_css('.mce-tinymce')
+    leave_for_the_text_editor
     page.execute_script(<<~JS)
       window.__cama_parses = 0;
       var parse = jQuery.parseHTML;
@@ -47,6 +85,40 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
 
     expect(page).to have_css('.panel_grid_editor .panel_grid_body .drg_item', count: 1)
     expect(page.evaluate_script('window.__cama_parses')).to eq(0)
+  end
+
+  # A column or block dropped from the palette is a copy of a palette entry, which has no menu. The
+  # copy gets its menu one time, when the sort that puts it in the grid ends.
+  it 'gives a column and a block dropped in from the palette their one menu, kept as they are sorted' do
+    install_plugin_and_open_post_editor
+    open_grid_editor
+    expect(page).to have_css('.grid_editor_menu .drg_column, .grid_editor_menu .drg_item')
+    expect(page).to have_no_css('.grid_editor_menu .header_box .dropdown', visible: :all)
+
+    # Do what a drop does for each sortable: put a copy of the entry in it, then end the sort.
+    page.execute_script("jQuery('.grid_editor_menu [data-col=\"6\"]').first().clone().appendTo(#{GRID_ROOT});")
+    end_a_sort(GRID_ROOT, '.drg_column')
+    page.execute_script("jQuery('.grid_editor_menu [data-kind=\"text\"]').first().clone()" \
+                        ".appendTo(#{FIRST_COLUMN_AREA});")
+    end_a_sort(FIRST_COLUMN_AREA, '.drg_item')
+    end_a_sort(GRID_ROOT, '.drg_column')
+    end_a_sort(FIRST_COLUMN_AREA, '.drg_item')
+
+    expect(page).to have_css('.panel_grid_body .drg_column > .header_box .dropdown', count: 1, visible: :all)
+    expect(page).to have_css('.panel_grid_body .drg_item > .header_box .dropdown', count: 1, visible: :all)
+  end
+
+  # The columns and blocks of a rebuilt grid already have a menu: a sort adds no second menu.
+  it 'leaves a column and a block of a rebuilt grid their one menu when they are sorted' do
+    store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
+    open_post_in_editor(@post)
+
+    # Run the sort-end handler of the grid sortables, for the column and for its block.
+    end_a_sort(GRID_ROOT, '.drg_column')
+    end_a_sort(FIRST_COLUMN_AREA, '.drg_item')
+
+    expect(page).to have_css('.panel_grid_body .drg_column > .header_box .dropdown', count: 1, visible: :all)
+    expect(page).to have_css('.panel_grid_body .drg_item > .header_box .dropdown', count: 1, visible: :all)
   end
 
   # The editor holds one grid: opening the first of several would drop the others at the next save.
@@ -158,7 +230,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   # editor is hidden and the grid editor is not in the page yet.
   it 'keeps the content in the text editor when rebuilding the grid throws' do
     open_post_in_editor(@post)
-    find('.mce-tinymce')
     content = grid_post_content(grid_with_block('<p>kept</p>'))
 
     # the field and the text editor hold the same content, as they do when the page opens with it
@@ -179,10 +250,9 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   # must not stay hidden behind an editor that never arrived.
   it 'brings the text editor back when building the editor over ordinary content throws' do
     open_post_in_editor(@post)
-    find('.mce-tinymce')
     page.execute_script("jQuery.fn.tooltip = function(){ throw new Error('widget broke'); };")
 
-    accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
+    open_grid_editor
 
     expect(page).to have_css('.mce-tinymce')
     expect(page).to have_no_css('.panel_grid_editor')
@@ -196,7 +266,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     body = %(<div class="panel_grid_body row hero" id="landing" data-theme="dark">#{grid_column_markup}</div>)
     store_post_content(@post, grid_post_content(body))
     open_post_in_editor(@post)
-    find('.panel_grid_editor .panel_grid_body .drg_column')
     trigger_grid_auto_save
 
     expect(saved_grid_content).to include('id="landing"', 'data-theme="dark"')
@@ -206,7 +275,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   # Called on several fields at once, jQuery's before() gave each its own editor; so does the editor.
   it 'builds an editor for each field of a set' do
     open_post_in_editor(@post)
-    find('.mce-tinymce')
 
     page.execute_script(<<~JS)
       jQuery('<div id="cama_two_fields"><textarea></textarea><textarea></textarea></div>').appendTo('#form-post');
@@ -219,7 +287,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   it 'does not give a saved grid root back a class it was saved without' do
     store_post_content(@post, grid_post_content(%(<div class="panel_grid_body hero">#{grid_column_markup}</div>)))
     open_post_in_editor(@post)
-    find('.panel_grid_editor .panel_grid_body .drg_column')
     trigger_grid_auto_save
 
     root_classes = saved_grid_content[/<div class="([^"]*panel_grid_body[^"]*)"/, 1].split
@@ -231,7 +298,6 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   # nothing for a detached field, and its native replacement must not throw instead.
   it 'does not break on a text field that is not in the page yet' do
     open_post_in_editor(@post)
-    find('.mce-tinymce')
 
     error = page.evaluate_script(<<~JS)
       (function(){

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Fix: a post keeps its grid and its scripts after a save from either editor
+
+Text editors keep scripts and do not rewrite the grid at a save or a cancelled unload. A grid shown again follows the text editor. A deleted block or column stays deleted. [#20](https://github.com/owen2345/camaleon_editor/pull/20).
+
+**Notes for upgraders**
+- Requires tinymce-rails 4.7.4 or later.
+- Without unfiltered HTML, core refuses changed content with a script.
+- Grid posts keep the export's `<b>` and `rgb()`.
+
 ### Tooling: the grid specs read the grid's own export
 
 The feature specs read what the grid exported from a record of their own, not from the post's textarea, which the text editor rewrites in its own serialization when it loses focus: they no longer fail on that timing. Development tooling only. [#18](https://github.com/owen2345/camaleon_editor/pull/18).

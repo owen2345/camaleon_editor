@@ -56,7 +56,9 @@ end
 # loads the grid editor's JS. Shared by the feature specs that drive the editor's builders.
 # as: a user built by the :user factory (whose password the instance still holds) instead of
 # the site's administrator. post: an existing post to edit instead of a new one.
-# From here on the grid's exports are on record (see record_grid_exports).
+# After this step, the record keeps the grid exports (see record_grid_exports) and the post's text
+# editor is ready. The step waits for the editor: its toolbar shows before the editor has its
+# content and before its init hooks run.
 def install_plugin_and_open_post_editor(as: nil, post: nil)
   store_current_site(@site)
   plugin_install('camaleon_editor')
@@ -64,14 +66,19 @@ def install_plugin_and_open_post_editor(as: nil, post: nil)
   post_type = post ? post.post_type : @site.post_types.first
   visit "#{cama_root_relative_path}/admin/post_type/#{post_type.id}/posts/#{post ? "#{post.id}/edit" : 'new'}"
   record_grid_exports
+  wait_for_text_editor(POST_TEXT_EDITOR)
+end
+
+# Waits until the block returns true, for the time that Capybara waits for an element. Use it for
+# page state that only a script can read: Capybara's own waits find elements.
+def wait_until
+  Timeout.timeout(Capybara.default_max_wait_time) { sleep 0.05 until yield }
 end
 
 # Wait until the page has no jQuery request in flight (adapted from camaleon_cms's
 # spec/support/wait_for_ajax.rb).
 def wait_for_ajax
-  Timeout.timeout(Capybara.default_max_wait_time) do
-    sleep 0.05 until page.evaluate_script('jQuery.active').zero?
-  end
+  wait_until { page.evaluate_script('jQuery.active').zero? }
 end
 
 # Accept the native JS confirm() dialog a destructive admin action raises. The dialog can lag a beat

@@ -11,4 +11,42 @@ RSpec.describe 'the grid editor in the admin post editor', :js do
     expect(page).to have_css('script[src*="editor-manifest"]', visible: :all)
     expect(page).to have_css('.mce-btn', text: 'Grid Editor')
   end
+
+  # The Admin AJAX plugin loads an admin page in place, and the response evaluates the editor script
+  # again. jQuery, the hook lists and the registrations of other scripts stay. The script runs only
+  # one time: a text editor set up later has one Grid Editor button, and a block kind that another
+  # script registered is still there.
+  it 'does its work once, however often its script is evaluated' do
+    install_plugin_and_open_post_editor
+
+    evaluated_again, hooks_before = page.evaluate_script(<<~JS)
+      (function(){
+        var hooks = function(){
+          return jQuery.map(['init', 'settings', 'setups', 'custom_toolbar'], function(list){
+            return tinymce_global_settings[list].length;
+          });
+        };
+        var before = hooks(), tabs_builder = window.grid_tab_builder;
+        jQuery.fn.gridEditor_options.faq = {title: 'FAQ', callback: function(){}};
+        jQuery.ajax({url: jQuery('script[src*="editor-manifest"]').attr('src'), dataType: 'script', async: false});
+        // The script runs at document ready, which jQuery can run later. Queue the reads after it.
+        window.__cama_after = null;
+        jQuery(function(){ window.__cama_after = [hooks(), 'faq' in jQuery.fn.gridEditor_options]; });
+        return [window.grid_tab_builder !== tabs_builder, before];
+      })()
+    JS
+    wait_until { page.evaluate_script('window.__cama_after !== null') }
+    hooks_after, kind_kept = page.evaluate_script('window.__cama_after')
+    set_up_text_editors(%w[later_editor], 'cama_get_tinymce_settings({selector: selector})')
+    buttons = page.evaluate_script(<<~JS)
+      jQuery(tinymce.get('later_editor').editorContainer).find('.mce-btn').filter(function(){
+        return jQuery(this).text() === 'Grid Editor';
+      }).length
+    JS
+
+    expect(evaluated_again).to be(true)
+    expect(hooks_after).to eq(hooks_before)
+    expect(buttons).to eq(1)
+    expect(kind_kept).to be(true)
+  end
 end

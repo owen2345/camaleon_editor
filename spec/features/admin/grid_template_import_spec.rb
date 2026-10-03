@@ -22,7 +22,7 @@ RSpec.describe 'importing a grid template', :js do
     page.execute_script('window.__cama_same_page = true;')
     watch_template_requests
 
-    dismiss_confirm { find('#grid_table_list .import_item').click }
+    dismiss_confirm { listed_template_link.click }
 
     expect(page.evaluate_script('window.__cama_same_page')).to be(true)
     expect(template_requests_sent).to eq(0)
@@ -48,7 +48,7 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
     expect(saved_grid_content).to include('<p>embedded widget</p>')
     expect(saved_grid_content).to include('<script>window.__cama_widget_loaded = true;</script>')
-    expect(page.evaluate_script('window.__cama_widget_loaded')).to be_nil
+    expect(script_flag('__cama_widget_loaded')).to be_nil
   end
 
   it 'applies a template whose script could not run in the admin page' do
@@ -95,8 +95,8 @@ RSpec.describe 'importing a grid template', :js do
   it 'ignores a second apply while one is under way' do
     find('#grid_table_list .import_item') # the list has arrived
     watch_template_requests
+    confirm_every_prompt
     page.execute_script(<<~JS)
-      window.confirm = function(){ return true; };
       var link = jQuery('#grid_table_list .import_item').first();
       link.click();
       link.click();
@@ -338,9 +338,7 @@ RSpec.describe 'importing a grid template', :js do
     full_width = '<div class="col-md-12" data-col="12" data-col_title="100%">' \
                  '<div class="grid_sortable_items"></div></div>'
     @template.update!(description: %(<div class="panel_grid_body row">#{full_width}</div>))
-    page.execute_script(<<~JS)
-      jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
-    JS
+    make_the_grid_export_throw
     open_templates_list
     apply_listed_template
 
@@ -351,6 +349,25 @@ RSpec.describe 'importing a grid template', :js do
     expect(saved_grid_content).to include('data-col="6"')
     expect(saved_grid_content).not_to include('data-col="12"')
     expect(page).to have_css('#grid_table_list .import_item')
+  end
+
+  # The rollback also restores the grid root: when the rebuild throws an error, the root already has
+  # the style of the template.
+  it 'puts the style of the previous grid back when rebuilding the grid throws' do
+    @template.update!(description: grid_body_markup(attributes: 'style="background-color: rgb(255, 204, 0);"'))
+    apply_listed_template
+    expect(page).to have_css('.panel_grid_body[style*="rgb(255, 204, 0)"] .drg_column')
+
+    @template.update!(description: grid_body_markup(grid_column_markup(col: 12, title: '100%'),
+                                                    attributes: 'style="background-color: rgb(0, 0, 255);"'))
+    make_the_grid_export_throw
+    open_templates_list
+    apply_listed_template
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
+    expect(page).to have_css('.panel_grid_body[style*="rgb(255, 204, 0)"] .drg_column .header_box', text: '50%')
+    expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)')
+    expect(saved_grid_content).not_to include('rgb(0, 0, 255)')
   end
 
   # Grid markup held by a block is that block's content. The grid being replaced is the editor's own
@@ -364,9 +381,7 @@ RSpec.describe 'importing a grid template', :js do
     expect(saved_grid_content).to include(pasted)
 
     @template.update!(description: grid_body_markup(grid_column_markup(col: 12, title: '100%')))
-    page.execute_script(<<~JS)
-      jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
-    JS
+    make_the_grid_export_throw
     open_templates_list
     apply_listed_template
 
@@ -385,17 +400,15 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
 
     store_template_markup(@template, grid_body_markup(grid_column_markup(col: 12, title: '100%')))
-    page.execute_script(<<~JS)
-      jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });
-    JS
+    make_the_grid_export_throw
     open_templates_list
     apply_listed_template
 
     expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
     expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
-    # read from the grid: the alert takes the focus, and the text editor losing it rewrites the field
+    # Read the grid itself: the rollback puts these nodes back.
     expect(page.evaluate_script("jQuery('.panel_grid_body .drg_item script').text()"))
       .to eq('window.__cama_widget_loaded = true;')
-    expect(page.evaluate_script('window.__cama_widget_loaded')).to be_nil
+    expect(script_flag('__cama_widget_loaded')).to be_nil
   end
 end

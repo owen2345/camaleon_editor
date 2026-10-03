@@ -7,15 +7,10 @@
 RSpec.describe 'the grid editor block forms', :js do
   init_site
 
-  def open_block_form(kind)
-    store_post_content(@post, grid_post_content(grid_with_block('', kind: kind)))
-    open_post_in_editor(@post)
-    find('.panel_grid_body .drg_item') # the grid is rebuilt
-    page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
-  end
-
-  # The list of a block's items opens the form of one in a second modal
+  # The item list of a block opens the form of an item in a second modal. Capybara can find the link
+  # while the list still slides into position. Wait first, or the click can miss the link.
   def add_block_item(label)
+    wait_for_modal_at_rest('#ow_inline_modal')
     find('#ow_inline_modal a.add_item', text: label).click
   end
 
@@ -23,7 +18,7 @@ RSpec.describe 'the grid editor block forms', :js do
     before { @site.set_admin_language('es') }
 
     it 'heads and labels the form of a media block in that language' do
-      open_block_form('audio')
+      open_block_form(kind: 'audio')
 
       within '#ow_inline_modal' do
         expect(page).to have_css('.modal-title', text: 'Formulario de audio')
@@ -32,7 +27,7 @@ RSpec.describe 'the grid editor block forms', :js do
     end
 
     it 'lists the tabs of a tabs block, and edits one, in that language' do
-      open_block_form('tab')
+      open_block_form(kind: 'tab')
 
       within '#ow_inline_modal' do
         expect(page).to have_css('.modal-title', text: 'Panel de pestañas')
@@ -52,7 +47,7 @@ RSpec.describe 'the grid editor block forms', :js do
     end
 
     it 'edits a slide of a slider block in that language' do
-      open_block_form('slider')
+      open_block_form(kind: 'slider')
       expect(page).to have_css('#ow_inline_modal .modal-title', text: 'Panel de diapositivas')
 
       add_block_item('Añadir elemento')
@@ -65,7 +60,7 @@ RSpec.describe 'the grid editor block forms', :js do
     end
 
     it 'offers the styles of an accordion block in that language' do
-      open_block_form('accordion')
+      open_block_form(kind: 'accordion')
 
       within '#ow_inline_modal' do
         expect(page).to have_css('.modal-title', text: 'Panel de acordeón')
@@ -85,7 +80,7 @@ RSpec.describe 'the grid editor block forms', :js do
     end
 
     it 'offers to delete, clone and style the block, not to edit it' do
-      find('.drg_item > .header_box .dropdown-toggle').click
+      open_the_menu_of('.drg_item')
 
       within '.drg_item > .header_box .dropdown-menu' do
         expect(page).to have_css('a.grid_content_remove')
@@ -97,8 +92,7 @@ RSpec.describe 'the grid editor block forms', :js do
 
     # A script may register a kind after the grid is rebuilt: the menu follows the registry as it opens
     it 'offers to edit the block once a script registers its kind' do
-      toggle = find('.drg_item > .header_box .dropdown-toggle')
-      toggle.click
+      toggle = open_the_menu_of('.drg_item')
       expect(page).to have_css('.drg_item > .header_box a.grid_content_remove')
       expect(page).to have_no_css('.drg_item > .header_box a.grid_content_edit')
 
@@ -111,15 +105,11 @@ RSpec.describe 'the grid editor block forms', :js do
 
     # The entry is still in the page, hidden: a click that reaches it all the same breaks nothing
     it 'opens nothing and goes nowhere when the Edit entry is clicked all the same' do
-      find('.panel_grid_body .drg_item') # the grid is rebuilt
-      page.execute_script(<<~JS)
-        window.__cama_errors = [];
-        window.addEventListener('error', function(event){ window.__cama_errors.push(event.message); });
-        document.querySelector('.panel_grid_body .drg_item .grid_content_edit').click();
-      JS
+      watch_the_page_errors
+      page.execute_script("document.querySelector('.panel_grid_body .drg_item .grid_content_edit').click();")
 
-      expect(page.evaluate_script('window.__cama_errors')).to eq([])
-      expect(URI(page.current_url).fragment).to be_nil
+      expect(page_errors).to eq([])
+      expect(current_url_fragment).to be_nil
       expect(page).to have_no_css('.modal')
     end
   end

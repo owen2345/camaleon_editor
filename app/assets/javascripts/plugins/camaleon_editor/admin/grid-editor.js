@@ -1,4 +1,9 @@
 jQuery(function(){
+    // Run this script only one time on a page. The Admin AJAX plugin loads an admin page in place,
+    // and the response evaluates this script again. jQuery, TinyMCE and the hook lists stay. A
+    // second run adds each hook again (a second toolbar button). It also makes the registries
+    // again, without the block kinds and rows of other scripts.
+    if($.fn.gridEditor) return;
     init_grid_editor();
 
     $.fn.fadeDestroy = function(speed){ $(this).fadeOut(speed, function(){ $(this).remove(); }) }
@@ -232,28 +237,65 @@ jQuery(function(){
     // the title a break line is saved with (data-col_title), in every admin language
     var BREAK_LINE = "Break Line";
 
+    // The classes of a grid root. The grid editor finds its grid by the first class.
+    var GRID_ROOT_CLASS = "panel_grid_body row";
+
+    // Writes the content of the text editor into its field and triggers "change" on the field, as
+    // core does when the text editor loses focus. Use it when the field must have the current
+    // content immediately: at a switch of editors, or before a grid is built from the field. A post
+    // in more than one language sends the content that core composed at the last "change". A switch
+    // of editors does not move the focus.
+    function field_follows(text_editor, field){
+        text_editor.save();
+        field.trigger("change");
+    }
+
+    // Returns the value of the field itself. After a block form loads a text editor, jQuery's val()
+    // returns the content of the field's text editor, as that editor serializes it.
+    function field_value(field){ return $(field)[0].value || ""; }
+
+    // Returns the grid editor of a field, if there is one. It is immediately before its field.
+    function built_grid_of(field){ return $(field).prev(".panel_grid_editor"); }
+
+    // A grid editor is hidden while the author is in the text editor. Read the display of the grid
+    // editor itself: a hidden form or tab around it does not count.
+    function grid_hidden(grid){ return grid[0].style.display === "none"; }
+
     // grid editor plugin
     var gridEditor_id = 0;
     $.fn.gridEditor = function(tinyEditor){
         // one editor per field, as jQuery's before() gave each field of a set its own
         if(this.length > 1) return this.each(function(){ $(this).gridEditor(tinyEditor); });
         var textarea = $(this);
-        // an editor built earlier for this field is only shown again: nothing to read, nothing to build
-        var existing_editor = textarea.prev().hasClass("panel_grid_editor");
+        // If this field already has a grid editor, show that editor again and build nothing. The
+        // field is not read: the "show_again" handler reads the text editor.
+        var built_editor = built_grid_of(textarea);
+        if(built_editor.length){
+            built_editor.triggerHandler("show_again", [tinyEditor]);
+            return textarea;
+        }
         // Content marked as a grid that cannot be read as one stays in the text editor: shown as an
         // empty grid, its first change would be auto-saved over the content nobody got to see.
         var saved_body = null;
-        if(!existing_editor && $.fn.isGridEditorContent(textarea.val())){
-            saved_body = parse_grid_body(textarea.val(), true);
+        var saved_content = field_value(textarea);
+        if($.fn.isGridEditorContent(saved_content)){
+            saved_body = parse_grid_body(saved_content, true);
             if(!saved_body){
                 content_unreadable();
                 return textarea;
             }
         }
+        // The content that a save stores while the grid editor is visible. Until the first
+        // auto_save, it is the content that the grid was built from. After that, it is the last
+        // export. A grid opened on other content has no export (null) until its first auto_save.
+        // Until then, a save stores the content of the text editor.
+        var exported = saved_body ? saved_content : null;
+        // The content of the text editor, and the markup of its document, when the author left the
+        // grid editor.
+        var left_with = null, left_with_body = null;
         gridEditor_id ++;
         var tinymce_panel = $(tinyEditor.editorContainer).hide();
         var editor_id = "grid_editor_"+gridEditor_id;
-        if(existing_editor){ textarea.prev().show(); return textarea; }
         var tpl_rows = "";
         $.each({6: 50, 4: 33, 3: 25, 2: 16, 8: 66, 9: 75, 12: 100}, function(k, val){ tpl_rows += '<div class="" data-col="'+k+'"'+tooltip("grid_editor.col_block_title", "Insert a column block with %{width}% of width.", {width: val})+' data-col_title="'+val+'%"><div class="grid_sortable_items"></div></div>'; });
 
@@ -313,7 +355,7 @@ jQuery(function(){
             "</div>"+
             "</div>"+
             "</div>"+
-            "<div class='panel_grid_body_w'><div class='panel_grid_body row'></div></div>"+
+            "<div class='panel_grid_body_w'><div class='"+GRID_ROOT_CLASS+"'></div></div>"+
             "</div>");
 
         // The editor's grid: the root its own wrapper holds, and that one alone. A block may hold grid
@@ -323,15 +365,22 @@ jQuery(function(){
         var GRID_ROOT = "#"+editor_id+" > .panel_grid_body_w > .panel_grid_body"; // for the widgets that take a selector
         function grid_root(editor){ return $(editor).children(".panel_grid_body_w").children(".panel_grid_body"); }
 
+        // The class of a column or block that the author deleted. The element stays in the grid
+        // while it fades out, but no export includes it (see fade_out_of_grid).
+        var DELETED = "grid-deleted";
+
         // grid editor export
         function export_content(editor){
             var container = grid_root(editor).clone();
+            container.children("."+DELETED).remove();
             container.children().each(function(){
-                var col = $(this).removeClass("drg_column grid-col-built btn-default btn ui-draggable ui-draggable-handle ui-draggable-dragging ui-sortable-handle");
+                var col = $(this).removeClass("drg_column btn-default btn ui-draggable ui-draggable-handle ui-draggable-dragging ui-sortable-handle");
                 col.children(".header_box").remove();
                 // the column's own area and blocks: what a block holds is content, chrome-like names included
-                col.children(".grid_sortable_items").removeClass("ui-sortable").children().each(function(){ //contents
-                    $(this).removeClass("drg_item btn-default grid-item-built btn ui-draggable ui-draggable-dragging ui-sortable-handle ui-draggable-handle").children(".header_box").remove();
+                var area = col.children(".grid_sortable_items").removeClass("ui-sortable");
+                area.children("."+DELETED).remove();
+                area.children().each(function(){ //contents
+                    $(this).removeClass("drg_item btn-default btn ui-draggable ui-draggable-dragging ui-sortable-handle ui-draggable-handle").children(".header_box").remove();
                 });
             });
             var res = container[0].outerHTML;
@@ -439,12 +488,29 @@ jQuery(function(){
             return editor;
         }
 
+        // Builds the grid from the root of stored content: the attributes of the root, its style
+        // and its markup, then the headers and menus. The grid is filled from markup. Live nodes
+        // are not inserted, because they run the scripts of the content.
+        function grid_from(root){
+            var grid = grid_root(editor);
+            keep_root_attributes(grid, root);
+            fill_grid(grid, root);
+            parse_content(editor);
+        }
+
         // What heads a column: the title saved with it, its width. A break line's saved title is its
         // English name, in whatever admin language it was added: the content keeps it as it is, and
         // the editor shows it in the admin language.
         function column_title(column){
             var title = column.attr("data-col_title") || "";
             return title === BREAK_LINE ? I18n("grid_editor.break_line", "Break Line") : title;
+        }
+
+        // Tells if a column or block has its options menu. A palette entry is parsed without a menu
+        // (skip_options). A copy dropped from the palette gets its menu one time, when its sort
+        // ends. The columns and blocks of a rebuilt grid, and clones, already have a menu.
+        function has_menu(element){
+            return element.children(".header_box").children(".dropdown").length > 0;
         }
 
         // parse column editor
@@ -530,14 +596,30 @@ jQuery(function(){
         // add editor menu actions
         function do_editor_menus(editor){
             // toggle editor menus
-            editor.find(".grid_editor_menu .toggle_panel_grid").click(function(){
+            editor.find(".grid_editor_menu .toggle_panel_grid").click(function(e){
+                // Stop the link first, in case the switch throws an error.
+                e.preventDefault();
                 if(!confirm(I18n("grid_editor.toggle_editor", "Are you sure to leave this editor?"))) return false;
+                // Show the text editor before its content is read or written. If a listener of the
+                // editor throws an error at a read, the author sees the text editor, not two hidden
+                // editors. While the grid editor is hidden, the text editor returns its own content
+                // (see the GetContent listener).
                 editor.hide();
-                if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
                 tinymce_panel.show();
+                // Give the text editor its backup: the content from before the grid, or other
+                // content that the author wrote there later. With an empty backup, the text editor
+                // keeps the grid export, and the author can edit the grid as markup. This applies
+                // to a grid made on an empty post, or kept after the author emptied the text
+                // editor.
+                if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
+                left_with = tinyEditor.getContent();
+                left_with_body = tinyEditor.getBody().innerHTML;
+                field_follows(tinyEditor, textarea);
                 return false;
             });
-            editor.find(".grid_editor_menu .clear").click(function(){
+            editor.find(".grid_editor_menu .clear").click(function(e){
+                // Stop the link first, in case an export listener throws an error.
+                e.preventDefault();
                 if(!confirm(I18n("grid_editor.clear_editor", "Are you sure to clear the editor?"))) return false;
                 grid_root(editor).html("");
                 editor.trigger("auto_save");
@@ -552,8 +634,8 @@ jQuery(function(){
             });
             // main style
             editor.find(".grid_editor_menu .grid_style_settings").click(function(e){
-                grid_style_setting(grid_root(editor), editor, grid_root(editor));
                 e.preventDefault();
+                grid_style_setting(grid_root(editor), editor, grid_root(editor));
             });
             // toggle fullscreen
             //$(window).unbind("resize.cama_editor").on("resize.cama_editor", function(){ if(editor.hasClass("fullscreen_mode")){ editor.find(".panel_grid_body").height($(window).height()-editor.find(".grid_editor_menu").height()); } });
@@ -577,8 +659,8 @@ jQuery(function(){
                         try {
                             var template_body = parse_grid_body(res);
                             if(!template_body) return import_failed();
-                            // the current grid is set aside as nodes, handlers included, in case the rebuild fails
-                            previous = {contents: grid.contents().detach(), grid_style: grid_style(grid)};
+                            // keep the current grid, to restore it if the rebuild fails
+                            previous = set_aside(grid);
                             fill_grid(grid, template_body);
                             parse_content(editor); // recover saved content
                             editor.trigger("auto_save");
@@ -589,8 +671,7 @@ jQuery(function(){
                             // back is guarded too: whatever it hits, the failure still gets reported.
                             try {
                                 if(previous){
-                                    set_grid_style(grid, previous.grid_style);
-                                    grid.empty().append(previous.contents);
+                                    previous.restore();
                                     editor.trigger("auto_save");
                                 }
                             } catch(restore_error) { if(window.console) console.error(restore_error); }
@@ -601,12 +682,11 @@ jQuery(function(){
                             hideLoading();
                         }
                         if(!applied) return;
-                        // Past the guard, where nothing can send the applied template back any more. The grid set
-                        // aside with its handlers and widgets for a rollback that did not come is released for good,
-                        // or jQuery's data store would hold every replaced grid for the life of the page; and only
-                        // now does the list close: every failure leaves it open. A listener of the modal's that
-                        // throws is no failure of the apply.
-                        previous.contents.remove();
+                        // After the guard, nothing can undo the applied template. Release the grid
+                        // that was kept for a rollback. Close the list only now, because each
+                        // failure leaves it open. An error from a listener of the modal is not a
+                        // failure of the apply.
+                        previous.release();
                         try { modal.modal("hide"); } catch(error) { if(window.console) console.error(error); }
                     }).fail(import_failed); });
                     return false;
@@ -638,19 +718,20 @@ jQuery(function(){
 
             // if saved content is a grid_editor content, then rebuilt or recover this content
             if(saved_body){
-                // filled rather than swapped in as live nodes, which would run the saved content's scripts
-                keep_root_attributes(grid_root(editor), saved_body);
-                fill_grid(grid_root(editor), saved_body);
-                parse_content(editor); // recover saved content
+                grid_from(saved_body);
             }else{
                 editor.data("tiny_backup", tinyEditor.getContent())
             }
 
             // trigger auto save changes
+            // Write the field directly, as field_value reads it. After a block form loads a text
+            // editor, jQuery's val() gives the export to the text editor again and does not change
+            // the field.
             editor.bind("auto_save", function(){
-                var txt = "<div>[grid_editor data='"+$.fn.gridEditor_libraries.join(",")+"']</div>"+export_content($(this));
+                var txt = exported = "<div>[grid_editor data='"+$.fn.gridEditor_libraries.join(",")+"']</div>"+export_content($(this));
                 tinyEditor.setContent(txt);
-                textarea.val(txt).trigger("change_in");
+                textarea[0].value = txt;
+                textarea.trigger("change_in");
             });
 
             // The registry entry of a block's kind, when it has a builder: the form the block is edited
@@ -662,28 +743,40 @@ jQuery(function(){
                 return kind && $.isFunction(kind.callback) ? kind : null;
             }
 
-            // content dropdown options
+            // Deletes a block or column. The element fades out, and stays in the grid until the
+            // fade ends. A mark removes it from each export, and the grid is exported at the click.
+            // A later export lets a save during the fade store the element. While it fades out, the
+            // element gets no clicks: no second delete, and no clone with the mark. A column that
+            // fades out accepts no dropped block, because the block goes with the column. The fade
+            // starts before the export, in case an export listener throws an error.
+            function fade_out_of_grid(element){
+                element.children(".grid_sortable_items").filter(":ui-sortable").sortable("disable");
+                element.addClass(DELETED).css("pointer-events", "none").fadeDestroy();
+                editor.trigger("auto_save");
+            }
+
+            // Block options. Each is a link to "#", and each handler stops the link first. The
+            // column options below do the same. The menu toggle at the end of this chain is not a
+            // link.
             grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
-                if(confirm(I18n("grid_editor.del_content", "Are you sure to delete this content?"))) {
-                    jQuery(this).closest(".drg_item").fadeDestroy();
-                    editor.trigger("auto_save");
-                }
                 e.preventDefault();
+                if(confirm(I18n("grid_editor.del_content", "Are you sure to delete this content?"))) {
+                    fade_out_of_grid(jQuery(this).closest(".drg_item"));
+                }
             }).on("click", '.drg_item .grid_content_clone', function (e) {
+                e.preventDefault();
                 var widget = jQuery(this).closest(".drg_item");
                 var widget_clone = widget.clone();
                 widget.after(widget_clone);
                 editor.trigger("auto_save");
-                e.preventDefault();
             }).on("click", '.drg_item .grid_content_edit', function (e) {
-                // first: the link goes nowhere, whatever the builder does
                 e.preventDefault();
                 var panel_content = $(this).closest(".drg_item");
                 var kind = editable_kind(panel_content);
                 if(kind) kind.callback(panel_content.children(".grid_item_content"), editor);
             }).on("click", "a.grid_style_settings", function(e){
-                grid_style_setting($(this), editor);
                 e.preventDefault();
+                grid_style_setting($(this), editor);
             }).on("click", ".drg_item > .header_box .dropdown-toggle", function(){
                 // this runs before Bootstrap's own handler opens the menu
                 var edit_entry = $(this).next(".dropdown-menu").find(".grid_content_edit").parent();
@@ -692,18 +785,19 @@ jQuery(function(){
 
             // column dropdown options
             grid_root(editor).on("click", '.grid_col_remove', function (e) {
-                if(confirm(I18n("grid_editor.del_block", "Are you sure to delete this block?"))){
-                    jQuery(this).closest(".drg_column").fadeDestroy();
-                    editor.trigger("auto_save");
-                }
                 e.preventDefault();
+                if(confirm(I18n("grid_editor.del_block", "Are you sure to delete this block?"))){
+                    fade_out_of_grid(jQuery(this).closest(".drg_column"));
+                }
             }).on("click", '.grid_col_clone', function (e) {
+                e.preventDefault();
                 var widget = jQuery(this).closest(".drg_column");
                 var widget_clone = widget.clone();
+                // Remove the copy of a block that still fades out: the copy does not fade.
+                widget_clone.children(".grid_sortable_items").children("."+DELETED).remove();
                 widget.after(widget_clone);
                 grid_content_manager(widget_clone.children(".grid_sortable_items"));
                 editor.trigger("auto_save");
-                e.preventDefault();
             });
 
             //// autosave changes
@@ -733,6 +827,111 @@ jQuery(function(){
         // inserted natively: jQuery's before() would run the scripts of the grid just rebuilt from saved content
         // like jQuery's before(), nothing to do for a field that is not in a document yet
         if(textarea[0].parentNode) textarea[0].parentNode.insertBefore(editor[0], textarea[0]);
+
+        // The field has a second writer. Core writes the content of the text editor into the field
+        // when the text editor loses focus, with each draft and at submit. The text editor does not
+        // serialize the export as the grid editor exports it: it changes <b> and rgb(), and
+        // flattens bare table rows. (It keeps scripts: see keep_scripts.)
+        // For this reason, while the grid editor is visible, each read of the text editor's content
+        // as HTML returns the export. The text editor returns its own content:
+        // - for a read of its text, its raw content or a selection
+        // - while the grid has no export (see exported)
+        // - while the grid editor is hidden
+        tinyEditor.on("GetContent", function(e){
+            var grid_shown = $.contains(document, editor[0]) && !grid_hidden(editor);
+            if(exported !== null && grid_shown && e.format === "html" && !e.selection) e.content = exported;
+        });
+
+        // Keeps the current grid while a new grid replaces it (a template is applied, or the grid
+        // is built again from the text editor), in case the build throws an error. It keeps the
+        // nodes with their handlers and widgets, and the attributes of the root. restore() puts the
+        // grid back. release() removes the kept nodes when the new grid is complete. Without
+        // release(), jQuery's data store holds them until the page unloads.
+        function set_aside(grid){
+            var contents = grid.contents().detach(), attributes = attributes_of(grid);
+            return {
+                restore: function(){
+                    grid.empty();
+                    set_attributes(grid, attributes);
+                    // append() does not run the kept scripts: detach() marked them as run
+                    grid.append(contents);
+                },
+                release: function(){ contents.remove(); }
+            };
+        }
+
+        // Builds the grid again from a grid root parsed from the text editor's content: its
+        // attributes, its style and its columns. If a parser throws an error, the previous grid
+        // comes back complete, because a partial grid is worse. Returns false in that case.
+        function rebuild_grid(body){
+            var grid = grid_root(editor);
+            var previous = set_aside(grid);
+            try {
+                // The same sequence as the first build: the class of the root, then the attributes
+                // of the content root, then the class that the sortable keeps on its root.
+                set_attributes(grid, [{name: "class", value: GRID_ROOT_CLASS}]);
+                grid_from(body);
+                grid.addClass("ui-sortable");
+            } catch(error) {
+                if(window.console) console.error(error);
+                previous.restore();
+                return false;
+            }
+            previous.release();
+            return true;
+        }
+        function attributes_of(element){
+            return $.map(element[0].attributes, function(attribute){ return {name: attribute.name, value: attribute.value}; });
+        }
+        function set_attributes(element, attributes){
+            $.each(attributes_of(element), function(_index, attribute){ element.removeAttr(attribute.name); });
+            $.each(attributes, function(_index, attribute){ element.attr(attribute.name, attribute.value); });
+        }
+
+        // Applies the content that the author changed in the text editor, which is newer than the
+        // grid. Returns false if the author must stay in the text editor.
+        // - A grid: the grid is built again from it. A save stores that content until the next
+        //   auto_save.
+        // - Content with the grid marker that does not parse as a grid: it stays in the text
+        //   editor, as when the post opens.
+        // - Other content: there is no grid to build. The grid stays as the author left it, and a
+        //   save stores the grid. The content becomes the backup of the text editor, which gets it
+        //   back when the author goes there again.
+        function follow_text_editor(content){
+            if(!$.fn.isGridEditorContent(content)){
+                editor.data("tiny_backup", content);
+                return true;
+            }
+            var body = parse_grid_body(content, true);
+            if(!body || !rebuild_grid(body)){
+                content_unreadable();
+                return false;
+            }
+            exported = content;
+            // the content from before the grid is no longer the backup of the text editor
+            editor.removeData("tiny_backup");
+            return true;
+        }
+
+        // The author comes back from the text editor (see the start of gridEditor). If nothing
+        // changed there, the grid and its export stay as they were. text_editor is the editor whose
+        // button the author clicked: its panel is hidden when the grid editor shows.
+        editor.bind("show_again", function(_event, text_editor){
+            var hidden = grid_hidden(editor);
+            // Compare the markup of the body first, because the same document gives the same
+            // content. A read of the content serializes the document (approximately a third of a
+            // second for each megabyte). TinyMCE's raw format is not sufficient: it removes a
+            // selection attribute also from text that spells one.
+            if(hidden && tinyEditor.getBody().innerHTML !== left_with_body){
+                var content = tinyEditor.getContent();
+                if(content !== left_with && !follow_text_editor(content)) return;
+            }
+            $(text_editor.editorContainer).hide();
+            editor.show();
+            if(hidden) field_follows(tinyEditor, textarea);
+            // Clear the state of the last switch to the text editor. The next switch sets it again.
+            left_with = left_with_body = null;
+        });
 
         // drag columns
         jQuery(".grid_editor_menu .drg_column", editor).draggable({
@@ -778,8 +977,7 @@ jQuery(function(){
             },
             stop: function (e, ui) {
                 ui.item.css({left: "", opacity: "", right: "", bottom: "", top: "", position: ""}).removeAttr("data-original-title").removeAttr("aria-describedby");
-                if(!jQuery(ui.item).hasClass('grid-col-built')) parse_content_column(ui.item)
-                ui.item.addClass('grid-col-built');
+                if(!has_menu(ui.item)) parse_content_column(ui.item)
                 editor.trigger("auto_save");
             }
         });
@@ -807,8 +1005,7 @@ jQuery(function(){
                 },
                 stop: function (e, ui) {
                     ui.item.removeClass('col-md-12').css({left: "", opacity: "", right: "", bottom: "", top: "", position: ""}).removeAttr("data-original-title").removeAttr("aria-describedby");
-                    if(!jQuery(ui.item).hasClass('grid-item-built')) parse_content_content(ui.item)
-                    ui.item.addClass('grid-item-built');
+                    if(!has_menu(ui.item)) parse_content_content(ui.item)
                     editor.trigger("auto_save");
                 }
             });
@@ -821,11 +1018,177 @@ jQuery(function(){
     function init_grid_editor(){
         //auto switch on grid editor detected
         var auto_switch_editor = function(editor){
-            if($.fn.isGridEditorContent($(editor.targetElm).val()))
+            if($.fn.isGridEditorContent(field_value(editor.targetElm)))
                 $(editor.targetElm).gridEditor(editor);
         }
         tinymce_global_settings["init"].push(auto_switch_editor);
         tinymce_global_settings["custom_toolbar"].push("grid_editor");
+
+        // A text editor removes the scripts from its content, and the embed blocks of a grid
+        // contain scripts. A grid lost them when it went through a text editor: the author left the
+        // grid editor, or edited an Editor block in its form.
+        // For this reason, the script element is added to the valid elements of each text editor.
+        // The editor then keeps a script as it keeps other elements:
+        // - In its document, the script has a type that a browser does not run.
+        // - The editor returns the script under its own type, with its text unchanged.
+        // This applies to all the content of each text editor on a page that loads the grid editor.
+        // Core applies its rules when the content is saved.
+        // The rule is added to the settings of the editor, before the editor reads them. The
+        // settings object of the page is not changed. The rule is added only if the editor has no
+        // rule for the script element:
+        // - A rule of the page for the script element stays in effect, also a narrower rule. The
+        //   editor uses the last rule that it gets for an element.
+        // - A rule for all elements ("*[...]") does not count. With only that rule, the editor
+        //   keeps a script but removes the attributes that the script loads with.
+        var SCRIPTS = "script[*]";
+        var keep_scripts = function(editor){
+            var settings = editor.settings;
+            if(new tinymce.html.Schema(settings).elements.script) return;
+            var elements = settings.extended_valid_elements || "";
+            settings.extended_valid_elements = (elements ? elements + "," : "") + SCRIPTS;
+        }
+
+        // A paste is different. Its markup can come from any page, and a pasted script stays in the
+        // editor where the author does not see it. The paste filter of the editor removed scripts
+        // by the list of valid elements, which now includes the script element. For this reason,
+        // the scripts are removed here from all pasted or dropped markup. Markup that says it was
+        // copied in the editor also loses its scripts, because any markup can say that.
+        // - The markup is parsed with the parser and the schema of the editor, as the editor reads
+        //   it later. A browser reads some markup differently and finds no script where the editor
+        //   finds one: a script after a plaintext tag or an incomplete tag, in a comment that a
+        //   noscript ends early for the editor, or in a template.
+        // - The work is done at PastePreProcess. At PastePostProcess, the editor first parses the
+        //   markup in its own document. There, the handler of an element that does not load runs on
+        //   the admin page.
+        // - The listener is added at PreInit, after the plugins of the editor add theirs. The
+        //   filters of the paste plugin then run first. The filter that removes style attributes
+        //   from tags can make a script tag from a tag that spelled none.
+        // - A paste that spells no script at that time is not changed.
+        var paste_without_scripts = function(editor){
+            editor.on("PreInit", function(){
+                editor.on("PastePreProcess", function(e){
+                    if(!/<script/i.test(e.content)) return;
+                    // parse with the settings of the editor, as its parser reads inserted content
+                    var parser = new tinymce.html.DomParser(editor.settings, editor.schema);
+                    var root = parser.parse(e.content, {forced_root_block: false, isRootContent: true});
+                    // Remove the scripts, and the nodes that can hide a script from this filter:
+                    // - A comment or a CDATA section. The editor reads it to its end. A browser can
+                    //   end it at the first ">" ("<!--->", "<![CDATA[ >") and read the remainder as
+                    //   markup.
+                    // - A processing instruction. The editor writes "<?xml ?>" as "<?xml?>", and
+                    //   its next read continues to the first "/>", one tag too far. Raw text after
+                    //   it can then become a script.
+                    // These three are not content. Collect the nodes first: remove() unlinks a
+                    // node, and a walk that continues from an unlinked node stops there.
+                    var removed = [];
+                    for(var node = root.firstChild; node; node = node.walk()){
+                        if(node.name === "script" || node.type === 4 || node.type === 7 || node.type === 8) removed.push(node);
+                    }
+                    for(var i = 0; i < removed.length; i++) removed[i].remove();
+                    e.content = new tinymce.html.Serializer({validate: editor.settings.validate}, editor.schema).serialize(root);
+                });
+            });
+        }
+
+        // The editor puts each top-level node of its content that is not a block into a paragraph.
+        // A top-level script then comes back in a paragraph that nobody wrote. The parser of the
+        // editor already reads a script as a block, but the block element map of the editor does
+        // not have it. The editor reads that map by two names:
+        // - "SCRIPT", for an element of the editor's document. The code that adds the paragraph,
+        //   and the lists plugin, test if the map has the name. (Before TinyMCE 4.7.4, the minimum
+        //   for the gem, that code tests the value.) The block test of the editor, Indent and the
+        //   search test the value. The search ignores the text of a script only while the script is
+        //   not a block. For this reason, the name is in the map with the value false: no paragraph
+        //   is added, and the search and Indent ignore the script.
+        // - "script", for markup that goes into the editor. Here the script is a block, as it is
+        //   for the parser. When inserted markup ends with a script that has a src, the caret stays
+        //   before that script, not after it as bare text. (After a script with text, the editor
+        //   stops at that text, and the caret stays after the markup.)
+        // The two names are set at PreInit, before the editor gets its content.
+        var script_takes_no_paragraph = function(editor){
+            editor.on("PreInit", function(){
+                var blocks = editor.schema.getBlockElements();
+                blocks.SCRIPT = false;
+                blocks.script = {};
+            });
+        }
+
+        // Finds the end of a script as a browser does. TinyMCE ends a script at the first closing
+        // tag, or at a tag that only starts like one ("</scriptx>"). A browser reads the text of a
+        // script differently. "<!--" starts a comment, and "<script" in that comment starts a
+        // second script. The next closing tag then ends the second script, not the element. An old
+        // technique hides a script in a comment and writes a second script from it. TinyMCE cut
+        // such a script at the tag that it writes and showed the remainder as text. The public
+        // page, in a browser, read from the cut into the content after it.
+        // TinyMCE gets the end of such an element from its schema: an object that it asks for the
+        // next closing tag (the media plugin sets one for a video). The entry for the script now
+        // uses the rules that the HTML standard gives for the text of a script.
+        var script_end = {
+            lastIndex: 0,
+            exec: function(markup){
+                var marks = /<!(?=--)|-->|<\/?script(?=[\t\n\f\r \/>])/gi, closing = /<\/script[^>]*>/gi;
+                var TEXT = 0, COMMENT = 1, WRITTEN = 2, state = TEXT, mark;
+                marks.lastIndex = this.lastIndex;
+                while((mark = marks.exec(markup))){
+                    var found = mark[0].toLowerCase();
+                    if(found === "<!"){ if(state === TEXT) state = COMMENT; }
+                    else if(found === "-->") state = TEXT;
+                    else if(found === "<script"){ if(state === COMMENT) state = WRITTEN; }
+                    else if(state === WRITTEN) state = COMMENT;
+                    else {
+                        closing.lastIndex = mark.index;
+                        return closing.exec(markup);
+                    }
+                }
+                return null;
+            }
+        };
+        var script_ends_as_in_a_browser = function(editor){
+            editor.on("PreInit", function(){ editor.schema.getSpecialElements().script = script_end; });
+        }
+
+        // A plugin of the editor can mark text with its own elements (for example, a visible
+        // no-break space). The editor removes them when its content is read, but in a script they
+        // come back as part of the script text. For this reason, the elements in each script are
+        // removed, and their text stays. PreProcess gets a copy that the editor makes for the read:
+        // the marks stay in the editor, for the plugin to remove. The copy is queried directly: the
+        // select() of the editor walks each element of the copy at each read, which takes some
+        // milliseconds for a long post.
+        var script_text_alone = function(editor){
+            editor.on("PreProcess", function(e){
+                if(e.node.nodeType !== 1) return;
+                editor.dom.remove(e.node.querySelectorAll("script *"), true);
+            });
+        }
+
+        // The field has a third writer. Before the page unloads, each text editor writes its raw
+        // content into its field: the markup of the editor, with each script under the type that
+        // the editor gives it. If the author cancels the unload at the unsaved-changes prompt, the
+        // fields keep that markup. At the next grid change or switch of editors, a post in more
+        // than one language composes its content from its fields. The other languages are then
+        // stored as raw content.
+        // TinyMCE triggers no GetContent for that write, but it triggers RawSaveContent before each
+        // raw save. The listener replaces the raw content with the content that the other saves
+        // write (the export of a visible grid, see gridEditor). An editor that TinyMCE hid, so that
+        // the author can edit its field, writes nothing. An editor with the unload write disabled
+        // also writes nothing.
+        var content_at_unload = function(editor){
+            editor.on("RawSaveContent", function(e){ e.content = editor.getContent({save: true}); });
+        }
+
+        // Each text editor of the page gets the six hooks when TinyMCE adds it, before it reads its
+        // settings. The hooks of core do not reach each editor. The settings hook runs when core
+        // makes its settings, and the editor hooks run from the setup of those settings. A page can
+        // add its own lists to the settings of core, pass its own setup, or set up an editor
+        // without those settings.
+        tinymce.on("AddEditor", function(added){
+            keep_scripts(added.editor);
+            paste_without_scripts(added.editor);
+            script_takes_no_paragraph(added.editor);
+            script_ends_as_in_a_browser(added.editor);
+            script_text_alone(added.editor);
+            content_at_unload(added.editor);
+        });
 
         // grid editor button
         var grid_editor_button = function(editor){
@@ -834,7 +1197,21 @@ jQuery(function(){
                 icon: false,
                 onclick: function(){
                     if(!confirm(I18n("grid_editor.switch_editor", "Are you sure to change the editor?"))) return false;
-                    var area = $(editor.targetElm).gridEditor(editor);
+                    // The first grid of a field is built from the field. The field holds the last
+                    // write of the text editor (at a focus loss or with a draft). For this reason,
+                    // the text editor writes the field first. A listener can throw an error at that
+                    // write, or at the read when a grid shows again. The author then gets the same
+                    // message as when the grid cannot be built. If the grid editor is already
+                    // visible when the error comes (a field listener, at the field write), it stays
+                    // visible and no message shows.
+                    try {
+                        field_follows(editor, $(editor.targetElm));
+                        $(editor.targetElm).gridEditor(editor);
+                    } catch(error) {
+                        if(window.console) console.error(error);
+                        var grid = built_grid_of(editor.targetElm);
+                        if(!grid.length || grid_hidden(grid)) editor_failed();
+                    }
                 }
             });
         }

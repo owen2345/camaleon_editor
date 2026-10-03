@@ -6,7 +6,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   init_site
 
   def script_ran
-    page.evaluate_script('window.__cama_script_ran')
+    script_flag('__cama_script_ran')
   end
 
   let(:script) { '<script>window.__cama_script_ran = true;</script>' }
@@ -24,26 +24,33 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   it 'does not run a block script while the block is dragged' do
     store_post_content(@post, grid_post_content(grid_with_block("<p>widget</p>#{script}")))
     open_post_in_editor(@post)
-    page.execute_script("jQuery(document).on('sortstart', function(){ window.__cama_sort_started = true; });")
+    watch_for_a_sort
 
-    handle = first('.panel_grid_body .drg_item .header_box').native
-    page.driver.browser.action.click_and_hold(handle).pause(duration: 0.4).move_by(0, 25).pause(duration: 0.2)
-        .move_by(0, 25).pause(duration: 0.2).release.perform
+    drag_the_first_block
 
-    expect(page.evaluate_script('window.__cama_sort_started')).to be(true)
+    expect(sort_started).to be(true)
     expect(script_ran).to be_nil
   end
 
   it 'does not run a block script when the block is edited and saved' do
-    store_post_content(@post, grid_post_content(grid_with_block("<p>widget</p>#{script}")))
-    open_post_in_editor(@post)
-    find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-    page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+    open_block_form("<p>widget</p>#{script}")
     find('#ow_inline_modal .modal_submit').click
 
     expect(page).to have_no_css('#ow_inline_modal')
     expect(saved_grid_content).to include(script)
+    expect(script_ran).to be_nil
+  end
+
+  # The author edits an Editor block in its own text editor. That editor holds the script of the
+  # block under a type that does not run, and returns it unchanged in the same position.
+  it 'keeps the script of an editor block edited in its form, and does not run it' do
+    open_block_form("<p>widget</p>#{script}", kind: 'editor')
+    find('#ow_inline_modal .mce-tinymce')
+    wait_for_text_editor("jQuery('#ow_inline_modal textarea').tinymce()")
+    find('#ow_inline_modal .modal_submit').click
+
+    expect(page).to have_no_css('#ow_inline_modal')
+    expect(saved_grid_content.delete("\n")).to include("<p>widget</p>#{script}</div>")
     expect(script_ran).to be_nil
   end
 
@@ -54,12 +61,8 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     item = %(<div class="gallery-item" data-url="#{CGI.escapeHTML(url)}"><div class="g-title">One</div></div>)
     store_post_content(@post, grid_post_content(grid_with_block(item, kind: 'gallery')))
     open_post_in_editor(@post)
-    find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-    page.execute_script(<<~JS)
-      jQuery.fn.gridEditor_options.gallery = {title: 'Gallery', callback: grid_gallery_builder};
-      jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();
-    JS
+    page.execute_script("jQuery.fn.gridEditor_options.gallery = {title: 'Gallery', callback: grid_gallery_builder};")
+    open_first_block_form
     find('#ow_inline_modal .modal_submit').click
 
     expect(page).to have_no_css('#ow_inline_modal')
@@ -71,11 +74,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   # html() parsed a table row or a cell as one wherever it went; set as innerHTML of a div, the same
   # markup loses its row and cells and keeps only their text.
   it 'keeps table rows written into a text block' do
-    store_post_content(@post, grid_post_content(grid_with_block('<p>widget</p>')))
-    open_post_in_editor(@post)
-    find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-    page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+    open_block_form('<p>widget</p>')
     find('#ow_inline_modal textarea').set('<tr><td>Q1</td><td>120</td></tr>')
     find('#ow_inline_modal .modal_submit').click
 
@@ -104,11 +103,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     end
 
     it 'reads an empty tab label as empty, not as the markup around it' do
-      store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'].sub(payload, ''), kind: 'tab')))
-      open_post_in_editor(@post)
-      find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      open_block_form(blocks['tab'].sub(payload, ''), kind: 'tab')
       expect(page).to have_css('#ow_inline_modal td.name', exact_text: '')
       find('#ow_inline_modal .modal_submit').click
 
@@ -120,11 +115,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     %w[tab accordion].each do |kind|
       it "lists a plain #{kind} label as its text, ampersand and all" do
         block = blocks[kind].sub(payload, 'Q &amp; A')
-        store_post_content(@post, grid_post_content(grid_with_block(block, kind: kind)))
-        open_post_in_editor(@post)
-        find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-        page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+        open_block_form(block, kind: kind)
 
         expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'Q & A')
         find('#ow_inline_modal .modal_submit').click
@@ -138,11 +129,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       # public page would show another label each time.
       it "saves a #{kind} label whose text spells a character reference as it was stored" do
         block = blocks[kind].sub(payload, 'Use &amp;amp; here')
-        store_post_content(@post, grid_post_content(grid_with_block(block, kind: kind)))
-        open_post_in_editor(@post)
-        find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-        page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+        open_block_form(block, kind: kind)
 
         expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'Use &amp;amp; here')
         find('#ow_inline_modal .modal_submit').click
@@ -157,11 +144,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     it 'writes a typed label with a stray "<" as text, and lists it as it was typed' do
       second = '<li role="presentation"><a href="#t1" role="tab" data-toggle="tab">Two</a></li>'
       two_tabs = blocks['tab'].sub(payload, 'One').sub('</li></ul>', "</li>#{second}</ul>")
-      store_post_content(@post, grid_post_content(grid_with_block(two_tabs, kind: 'tab')))
-      open_post_in_editor(@post)
-      find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      open_block_form(two_tabs, kind: 'tab')
       wait_for_modal_at_rest('#ow_inline_modal') # two rows: the click must not land on the second
       first('#ow_inline_modal a.edit_item').click
       find('#cama_editor_modal2 input.name').set('x<y')
@@ -173,7 +156,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       expect(saved_grid_content).to include('data-toggle="tab">x&lt;y</a>')
       expect(page).to have_css('.panel_grid_body .nav-tabs > li', count: 2, visible: :all)
 
-      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      open_first_block_form
       # the first tab is the one renamed, and the second is still behind it
       expect(page).to have_css('#ow_inline_modal tbody tr:nth-child(1) td.name', exact_text: 'x<y')
       expect(page).to have_css('#ow_inline_modal tbody tr:nth-child(2) td.name', exact_text: 'Two')
@@ -182,11 +165,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     # "&T;" names no character: decoded it is what it was, so the label is text and reads back as typed.
     it 'lists a label whose ampersand only looks like a character reference as it was typed' do
       block = blocks['tab'].sub(payload, 'AT&amp;T; and more')
-      store_post_content(@post, grid_post_content(grid_with_block(block, kind: 'tab')))
-      open_post_in_editor(@post)
-      find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      open_block_form(block, kind: 'tab')
 
       expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'AT&T; and more')
       find('#ow_inline_modal .modal_submit').click
@@ -199,11 +178,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     it 'writes a typed label that leaves its tag open as text' do
       second = '<li role="presentation"><a href="#t1" role="tab" data-toggle="tab">Two</a></li>'
       two_tabs = blocks['tab'].sub(payload, 'One').sub('</li></ul>', "</li>#{second}</ul>")
-      store_post_content(@post, grid_post_content(grid_with_block(two_tabs, kind: 'tab')))
-      open_post_in_editor(@post)
-      find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      open_block_form(two_tabs, kind: 'tab')
       wait_for_modal_at_rest('#ow_inline_modal') # two rows: the click must not land on the second
       first('#ow_inline_modal a.edit_item').click
       find('#cama_editor_modal2 input.name').set('<b>News')
@@ -215,18 +190,14 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       expect(saved_grid_content).to include('data-toggle="tab">&lt;b&gt;News</a>')
       expect(page).to have_no_css('.panel_grid_body .nav-tabs b', visible: :all)
 
-      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      open_first_block_form
       expect(page).to have_css('#ow_inline_modal tbody tr:nth-child(1) td.name', exact_text: '<b>News')
       expect(page).to have_css('#ow_inline_modal tbody tr:nth-child(2) td.name', exact_text: 'Two')
     end
 
     it 'lists a label with a "<" that opens no tag as its text' do
       block = blocks['tab'].sub(payload, 'a &lt; b')
-      store_post_content(@post, grid_post_content(grid_with_block(block, kind: 'tab')))
-      open_post_in_editor(@post)
-      find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      open_block_form(block, kind: 'tab')
 
       expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'a < b')
       find('#ow_inline_modal .modal_submit').click
@@ -238,11 +209,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     # label then - not its markup, which would go back inside the new heading, a title in a title.
     it 'lists an accordion heading without a link by its text' do
       block = blocks['accordion'].sub(%r{<a role="button"[^>]*>.*?</a>}, 'FAQ &amp; more')
-      store_post_content(@post, grid_post_content(grid_with_block(block, kind: 'accordion')))
-      open_post_in_editor(@post)
-      find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      open_block_form(block, kind: 'accordion')
 
       expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'FAQ & more')
       find('#ow_inline_modal .modal_submit').click
@@ -252,12 +219,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     end
 
     it 'keeps the markup of a label through an edit' do
-      store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'], kind: 'tab')))
-      @post.reload.update_column(:content, @post.content.sub(payload, '<b>Bold</b> tab')) # rubocop:disable Rails/SkipsModelValidations
-      open_post_in_editor(@post)
-      find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-      page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+      open_block_form(blocks['tab'].sub(payload, '<b>Bold</b> tab'), kind: 'tab')
 
       expect(page).to have_css('#ow_inline_modal td.name', text: '<b>Bold</b> tab')
       expect(page).to have_no_css('#ow_inline_modal td.name b')
@@ -268,11 +230,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
 
     %w[tab accordion].each do |kind|
       it "lists a #{kind} label's source as text and saves it back unchanged" do
-        store_post_content(@post, grid_post_content(grid_with_block(blocks[kind], kind: kind)))
-        open_post_in_editor(@post)
-        find('.panel_grid_body .drg_item') # the grid is rebuilt
-
-        page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
+        open_block_form(blocks[kind], kind: kind)
 
         expect(page).to have_css('#ow_inline_modal td.name', text: '&lt;img src=x onerror=')
         expect(page).to have_no_css('#ow_inline_modal td.name img')

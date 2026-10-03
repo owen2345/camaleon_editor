@@ -1,27 +1,18 @@
 # frozen_string_literal: true
 
-# The specs read what the grid exported from a record of their own, not from the post's textarea:
-# the text editor writes there too, in its own serialization and at moments of its own. This is
-# the record held to that, with the text editor made to write right after the grid.
+# The specs read the grid export from their own record, not from the post's field: a text editor
+# that the author went back to writes its own serialization there. These examples test that record.
+# They also test it after a block form loads a text editor, when jQuery's val() does not read or
+# write the field.
 RSpec.describe 'the record of what the grid exports', :js do
   init_site
 
-  def post_textarea
-    page.evaluate_script("jQuery('.panel_grid_editor').next('textarea').val()")
-  end
-
-  # What core does when the text editor loses focus, two seconds after the form opened and with
-  # every draft: the text editor's content goes into its textarea.
-  def let_the_text_editor_write
-    page.execute_script("jQuery.each(tinymce.editors, function(_index, editor){ editor.fire('blur'); });")
-  end
-
   before do
-    block = grid_block_markup('<p><b>kept</b></p><script>window.__cama_widget_loaded = true;</script>',
-                              kind: 'editor')
-    grid = grid_body_markup(grid_column_markup(block), attributes: 'style="background-color: rgb(255, 204, 0);"')
+    grid = grid_with_block('<p><b>kept</b></p><script>window.__cama_widget_loaded = true;</script>',
+                           kind: 'editor', attributes: 'style="background-color: rgb(255, 204, 0);"')
     store_post_content(@post, grid_post_content(grid))
     open_post_in_editor(@post)
+    # Wait for the stored grid: with no grid, an empty record proves nothing.
     find('.panel_grid_editor .panel_grid_body .drg_item')
   end
 
@@ -29,13 +20,24 @@ RSpec.describe 'the record of what the grid exports', :js do
     expect(saved_grid_content).to be_nil
   end
 
-  it 'holds the export, whatever the text editor writes over it in the textarea' do
+  it 'holds the export, whatever the text editor the author went back to writes in the textarea' do
     trigger_grid_auto_save
-    let_the_text_editor_write
+    leave_for_the_text_editor
 
-    expect(post_textarea).to include('background-color: #ffcc00', '<strong>kept</strong>')
+    expect(grid_field).to include('background-color: #ffcc00', '<strong>kept</strong>')
     expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)', '<b>kept</b>',
                                           '<script>window.__cama_widget_loaded = true;</script>')
+  end
+
+  # Core can trigger change_in on a field of its own. The draft save of core master does this for an
+  # empty summary, when the last content that an editor got was empty. The record stores the content
+  # that a text editor got only when the field of that editor triggers change_in.
+  it 'holds the export when a field of no editor says it changed' do
+    trigger_grid_auto_save
+    text_editor_holds('')
+    page.execute_script("jQuery('<textarea>').appendTo('body').trigger('change_in');")
+
+    expect(saved_grid_content).to include('<b>kept</b>')
   end
 
   # A rebuild that fails never puts its editor in the page: an export made on the way has to show
@@ -46,15 +48,12 @@ RSpec.describe 'the record of what the grid exports', :js do
     expect(saved_grid_content).to include('<b>kept</b>')
   end
 
-  # A block form loads a text editor of its own through jQuery's tinymce(), and from then on
-  # val() hands a value to the text editor of a field that has one and leaves the field alone: the
-  # grid's write no longer reaches the post's textarea, and the record cannot be read off it.
+  # A block form loads its own text editor through jQuery's tinymce(). After that, val() gives a
+  # value to the text editor of a field and does not change the field. The grid editor still gives
+  # its export to the text editor first, and the record keeps that content.
   it 'holds the export once a block form has loaded a text editor of its own' do
-    page.execute_script(<<~JS)
-      jQuery('<textarea></textarea>').appendTo('#form-post').tinymce(cama_get_tinymce_settings({height: '120px'}));
-      jQuery('.panel_grid_body .drg_item b').text('changed');
-    JS
-    trigger_grid_auto_save
+    load_a_block_form_text_editor
+    change_the_grid
 
     expect(saved_grid_content).to include('<b>changed</b>',
                                           '<script>window.__cama_widget_loaded = true;</script>')
