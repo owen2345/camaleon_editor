@@ -89,14 +89,12 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
   end
 
   # A column or a block dropped in from the palette is a copy of the palette's entry, which
-  # carries no menu and is not marked as built: the copy is given its menu as the sort that
-  # placed it ends, and once.
+  # carries no menu: the copy is given its menu as the sort that placed it ends, and once.
   it 'gives a column and a block dropped in from the palette their one menu, kept as they are sorted' do
     install_plugin_and_open_post_editor
     open_grid_editor
     expect(page).to have_css('.grid_editor_menu .drg_column, .grid_editor_menu .drg_item')
-    expect(page).to have_no_css('.grid_editor_menu .grid-col-built, .grid_editor_menu .grid-item-built',
-                                visible: :all)
+    expect(page).to have_no_css('.grid_editor_menu .header_box .dropdown', visible: :all)
 
     # what a drop hands each sortable: a copy of the entry, placed in it, as the sort ends
     page.execute_script("jQuery('.grid_editor_menu [data-col=\"6\"]').first().clone().appendTo(#{GRID_ROOT});")

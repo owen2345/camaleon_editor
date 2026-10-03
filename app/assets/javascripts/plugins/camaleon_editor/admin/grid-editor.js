@@ -368,13 +368,13 @@ jQuery(function(){
             var container = grid_root(editor).clone();
             container.children("."+DELETED).remove();
             container.children().each(function(){
-                var col = $(this).removeClass("drg_column grid-col-built btn-default btn ui-draggable ui-draggable-handle ui-draggable-dragging ui-sortable-handle");
+                var col = $(this).removeClass("drg_column btn-default btn ui-draggable ui-draggable-handle ui-draggable-dragging ui-sortable-handle");
                 col.children(".header_box").remove();
                 // the column's own area and blocks: what a block holds is content, chrome-like names included
                 var area = col.children(".grid_sortable_items").removeClass("ui-sortable");
                 area.children("."+DELETED).remove();
                 area.children().each(function(){ //contents
-                    $(this).removeClass("drg_item btn-default grid-item-built btn ui-draggable ui-draggable-dragging ui-sortable-handle ui-draggable-handle").children(".header_box").remove();
+                    $(this).removeClass("drg_item btn-default btn ui-draggable ui-draggable-dragging ui-sortable-handle ui-draggable-handle").children(".header_box").remove();
                 });
             });
             var res = container[0].outerHTML;
@@ -500,6 +500,13 @@ jQuery(function(){
             return title === BREAK_LINE ? I18n("grid_editor.break_line", "Break Line") : title;
         }
 
+        // A column or a block dropped in from the palette is a copy of the palette's entry, parsed
+        // without its menu: the sort that places it is what gives it its menu, and gives it once,
+        // where the columns and blocks of a rebuilt grid, and the copies a clone makes, have theirs.
+        function has_menu(element){
+            return element.children(".header_box").children(".dropdown").length > 0;
+        }
+
         // parse column editor
         // column: content element
         // skip_options: boolean to add drodown options
@@ -520,10 +527,6 @@ jQuery(function(){
             if(!skip_options){
                 // the column's own header, area and blocks: a block may hold grid markup of its own
                 column.children('.header_box').append(options);
-                // Marked as built once its menu is in: the sort that ends on a column or a block not
-                // marked yet - one dropped in from the palette - is what gives it its menu, and gives
-                // it once. Marked before, a throw on the way to the menu would leave it with none.
-                column.addClass("grid-col-built");
                 grid_content_manager(column.children(".grid_sortable_items"));
                 column.children(".grid_sortable_items").children().each(function(){ //contents
                     parse_content_content($(this));
@@ -562,7 +565,6 @@ jQuery(function(){
             if(content.children(".header_box").length == 0) content.prepend(html);
             if(!skip_options){
                 content.children('.header_box').append(options);
-                content.addClass("grid-item-built");
             }
             // save used libraries
             // TODO: finish or retire the list of libraries a grid uses, a design of the plugin's first
@@ -965,7 +967,7 @@ jQuery(function(){
             },
             stop: function (e, ui) {
                 ui.item.css({left: "", opacity: "", right: "", bottom: "", top: "", position: ""}).removeAttr("data-original-title").removeAttr("aria-describedby");
-                if(!jQuery(ui.item).hasClass('grid-col-built')) parse_content_column(ui.item)
+                if(!has_menu(jQuery(ui.item))) parse_content_column(ui.item)
                 editor.trigger("auto_save");
             }
         });
@@ -993,7 +995,7 @@ jQuery(function(){
                 },
                 stop: function (e, ui) {
                     ui.item.removeClass('col-md-12').css({left: "", opacity: "", right: "", bottom: "", top: "", position: ""}).removeAttr("data-original-title").removeAttr("aria-describedby");
-                    if(!jQuery(ui.item).hasClass('grid-item-built')) parse_content_content(ui.item)
+                    if(!has_menu(jQuery(ui.item))) parse_content_content(ui.item)
                     editor.trigger("auto_save");
                 }
             });
