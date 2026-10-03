@@ -181,6 +181,26 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(current_url_fragment).to be_nil
     end
 
+    # The other entries that export the grid are links to "#" as well: Clone of a block or of a
+    # column, Delete of a column, Clear. Clicked for real, each goes nowhere all the same.
+    it 'leaves the page where it was whichever entry a listener of the export throws at' do
+      make_the_grid_export_throw
+      open_the_menu_of('.drg_item')
+      find('.panel_grid_body .drg_item .grid_content_clone').click
+      expect(current_url_fragment).to be_nil
+
+      open_the_menu_of('.drg_column')
+      find('.panel_grid_body .drg_column .grid_col_clone').click
+      expect(current_url_fragment).to be_nil
+
+      open_the_menu_of('.drg_column')
+      accept_confirm { find('.panel_grid_body .drg_column .grid_col_remove').click }
+      expect(current_url_fragment).to be_nil
+
+      accept_confirm { find('.grid_editor_menu .clear').click }
+      expect(current_url_fragment).to be_nil
+    end
+
     # A column cloned while one of its blocks fades out does not take that block along: the copy
     # would stay in the clone for good, marked as deleted and in no export.
     it 'leaves a deleted block out of a clone of its column' do
