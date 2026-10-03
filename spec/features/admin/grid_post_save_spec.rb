@@ -73,6 +73,25 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(page).to have_css('.mce-tinymce')
     end
 
+    # Once the grid is the one shown again, the field is written: a listener of the field's that
+    # throws there leaves the grid shown, and the author is not told the grid could not be opened.
+    # Core's alert is watched for rather than looked for: its modal comes a moment after the call.
+    it 'says nothing false when the field cannot be written once the grid is shown again' do
+      leave_for_the_text_editor
+      page.execute_script(<<~JS)
+        var alert = jQuery.fn.alert;
+        jQuery.fn.alert = function(options){ window.__cama_alerts = (window.__cama_alerts || []).concat([options.title]); return alert.apply(this, arguments); };
+        jQuery('.panel_grid_editor').next('textarea').on('change', function(){
+          if(jQuery('.panel_grid_editor').is(':visible')) throw new Error('the field cannot be written');
+        });
+      JS
+      open_grid_editor
+
+      expect(page).to have_css('.panel_grid_editor')
+      expect(page).to have_no_css('.mce-tinymce')
+      expect(page.evaluate_script('window.__cama_alerts')).to be_nil
+    end
+
     it 'stores the grid as the grid exported it, a block script included' do
       trigger_grid_auto_save
       export = saved_grid_content

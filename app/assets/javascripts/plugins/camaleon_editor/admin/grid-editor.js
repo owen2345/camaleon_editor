@@ -1173,13 +1173,16 @@ jQuery(function(){
                     // there - when it lost focus, with a draft - and not what the author changed since.
                     // A listener of the editor's may throw at that write, or at the read a grid shown
                     // again makes of the text editor: the author, who has just answered the prompt,
-                    // is told, as when the grid itself cannot be made.
+                    // is told, as when the grid itself cannot be made. Once the grid is the one
+                    // shown, a throw - a listener of the field's, which is written then - leaves
+                    // it shown, and the author is told nothing false.
                     try {
                         field_follows(editor, $(editor.targetElm));
                         $(editor.targetElm).gridEditor(editor);
                     } catch(error) {
                         if(window.console) console.error(error);
-                        editor_failed();
+                        var grid = $(editor.targetElm).prev(".panel_grid_editor");
+                        if(!grid.length || grid[0].style.display === "none") editor_failed();
                     }
                     return false;
                 }
