@@ -569,6 +569,20 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(post_content).to eq('<p>written meanwhile</p>')
     end
 
+    # On the way back the text editor is handed the content from before the grid, once it is the
+    # one shown. A listener of the editor's that throws at that write leaves the author in the
+    # text editor, not before two hidden editors, and where they were.
+    it 'leaves the text editor shown when it cannot be handed its content on the way back to it' do
+      page.execute_script(<<~JS)
+        #{POST_TEXT_EDITOR}.on('BeforeSetContent', function(){ throw new Error('the writes are broken'); });
+      JS
+      leave_for_the_text_editor
+
+      expect(page).to have_css('.mce-tinymce')
+      expect(page).to have_no_css('.panel_grid_editor')
+      expect(current_url_fragment).to be_nil
+    end
+
     # The author who leaves such a grid gets the content from before the grid back in the text
     # editor. A grid written there is then the grid the grid editor shows, and that content is no
     # longer what the text editor goes back to.
