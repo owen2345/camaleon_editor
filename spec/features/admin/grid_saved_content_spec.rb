@@ -255,7 +255,7 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     open_post_in_editor(@post)
     page.execute_script("jQuery.fn.tooltip = function(){ throw new Error('widget broke'); };")
 
-    accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
+    open_grid_editor
 
     expect(page).to have_css('.mce-tinymce')
     expect(page).to have_no_css('.panel_grid_editor')
