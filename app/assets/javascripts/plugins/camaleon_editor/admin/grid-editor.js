@@ -286,7 +286,7 @@ jQuery(function(){
         // its first auto_save, and the text editor's content stays what is saved until then.
         var exported = saved_body ? saved_content : null;
         // What the text editor held when the author left the grid editor for it.
-        var left_with = null;
+        var left_with = null, left_with_raw = null;
         gridEditor_id ++;
         var tinymce_panel = $(tinyEditor.editorContainer).hide();
         var editor_id = "grid_editor_"+gridEditor_id;
@@ -607,6 +607,7 @@ jQuery(function(){
                 // the text editor was emptied, can be worked on as markup there.
                 if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
                 left_with = tinyEditor.getContent();
+                left_with_raw = tinyEditor.getContent({format: "raw"});
                 field_follows(tinyEditor, textarea);
                 return false;
             });
@@ -913,14 +914,19 @@ jQuery(function(){
         editor.bind("show_again", function(_event, text_editor){
             var hidden = grid_hidden();
             if(hidden){
-                var content = tinyEditor.getContent();
-                if(content !== left_with && !follow_text_editor(content)) return;
+                // The raw read is a copy of the editor's document, where the content is a serialization
+                // of it, a third of a second per megabyte: the same document gives the same content, so
+                // the content is read and compared only where the document changed.
+                if(tinyEditor.getContent({format: "raw"}) !== left_with_raw){
+                    var content = tinyEditor.getContent();
+                    if(content !== left_with && !follow_text_editor(content)) return;
+                }
             }
             $(text_editor.editorContainer).hide();
             editor.show();
             if(hidden) field_follows(tinyEditor, textarea);
             // what the author left with has been compared; the next leave sets it again
-            left_with = null;
+            left_with = left_with_raw = null;
         });
 
         // drag columns
