@@ -162,11 +162,14 @@ def current_url_fragment
 end
 
 # Keeps the errors the page reports from here on (a listener that throws at a real click reports
-# one), for page_errors to answer with.
+# one), for page_errors to answer with; called again, it starts the count over.
 def watch_the_page_errors
   page.execute_script(<<~JS)
     window.__cama_errors = [];
-    window.addEventListener('error', function(event){ window.__cama_errors.push(event.message); });
+    if(!window.__cama_errors_watched){
+      window.__cama_errors_watched = true;
+      window.addEventListener('error', function(event){ window.__cama_errors.push(event.message); });
+    }
   JS
 end
 
