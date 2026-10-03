@@ -35,9 +35,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   end
 
   it 'does not run a block script when the block is edited and saved' do
-    store_post_content(@post, grid_post_content(grid_with_block("<p>widget</p>#{script}")))
-    open_post_in_editor(@post)
-    open_first_block_form
+    open_block_form("<p>widget</p>#{script}")
     find('#ow_inline_modal .modal_submit').click
 
     expect(page).to have_no_css('#ow_inline_modal')
@@ -48,9 +46,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   # An Editor block is edited in a text editor of its own, which holds the block's script under a
   # type that does not run and gives it back as it was, where it stood.
   it 'keeps the script of an editor block edited in its form, and does not run it' do
-    store_post_content(@post, grid_post_content(grid_with_block("<p>widget</p>#{script}", kind: 'editor')))
-    open_post_in_editor(@post)
-    open_first_block_form
+    open_block_form("<p>widget</p>#{script}", kind: 'editor')
     find('#ow_inline_modal .mce-tinymce')
     wait_for_text_editor("jQuery('#ow_inline_modal textarea').tinymce()")
     find('#ow_inline_modal .modal_submit').click
@@ -80,9 +76,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   # html() parsed a table row or a cell as one wherever it went; set as innerHTML of a div, the same
   # markup loses its row and cells and keeps only their text.
   it 'keeps table rows written into a text block' do
-    store_post_content(@post, grid_post_content(grid_with_block('<p>widget</p>')))
-    open_post_in_editor(@post)
-    open_first_block_form
+    open_block_form('<p>widget</p>')
     find('#ow_inline_modal textarea').set('<tr><td>Q1</td><td>120</td></tr>')
     find('#ow_inline_modal .modal_submit').click
 
@@ -111,9 +105,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     end
 
     it 'reads an empty tab label as empty, not as the markup around it' do
-      store_post_content(@post, grid_post_content(grid_with_block(blocks['tab'].sub(payload, ''), kind: 'tab')))
-      open_post_in_editor(@post)
-      open_first_block_form
+      open_block_form(blocks['tab'].sub(payload, ''), kind: 'tab')
       expect(page).to have_css('#ow_inline_modal td.name', exact_text: '')
       find('#ow_inline_modal .modal_submit').click
 
@@ -125,9 +117,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     %w[tab accordion].each do |kind|
       it "lists a plain #{kind} label as its text, ampersand and all" do
         block = blocks[kind].sub(payload, 'Q &amp; A')
-        store_post_content(@post, grid_post_content(grid_with_block(block, kind: kind)))
-        open_post_in_editor(@post)
-        open_first_block_form
+        open_block_form(block, kind: kind)
 
         expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'Q & A')
         find('#ow_inline_modal .modal_submit').click
@@ -141,9 +131,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
       # public page would show another label each time.
       it "saves a #{kind} label whose text spells a character reference as it was stored" do
         block = blocks[kind].sub(payload, 'Use &amp;amp; here')
-        store_post_content(@post, grid_post_content(grid_with_block(block, kind: kind)))
-        open_post_in_editor(@post)
-        open_first_block_form
+        open_block_form(block, kind: kind)
 
         expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'Use &amp;amp; here')
         find('#ow_inline_modal .modal_submit').click
@@ -158,9 +146,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     it 'writes a typed label with a stray "<" as text, and lists it as it was typed' do
       second = '<li role="presentation"><a href="#t1" role="tab" data-toggle="tab">Two</a></li>'
       two_tabs = blocks['tab'].sub(payload, 'One').sub('</li></ul>', "</li>#{second}</ul>")
-      store_post_content(@post, grid_post_content(grid_with_block(two_tabs, kind: 'tab')))
-      open_post_in_editor(@post)
-      open_first_block_form
+      open_block_form(two_tabs, kind: 'tab')
       wait_for_modal_at_rest('#ow_inline_modal') # two rows: the click must not land on the second
       first('#ow_inline_modal a.edit_item').click
       find('#cama_editor_modal2 input.name').set('x<y')
@@ -181,9 +167,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     # "&T;" names no character: decoded it is what it was, so the label is text and reads back as typed.
     it 'lists a label whose ampersand only looks like a character reference as it was typed' do
       block = blocks['tab'].sub(payload, 'AT&amp;T; and more')
-      store_post_content(@post, grid_post_content(grid_with_block(block, kind: 'tab')))
-      open_post_in_editor(@post)
-      open_first_block_form
+      open_block_form(block, kind: 'tab')
 
       expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'AT&T; and more')
       find('#ow_inline_modal .modal_submit').click
@@ -196,9 +180,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     it 'writes a typed label that leaves its tag open as text' do
       second = '<li role="presentation"><a href="#t1" role="tab" data-toggle="tab">Two</a></li>'
       two_tabs = blocks['tab'].sub(payload, 'One').sub('</li></ul>', "</li>#{second}</ul>")
-      store_post_content(@post, grid_post_content(grid_with_block(two_tabs, kind: 'tab')))
-      open_post_in_editor(@post)
-      open_first_block_form
+      open_block_form(two_tabs, kind: 'tab')
       wait_for_modal_at_rest('#ow_inline_modal') # two rows: the click must not land on the second
       first('#ow_inline_modal a.edit_item').click
       find('#cama_editor_modal2 input.name').set('<b>News')
@@ -217,9 +199,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
 
     it 'lists a label with a "<" that opens no tag as its text' do
       block = blocks['tab'].sub(payload, 'a &lt; b')
-      store_post_content(@post, grid_post_content(grid_with_block(block, kind: 'tab')))
-      open_post_in_editor(@post)
-      open_first_block_form
+      open_block_form(block, kind: 'tab')
 
       expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'a < b')
       find('#ow_inline_modal .modal_submit').click
@@ -231,9 +211,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     # label then - not its markup, which would go back inside the new heading, a title in a title.
     it 'lists an accordion heading without a link by its text' do
       block = blocks['accordion'].sub(%r{<a role="button"[^>]*>.*?</a>}, 'FAQ &amp; more')
-      store_post_content(@post, grid_post_content(grid_with_block(block, kind: 'accordion')))
-      open_post_in_editor(@post)
-      open_first_block_form
+      open_block_form(block, kind: 'accordion')
 
       expect(page).to have_css('#ow_inline_modal td.name', exact_text: 'FAQ & more')
       find('#ow_inline_modal .modal_submit').click
@@ -257,9 +235,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
 
     %w[tab accordion].each do |kind|
       it "lists a #{kind} label's source as text and saves it back unchanged" do
-        store_post_content(@post, grid_post_content(grid_with_block(blocks[kind], kind: kind)))
-        open_post_in_editor(@post)
-        open_first_block_form
+        open_block_form(blocks[kind], kind: kind)
 
         expect(page).to have_css('#ow_inline_modal td.name', text: '&lt;img src=x onerror=')
         expect(page).to have_no_css('#ow_inline_modal td.name img')

@@ -18,9 +18,7 @@ RSpec.describe 'editing a slider block', :js do
   end
 
   it 'keeps each slide with its own caption through an edit' do
-    store_post_content(@post, grid_post_content(grid_with_block(slider, kind: 'slider')))
-    open_post_in_editor(@post)
-    open_first_block_form
+    open_block_form(slider, kind: 'slider')
     expect(page).to have_css('#ow_inline_modal td.name', count: 2)
     find('#ow_inline_modal .modal_submit').click
 

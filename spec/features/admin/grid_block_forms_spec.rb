@@ -7,12 +7,6 @@
 RSpec.describe 'the grid editor block forms', :js do
   init_site
 
-  def open_block_form(kind)
-    store_post_content(@post, grid_post_content(grid_with_block('', kind: kind)))
-    open_post_in_editor(@post)
-    open_first_block_form
-  end
-
   # The list of a block's items opens the form of one in a second modal. The list is still sliding
   # into place when its link can be found: the click waits, or it may land beside the link.
   def add_block_item(label)
@@ -24,7 +18,7 @@ RSpec.describe 'the grid editor block forms', :js do
     before { @site.set_admin_language('es') }
 
     it 'heads and labels the form of a media block in that language' do
-      open_block_form('audio')
+      open_block_form('', kind: 'audio')
 
       within '#ow_inline_modal' do
         expect(page).to have_css('.modal-title', text: 'Formulario de audio')
@@ -33,7 +27,7 @@ RSpec.describe 'the grid editor block forms', :js do
     end
 
     it 'lists the tabs of a tabs block, and edits one, in that language' do
-      open_block_form('tab')
+      open_block_form('', kind: 'tab')
 
       within '#ow_inline_modal' do
         expect(page).to have_css('.modal-title', text: 'Panel de pestañas')
@@ -53,7 +47,7 @@ RSpec.describe 'the grid editor block forms', :js do
     end
 
     it 'edits a slide of a slider block in that language' do
-      open_block_form('slider')
+      open_block_form('', kind: 'slider')
       expect(page).to have_css('#ow_inline_modal .modal-title', text: 'Panel de diapositivas')
 
       add_block_item('Añadir elemento')
@@ -66,7 +60,7 @@ RSpec.describe 'the grid editor block forms', :js do
     end
 
     it 'offers the styles of an accordion block in that language' do
-      open_block_form('accordion')
+      open_block_form('', kind: 'accordion')
 
       within '#ow_inline_modal' do
         expect(page).to have_css('.modal-title', text: 'Panel de acordeón')
