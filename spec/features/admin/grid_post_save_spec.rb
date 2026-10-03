@@ -25,8 +25,34 @@ RSpec.describe 'saving a post from the grid editor', :js do
     text_editor_holds(text_editor_content.sub(from) { to })
   end
 
+  # A listener of the text editor's that throws at every read of its content, from here until
+  # the reads are restored: a listener a plugin adds may, and a switch of editors reads first.
+  def break_the_text_editor_reads
+    page.execute_script(<<~JS)
+      window.__cama_break_reads = true;
+      #{POST_TEXT_EDITOR}.on('GetContent', function(){
+        if(window.__cama_break_reads) throw new Error('the reads are broken');
+      });
+    JS
+  end
+
+  def restore_the_text_editor_reads
+    page.execute_script('window.__cama_break_reads = false;')
+  end
+
   context 'with an administrator' do
     before { open_stored_post }
+
+    # On the way back to the text editor its content is read, once the grid editor is hidden. A
+    # read that throws leaves the author in the text editor, not before two hidden editors.
+    it 'leaves the text editor shown when its content cannot be read on the way back to it' do
+      break_the_text_editor_reads
+      accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
+      restore_the_text_editor_reads
+
+      expect(page).to have_css('.mce-tinymce')
+      expect(page).to have_no_css('.panel_grid_editor')
+    end
 
     it 'stores the grid as the grid exported it, a block script included' do
       trigger_grid_auto_save
@@ -367,6 +393,28 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
   # A grid opened over other content has exported nothing yet: the text editor's content stays what
   # the post stores until the grid's first change.
+  context 'with content that is not a grid, when the text editor cannot be read' do
+    let(:stored_content) { '<p>written in the text editor</p>' }
+
+    before do
+      store_post_content(@post, stored_content)
+      open_post_in_editor(@post)
+    end
+
+    # The switch has the text editor write its field before the grid is made, and a listener of
+    # the editor's may throw there: the author, who has just answered the prompt, is told, and
+    # stays in the text editor.
+    it 'tells the author when the switch to the grid editor fails before the grid is made' do
+      break_the_text_editor_reads
+      open_grid_editor
+      restore_the_text_editor_reads
+
+      expect(page).to have_css('#cama_alert_modal', text: 'could not be opened')
+      expect(page).to have_no_css('.panel_grid_editor', visible: :all)
+      expect(page).to have_css('.mce-tinymce')
+    end
+  end
+
   context 'with a grid opened over other content' do
     let(:stored_content) { '<p>written in the text editor</p>' }
 

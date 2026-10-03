@@ -587,14 +587,18 @@ jQuery(function(){
             // toggle editor menus
             editor.find(".grid_editor_menu .toggle_panel_grid").click(function(){
                 if(!confirm(I18n("grid_editor.toggle_editor", "Are you sure to leave this editor?"))) return false;
+                // The text editor is the one shown from here on, before its content is read or
+                // written: a listener of the editor's that throws at a read leaves the author
+                // there, not before two hidden editors. The grid editor hidden, the text editor
+                // answers for itself (see the GetContent listener).
                 editor.hide();
+                tinymce_panel.show();
                 // The text editor gets the content from before the grid back, or what was written
                 // there since. An empty text editor is nothing to go back to: the text editor then
                 // keeps what the grid handed it, so a grid made over an empty post, or kept after
                 // the text editor was emptied, can be worked on as markup there.
                 if(editor.data("tiny_backup")) tinyEditor.setContent(editor.data("tiny_backup"));
                 left_with = tinyEditor.getContent();
-                tinymce_panel.show();
                 field_follows(tinyEditor, textarea);
                 return false;
             });
@@ -1162,7 +1166,15 @@ jQuery(function(){
                     if(!confirm(I18n("grid_editor.switch_editor", "Are you sure to change the editor?"))) return false;
                     // A grid is first made from the field, which holds what the text editor last wrote
                     // there - when it lost focus, with a draft - and not what the author changed since.
-                    field_follows(editor, $(editor.targetElm));
+                    // A listener of the editor's may throw at that write: the author, who has just
+                    // answered the prompt, is told, as when the grid itself cannot be made.
+                    try {
+                        field_follows(editor, $(editor.targetElm));
+                    } catch(error) {
+                        if(window.console) console.error(error);
+                        editor_failed();
+                        return false;
+                    }
                     $(editor.targetElm).gridEditor(editor);
                 }
             });
