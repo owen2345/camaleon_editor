@@ -22,7 +22,7 @@ RSpec.describe 'importing a grid template', :js do
     page.execute_script('window.__cama_same_page = true;')
     watch_template_requests
 
-    dismiss_confirm { find('#grid_table_list .import_item').click }
+    dismiss_confirm { listed_template_link.click }
 
     expect(page.evaluate_script('window.__cama_same_page')).to be(true)
     expect(template_requests_sent).to eq(0)

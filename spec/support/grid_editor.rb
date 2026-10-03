@@ -279,8 +279,16 @@ def have_link_with_tooltip(label, tooltip)
   have_link(label) { |link| tooltip_of(link) == tooltip }
 end
 
+# The link that applies the listed template, once the list stands still. The list's modal slides
+# into place for a moment after it opens, and the link moves by twice its height meanwhile: a
+# click aimed at it as it appears can land above it, and no prompt is asked.
+def listed_template_link
+  wait_for_modal_at_rest('#ow_inline_modal')
+  find('#grid_table_list .import_item')
+end
+
 def apply_listed_template
-  accept_confirm { find('#grid_table_list .import_item').click }
+  accept_confirm { listed_template_link.click }
 end
 
 # A modal slides into place for a moment after it opens, and a click aimed at one of several rows
