@@ -749,8 +749,8 @@ jQuery(function(){
                 editor.trigger("auto_save");
             }
 
-            // content dropdown options: links to "#", each going nowhere first, whatever a listener
-            // of the export it triggers does (the column options below the same)
+            // content dropdown options: links to "#", each going nowhere first, whatever its handler
+            // does (the column options below the same)
             grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
                 e.preventDefault();
                 if(confirm(I18n("grid_editor.del_content", "Are you sure to delete this content?"))) {
@@ -763,7 +763,6 @@ jQuery(function(){
                 widget.after(widget_clone);
                 editor.trigger("auto_save");
             }).on("click", '.drg_item .grid_content_edit', function (e) {
-                // first: the link goes nowhere, whatever the builder does
                 e.preventDefault();
                 var panel_content = $(this).closest(".drg_item");
                 var kind = editable_kind(panel_content);
