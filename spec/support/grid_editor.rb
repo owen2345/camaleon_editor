@@ -300,24 +300,27 @@ end
 #
 # So the export is not read off the field. The grid hands it to the text editor right before the
 # change_in its auto_save triggers, and what a text editor was last handed at that moment goes on
-# record, when the field that said so holds it: core triggers change_in on other fields too (the
-# slug; each language's summary, at a draft save), and none of them holds what an editor was
-# handed. The record does not look for the editor beside the field: a rebuild that fails never
-# puts its editor in the page. It listens ahead of the editor's own listeners, which may rewrite
-# what it was handed.
+# record, when the field of that editor is the one that said so: core triggers change_in on a
+# field of its own too (core master's draft save, on the first language's copy of a translated
+# field that has no editor, the summary), which was handed nothing. The record does not look for
+# the editor beside the field: a rebuild that fails never puts its editor in the page. It listens
+# ahead of the editor's own listeners, which may rewrite what it was handed.
 def record_grid_exports
   page.execute_script(<<~JS)
     if(window.jQuery && !window.__cama_grid_exports){
-      var record = window.__cama_grid_exports = {handed: null, last: null};
+      var record = window.__cama_grid_exports = {handed: null, field: null, last: null};
       var watch = function(editor){
-        editor.on('BeforeSetContent', function(event){ record.handed = event.content; }, true);
+        editor.on('BeforeSetContent', function(event){
+          record.handed = event.content;
+          record.field = editor.getElement();
+        }, true);
       };
       if(window.tinymce){
         jQuery.each(tinymce.editors, function(_index, editor){ watch(editor); });
         tinymce.on('AddEditor', function(event){ watch(event.editor); });
       }
       jQuery(document).on('change_in', 'textarea', function(){
-        if(this.value === record.handed) record.last = record.handed;
+        if(this === record.field) record.last = record.handed;
       });
     }
   JS

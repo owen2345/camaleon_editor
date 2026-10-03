@@ -29,6 +29,17 @@ RSpec.describe 'the record of what the grid exports', :js do
                                           '<script>window.__cama_widget_loaded = true;</script>')
   end
 
+  # Core may have a field of its own say it changed (core master's draft save does, for an empty
+  # summary, with the editors last handed nothing): what a text editor was last handed goes on
+  # record when that editor's field says so, not then.
+  it 'holds the export when a field of no editor says it changed' do
+    trigger_grid_auto_save
+    text_editor_holds('')
+    page.execute_script("jQuery('<textarea>').appendTo('body').trigger('change_in');")
+
+    expect(saved_grid_content).to include('<b>kept</b>')
+  end
+
   # A rebuild that fails never puts its editor in the page: an export made on the way has to show
   # in the record all the same, or the examples that expect none could not fail.
   it 'holds an export made while the editor is not in the page' do
