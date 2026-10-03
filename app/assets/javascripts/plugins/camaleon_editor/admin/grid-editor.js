@@ -910,6 +910,8 @@ jQuery(function(){
             $(text_editor.editorContainer).hide();
             editor.show();
             if(hidden) field_follows(tinyEditor, textarea);
+            // what the author left with has been compared; the next leave sets it again
+            left_with = null;
         });
 
         // drag columns
