@@ -170,6 +170,17 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(saved_grid_content).not_to include('embedded widget')
     end
 
+    # The Delete entry is a link to "#": clicked for real, with a listener of the export that
+    # throws, it still goes nowhere, and the page stays where it was.
+    it 'leaves the page where it was when a listener of the export throws at a delete' do
+      make_the_grid_export_throw
+      find('.panel_grid_body .drg_item > .header_box .dropdown-toggle').click
+      accept_confirm { find('.panel_grid_body .drg_item .grid_content_remove').click }
+
+      expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)
+      expect(page.current_url).not_to end_with('#')
+    end
+
     # A column cloned while one of its blocks fades out does not take that block along: the copy
     # would stay in the clone for good, marked as deleted and in no export.
     it 'leaves a deleted block out of a clone of its column' do

@@ -605,7 +605,10 @@ jQuery(function(){
                 field_follows(tinyEditor, textarea);
                 return false;
             });
-            editor.find(".grid_editor_menu .clear").click(function(){
+            // Every entry below is a link to "#": its default is taken off first, so that a listener
+            // of the export that throws leaves the page where it is (the Edit entry does the same).
+            editor.find(".grid_editor_menu .clear").click(function(e){
+                e.preventDefault();
                 if(!confirm(I18n("grid_editor.clear_editor", "Are you sure to clear the editor?"))) return false;
                 grid_root(editor).html("");
                 editor.trigger("auto_save");
@@ -620,8 +623,8 @@ jQuery(function(){
             });
             // main style
             editor.find(".grid_editor_menu .grid_style_settings").click(function(e){
-                grid_style_setting(grid_root(editor), editor, grid_root(editor));
                 e.preventDefault();
+                grid_style_setting(grid_root(editor), editor, grid_root(editor));
             });
             // toggle fullscreen
             //$(window).unbind("resize.cama_editor").on("resize.cama_editor", function(){ if(editor.hasClass("fullscreen_mode")){ editor.find(".panel_grid_body").height($(window).height()-editor.find(".grid_editor_menu").height()); } });
@@ -745,16 +748,16 @@ jQuery(function(){
 
             // content dropdown options
             grid_root(editor).on("click", '.drg_item .grid_content_remove', function (e) {
+                e.preventDefault();
                 if(confirm(I18n("grid_editor.del_content", "Are you sure to delete this content?"))) {
                     fade_out_of_grid(jQuery(this).closest(".drg_item"));
                 }
-                e.preventDefault();
             }).on("click", '.drg_item .grid_content_clone', function (e) {
+                e.preventDefault();
                 var widget = jQuery(this).closest(".drg_item");
                 var widget_clone = widget.clone();
                 widget.after(widget_clone);
                 editor.trigger("auto_save");
-                e.preventDefault();
             }).on("click", '.drg_item .grid_content_edit', function (e) {
                 // first: the link goes nowhere, whatever the builder does
                 e.preventDefault();
@@ -762,8 +765,8 @@ jQuery(function(){
                 var kind = editable_kind(panel_content);
                 if(kind) kind.callback(panel_content.children(".grid_item_content"), editor);
             }).on("click", "a.grid_style_settings", function(e){
-                grid_style_setting($(this), editor);
                 e.preventDefault();
+                grid_style_setting($(this), editor);
             }).on("click", ".drg_item > .header_box .dropdown-toggle", function(){
                 // this runs before Bootstrap's own handler opens the menu
                 var edit_entry = $(this).next(".dropdown-menu").find(".grid_content_edit").parent();
@@ -772,11 +775,12 @@ jQuery(function(){
 
             // column dropdown options
             grid_root(editor).on("click", '.grid_col_remove', function (e) {
+                e.preventDefault();
                 if(confirm(I18n("grid_editor.del_block", "Are you sure to delete this block?"))){
                     fade_out_of_grid(jQuery(this).closest(".drg_column"));
                 }
-                e.preventDefault();
             }).on("click", '.grid_col_clone', function (e) {
+                e.preventDefault();
                 var widget = jQuery(this).closest(".drg_column");
                 var widget_clone = widget.clone();
                 // a block of the column that is fading out is deleted: the copy would not fade, and stay
@@ -784,7 +788,6 @@ jQuery(function(){
                 widget.after(widget_clone);
                 grid_content_manager(widget_clone.children(".grid_sortable_items"));
                 editor.trigger("auto_save");
-                e.preventDefault();
             });
 
             //// autosave changes
