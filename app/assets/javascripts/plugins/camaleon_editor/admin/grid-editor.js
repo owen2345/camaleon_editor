@@ -257,6 +257,13 @@ jQuery(function(){
     // editor, in that editor's serialization.
     function field_value(field){ return $(field)[0].value || ""; }
 
+    // The grid editor built for a field, if one was: it stands right before its field.
+    function built_grid_of(field){ return $(field).prev(".panel_grid_editor"); }
+
+    // A grid editor is hidden while the author is in the text editor they left it for. Its own
+    // display says so, whatever hides the form or the tab around it.
+    function grid_hidden(grid){ return grid[0].style.display === "none"; }
+
     // grid editor plugin
     var gridEditor_id = 0;
     $.fn.gridEditor = function(tinyEditor){
@@ -265,7 +272,7 @@ jQuery(function(){
         var textarea = $(this);
         // An editor built earlier for this field is shown again, and nothing is built: the field is
         // not read, and the editor sees for itself what the text editor holds by now (show_again).
-        var built_editor = textarea.prev(".panel_grid_editor");
+        var built_editor = built_grid_of(textarea);
         if(built_editor.length){
             built_editor.triggerHandler("show_again", [tinyEditor]);
             return textarea;
@@ -824,10 +831,6 @@ jQuery(function(){
         // like jQuery's before(), nothing to do for a field that is not in a document yet
         if(textarea[0].parentNode) textarea[0].parentNode.insertBefore(editor[0], textarea[0]);
 
-        // The grid editor is hidden while the author is in the text editor they left it for. Its own
-        // display says so, whatever hides the form or the tab around it.
-        function grid_hidden(){ return editor[0].style.display === "none"; }
-
         // The post's field has a second writer. Core has the text editor write its content into the
         // field when it loses focus, with every draft and as the form is sent, and what the text
         // editor makes of the export it was handed is not the export: <b> and rgb() are respelled,
@@ -836,7 +839,7 @@ jQuery(function(){
         // asks for its content. Back in the text editor (the grid editor hidden), the text editor
         // speaks for itself.
         tinyEditor.on("GetContent", function(e){
-            var grid_shown = $.contains(document, editor[0]) && !grid_hidden();
+            var grid_shown = $.contains(document, editor[0]) && !grid_hidden(editor);
             if(exported !== null && grid_shown && e.format === "html" && !e.selection) e.content = exported;
         });
 
@@ -913,7 +916,7 @@ jQuery(function(){
         // is shown as it was left and stands for what it stood for. text_editor is the one the button
         // was clicked in: its panel is hidden once the grid is the one shown.
         editor.bind("show_again", function(_event, text_editor){
-            var hidden = grid_hidden();
+            var hidden = grid_hidden(editor);
             // The body's markup is the editor's document as it stands, where the content is a
             // serialization of it, a third of a second per megabyte: the same document gives the same
             // content, so the content is read and compared only where the document changed. (TinyMCE's
@@ -1207,8 +1210,8 @@ jQuery(function(){
                         $(editor.targetElm).gridEditor(editor);
                     } catch(error) {
                         if(window.console) console.error(error);
-                        var grid = $(editor.targetElm).prev(".panel_grid_editor");
-                        if(!grid.length || grid[0].style.display === "none") editor_failed();
+                        var grid = built_grid_of(editor.targetElm);
+                        if(!grid.length || grid_hidden(grid)) editor_failed();
                     }
                 }
             });
