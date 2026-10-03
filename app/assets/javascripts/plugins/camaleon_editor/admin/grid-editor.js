@@ -1106,9 +1106,14 @@ jQuery(function(){
         // it would give them back as part of the script's text. So a script is read as its text
         // alone: the elements inside it are taken off around what they hold. What is read is a
         // copy the editor makes for the read: in the editor the marks stay, for the plugin to
-        // take off.
+        // take off. The copy is an element, and is asked for them itself: the editor's own
+        // select walks every element of the copy at every read, a few milliseconds for a long
+        // post, where the document's query costs nothing.
         var script_text_alone = function(editor){
-            editor.on("PreProcess", function(e){ editor.dom.remove(editor.dom.select("script *", e.node), true); });
+            editor.on("PreProcess", function(e){
+                if(e.node.nodeType !== 1) return;
+                editor.dom.remove(e.node.querySelectorAll("script *"), true);
+            });
         }
 
         // A field has one more writer. As the page is being left, each text editor writes its raw
