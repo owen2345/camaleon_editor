@@ -165,16 +165,31 @@ end
 # one), for page_errors to answer with; called again, it starts the count over.
 def watch_the_page_errors
   page.execute_script(<<~JS)
-    window.__cama_errors = [];
-    if(!window.__cama_errors_watched){
-      window.__cama_errors_watched = true;
+    if(!window.__cama_errors){
       window.addEventListener('error', function(event){ window.__cama_errors.push(event.message); });
     }
+    window.__cama_errors = [];
   JS
 end
 
 def page_errors
   page.evaluate_script('window.__cama_errors')
+end
+
+# Keeps the titles of core's alerts from here on, for alerts_shown to answer with (nil for none).
+# Core's alert is watched for rather than looked for: its modal comes a moment after the call.
+def watch_the_alerts
+  page.execute_script(<<~JS)
+    var alert = jQuery.fn.alert;
+    jQuery.fn.alert = function(options){
+      window.__cama_alerts = (window.__cama_alerts || []).concat([options.title]);
+      return alert.apply(this, arguments);
+    };
+  JS
+end
+
+def alerts_shown
+  page.evaluate_script('window.__cama_alerts')
 end
 
 # The field of the post's text editor. In a post of several languages each language has a field
