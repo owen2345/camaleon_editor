@@ -178,7 +178,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
       accept_confirm { find('.panel_grid_body .drg_item .grid_content_remove').click }
 
       expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)
-      expect(page.current_url).not_to end_with('#')
+      expect(current_url_fragment).to be_nil
     end
 
     # A column cloned while one of its blocks fades out does not take that block along: the copy

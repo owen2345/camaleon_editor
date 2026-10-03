@@ -155,6 +155,12 @@ def leave_for_the_text_editor
   find('.mce-tinymce')
 end
 
+# What a link to "#" that was followed leaves on the page's URL: an empty fragment, which the
+# browser's location.hash hides.
+def current_url_fragment
+  URI(page.current_url).fragment
+end
+
 # The field of the post's text editor. In a post of several languages each language has a field
 # and a text editor of its own, and this is the first language's: the field they are composed into
 # has no editor.

@@ -112,7 +112,7 @@ RSpec.describe 'the grid editor block forms', :js do
       JS
 
       expect(page.evaluate_script('window.__cama_errors')).to eq([])
-      expect(URI(page.current_url).fragment).to be_nil
+      expect(current_url_fragment).to be_nil
       expect(page).to have_no_css('.modal')
     end
   end
