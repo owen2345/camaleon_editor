@@ -104,9 +104,9 @@ def open_first_block_form
   page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
 end
 
-# Stores a grid of one block holding `inner`, of the kind, opens the post in the editor and opens
-# that block's form.
-def open_block_form(inner, kind: 'text')
+# Stores a grid of one block holding `inner` (nothing, by default), of the kind, opens the post in
+# the editor and opens that block's form.
+def open_block_form(inner = '', kind: 'text')
   store_post_content(@post, grid_post_content(grid_with_block(inner, kind: kind)))
   open_post_in_editor(@post)
   open_first_block_form
