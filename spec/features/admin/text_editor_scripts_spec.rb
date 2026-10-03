@@ -345,7 +345,8 @@ RSpec.describe 'scripts in the text editor', :js do
   # ">" ("<!--->", "<![CDATA[ >") and reads a script behind it; and a processing instruction the
   # editor writes back ("<?xml ?>" as "<?xml?>"), which its next read takes up to the first "/>",
   # a tag further, so that a script in a textarea's text behind it becomes a script. None of the
-  # three is content: a paste that spells a script loses them. And
+  # three is content: a paste that spells a script loses them (a processing instruction with text,
+  # "<?x >…", comes back with that text encoded and so carries none; it is pasted to say so). And
   # they are found in the markup as the editor's paste plugin leaves it: its own filters run first,
   # and the one that takes style attributes out of tags (in a WebKit browser) can glue a script tag
   # together out of a tag that spelled none.
