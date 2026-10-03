@@ -605,11 +605,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     it 'stores a changed grid once the script is out of it' do
-      page.execute_script(<<~JS)
-        jQuery('.panel_grid_body .drg_item script').remove();
-        jQuery('.panel_grid_body .drg_item b').text('changed');
-      JS
-      trigger_grid_auto_save
+      page.execute_script("jQuery('.panel_grid_body .drg_item script').remove();")
+      change_the_grid
       export = saved_grid_content
       submit_post_form
 
