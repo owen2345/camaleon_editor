@@ -1192,7 +1192,6 @@ jQuery(function(){
                         var grid = $(editor.targetElm).prev(".panel_grid_editor");
                         if(!grid.length || grid[0].style.display === "none") editor_failed();
                     }
-                    return false;
                 }
             });
         }
