@@ -160,24 +160,15 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     # A listener of the grid's export may throw, a block plugin's among them: what was deleted
-    # fades out and goes all the same, its fade under way before the grid is exported.
-    it 'takes a deleted block out of the grid when a listener of the export throws' do
-      confirm_every_prompt
-      make_the_grid_export_throw
-      page.execute_script("try { jQuery('.panel_grid_body .drg_item .grid_content_remove').click(); } catch(error) {}")
-
-      expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)
-      expect(saved_grid_content).not_to include('embedded widget')
-    end
-
-    # The Delete entry is a link to "#": clicked for real, with a listener of the export that
-    # throws, it still goes nowhere, and the page stays where it was.
-    it 'leaves the page where it was when a listener of the export throws at a delete' do
+    # fades out and goes all the same, its fade under way before the grid is exported. The Delete
+    # entry is a link to "#": clicked for real, it still goes nowhere, and the page stays where it was.
+    it 'takes a deleted block out of the grid and leaves the page where it was when a listener of the export throws' do
       make_the_grid_export_throw
       open_the_menu_of('.drg_item')
       accept_confirm { find('.panel_grid_body .drg_item .grid_content_remove').click }
 
       expect(page).to have_no_css('.panel_grid_body .drg_item', visible: :all)
+      expect(saved_grid_content).not_to include('embedded widget')
       expect(current_url_fragment).to be_nil
     end
 
