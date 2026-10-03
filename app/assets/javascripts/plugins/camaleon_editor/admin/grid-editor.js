@@ -1027,11 +1027,20 @@ jQuery(function(){
         // unseen. The editor's paste filter took scripts out by the editor's list of elements,
         // which now holds the script: so they are taken out here, of whatever is pasted or dropped
         // in. Markup copied in the editor itself loses them too: any markup can say it is that.
-        // They are taken out with the editor's own tools: once a block form has loaded a text
-        // editor, jQuery's remove() also removes the text editor whose id an element carries,
-        // and a pasted script carries whatever id its markup gives it.
+        // They are taken out of the markup before the editor reads it, in the inert document,
+        // where nothing of the markup runs or loads. Asked for the markup once read instead,
+        // the editor would read it in its own document first, where a handler of an element
+        // that fails to load - a video's source, an image - runs over the admin's page. A paste
+        // that spells no script is left to the editor as it came.
         var paste_without_scripts = function(editor){
-            editor.on("PastePostProcess", function(e){ editor.dom.remove(editor.dom.select("script", e.node)); });
+            editor.on("PastePreProcess", function(e){
+                if(!/<script/i.test(e.content)) return;
+                var holder = inert().createElement("div");
+                holder.innerHTML = e.content;
+                var scripts = holder.getElementsByTagName("script");
+                while(scripts.length) scripts[0].parentNode.removeChild(scripts[0]);
+                e.content = holder.innerHTML;
+            });
         }
 
         // The editor gives whatever stands at the top level of its content a paragraph, unless it
