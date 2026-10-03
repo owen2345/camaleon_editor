@@ -48,7 +48,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
     before { open_stored_post }
 
     # On the way back to the text editor its content is read, once the grid editor is hidden. A
-    # read that throws leaves the author in the text editor, not before two hidden editors.
+    # read that throws leaves the author in the text editor, not before two hidden editors, and
+    # where they were: the link goes nowhere, whatever the read does.
     it 'leaves the text editor shown when its content cannot be read on the way back to it' do
       break_the_text_editor_reads
       accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
@@ -56,6 +57,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
       expect(page).to have_css('.mce-tinymce')
       expect(page).to have_no_css('.panel_grid_editor')
+      expect(page.current_url).not_to end_with('#')
     end
 
     # Shown again from the text editor, the grid editor reads the text editor's content first: a

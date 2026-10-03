@@ -586,7 +586,9 @@ jQuery(function(){
         // add editor menu actions
         function do_editor_menus(editor){
             // toggle editor menus
-            editor.find(".grid_editor_menu .toggle_panel_grid").click(function(){
+            editor.find(".grid_editor_menu .toggle_panel_grid").click(function(e){
+                // first: the link goes nowhere, whatever the switch does
+                e.preventDefault();
                 if(!confirm(I18n("grid_editor.toggle_editor", "Are you sure to leave this editor?"))) return false;
                 // The text editor is the one shown from here on, before its content is read or
                 // written: a listener of the editor's that throws at a read leaves the author
