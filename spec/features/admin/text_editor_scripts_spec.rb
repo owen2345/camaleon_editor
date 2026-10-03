@@ -250,10 +250,10 @@ RSpec.describe 'scripts in the text editor', :js do
     end
   end
 
-  # As the page is being left, a text editor writes its raw body into its field, a script under
-  # the type the editor holds it with, and then its content (grid_post_save_spec has what a page
-  # that is not left would send otherwise). An editor hidden for its field to be edited writes
-  # neither.
+  # As the page is being left, a text editor writes its content into its field, where its own
+  # write would put its raw body, a script under the type the editor holds it with
+  # (grid_post_save_spec has what a page that is not left would send otherwise). An editor hidden
+  # for its field to be edited writes nothing.
   it 'writes its content as the page is being left, unless it is hidden for its field to be edited' do
     written, typed = page.evaluate_script(<<~JS, "<p>written in the text editor</p>#{script}")
       (function(markup){
@@ -404,9 +404,9 @@ RSpec.describe 'scripts in the text editor', :js do
 
   # A page may set a text editor up with a setup of its own, which takes the place of core's, and
   # with it of the hooks core's setup runs for the plugins; that editor keeps scripts like the
-  # others. So every text editor of a page that loads the grid editor has its pastes filtered
-  # and keeps a script out of a paragraph, whatever it was set up with, a list of block elements
-  # of its own included.
+  # others. So every text editor of a page that loads the grid editor has its pastes filtered,
+  # keeps a script out of a paragraph and writes its content as the page is being left, whatever
+  # it was set up with, a list of block elements of its own included.
   context 'with a text editor set up with a setup and a list of block elements of its own' do
     let(:own_editor) { "tinymce.get('own_editor')" }
 
@@ -431,6 +431,20 @@ RSpec.describe 'scripts in the text editor', :js do
       content = "#{script}<p>written in the text editor</p>"
 
       expect(with_the_caret_outside_any_block(content, editor: own_editor).delete("\n")).to eq(content)
+    end
+
+    it 'writes its content as the page is being left' do
+      written = page.evaluate_script(<<~JS, "<p>written in the text editor</p>#{script}")
+        (function(markup){
+          var editor = #{own_editor};
+          window.onbeforeunload = null;
+          editor.setContent(markup);
+          window.dispatchEvent(new Event('beforeunload'));
+          return editor.getElement().value;
+        })(arguments[0])
+      JS
+
+      expect(written.delete("\n")).to eq("<p>written in the text editor</p>#{script}")
     end
   end
 end

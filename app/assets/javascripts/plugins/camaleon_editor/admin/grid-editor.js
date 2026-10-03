@@ -1111,7 +1111,22 @@ jQuery(function(){
             editor.on("PreProcess", function(e){ editor.dom.remove(editor.dom.select("script *", e.node), true); });
         }
 
-        // Every text editor of the page gets the five as it is added, before it reads its
+        // A field has one more writer. As the page is being left, each text editor writes its raw
+        // body there: the editor's own markup, a script under the type the editor holds it with.
+        // On a page that is not left after all - the author stays at the prompt about unsaved
+        // changes - the fields keep that, and a post in several languages composes what it sends
+        // from its fields at the next change of a grid or switch of editors: the other languages
+        // would be stored as those raw bodies. The editor asks nobody for that write's content,
+        // but says what it is about to write, as it does for any save of a raw body: the editor
+        // is given its content to write instead, read as its other saves read it (the export of
+        // a grid that is shown, see gridEditor). An editor hidden for its field to be edited
+        // writes nothing then, as the editor has it, and an editor set up not to write as the
+        // page is left writes nothing either.
+        var content_at_unload = function(editor){
+            editor.on("RawSaveContent", function(e){ e.content = editor.getContent({save: true}); });
+        }
+
+        // Every text editor of the page gets the six as it is added, before it reads its
         // settings, whatever it was set up with. The hooks core offers reach less: the one for
         // the settings runs as core's settings are made, the ones for an editor from the setup
         // of those settings. A page may put lists of its own onto what core returned, pass a
@@ -1122,23 +1137,8 @@ jQuery(function(){
             script_takes_no_paragraph(added.editor);
             script_ends_as_in_a_browser(added.editor);
             script_text_alone(added.editor);
+            content_at_unload(added.editor);
         });
-
-        // A field has one more writer. As the page is being left, each text editor writes its raw
-        // body there, with no event anybody could answer: the editor's own markup, a script under
-        // the type the editor holds it with. On a page that is not left after all - the author stays
-        // at the prompt about unsaved changes - the fields keep that, and a post in several languages
-        // composes what it sends from its fields at the next change of a grid or switch of
-        // editors: the other languages would be stored as those raw bodies. So each editor writes
-        // its content right behind its raw body. The listener is added once the editor is set up,
-        // after the editor's own; an editor hidden for its field to be edited is left alone, as
-        // the editor leaves it.
-        var content_at_unload = function(editor){
-            var write = function(){ if(!editor.isHidden()) editor.save({set_dirty: false}); };
-            editor.editorManager.on("BeforeUnload", write);
-            editor.on("remove", function(){ editor.editorManager.off("BeforeUnload", write); });
-        }
-        tinymce_global_settings["init"].push(content_at_unload);
 
         // grid editor button
         var grid_editor_button = function(editor){
