@@ -351,6 +351,25 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('#grid_table_list .import_item')
   end
 
+  # The grid's root goes back with the grid: by the time the rebuild throws, the style the template
+  # carries had been put on it.
+  it 'puts the style of the previous grid back when rebuilding the grid throws' do
+    @template.update!(description: grid_body_markup(attributes: 'style="background-color: rgb(255, 204, 0);"'))
+    apply_listed_template
+    expect(page).to have_css('.panel_grid_body[style*="rgb(255, 204, 0)"] .drg_column')
+
+    @template.update!(description: grid_body_markup(grid_column_markup(col: 12, title: '100%'),
+                                                    attributes: 'style="background-color: rgb(0, 0, 255);"'))
+    make_the_grid_export_throw
+    open_templates_list
+    apply_listed_template
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
+    expect(page).to have_css('.panel_grid_body[style*="rgb(255, 204, 0)"] .drg_column .header_box', text: '50%')
+    expect(saved_grid_content).to include('background-color: rgb(255, 204, 0)')
+    expect(saved_grid_content).not_to include('rgb(0, 0, 255)')
+  end
+
   # Grid markup held by a block is that block's content. The grid being replaced is the editor's own
   # root alone: taken together with a grid inside it, the way back would put every level of the old
   # grid into both and fail half-way.

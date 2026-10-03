@@ -459,18 +459,22 @@ RSpec.describe 'saving a post from the grid editor', :js do
       end
 
       # Making the grid again runs the parsers that rebuild a saved grid, and a widget they set up
-      # can throw: the grid built earlier comes back whole, its script not run on the way, and the
-      # author stays in the text editor.
+      # can throw: the grid built earlier comes back whole, its root as it was (by then the root
+      # written in the text editor had been put in its place), its script not run on the way, and
+      # the author stays in the text editor.
       it 'keeps the grid built earlier when making it again throws' do
         change_in_the_text_editor('bold', 'changed in the text editor')
+        change_in_the_text_editor(/<div class="panel_grid_body row"[^>]*>/,
+                                  '<div id="hero" class="panel_grid_body row wide">')
         page.execute_script("jQuery.fn.sortable = function(){ throw new Error('widget broke'); };")
         open_grid_editor
 
         expect(page).to have_css('#cama_alert_modal', text: 'could not be read as a grid')
         expect(page).to have_css('.mce-tinymce')
         expect(page).to have_no_css('.panel_grid_editor')
-        expect(page).to have_css('.panel_grid_body[style*="background-color"] .drg_item > .header_box',
+        expect(page).to have_css('.panel_grid_body.ui-sortable[style*="rgb(255, 204, 0)"] .drg_item > .header_box',
                                  count: 1, visible: :all)
+        expect(page).to have_no_css('.panel_grid_body#hero, .panel_grid_body.wide', visible: :all)
         expect(page).to have_css('.panel_grid_body .drg_item b', text: 'bold', visible: :all)
         expect(page).to have_css('.panel_grid_body .drg_item script', count: 1, visible: :all)
         expect(script_flag('__cama_widget_loaded')).to be_nil
