@@ -220,8 +220,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
     # alone. The grid writes its field itself: the field holds the export whatever was loaded.
     it 'stores the export once a block form has loaded a text editor of its own' do
       load_a_block_form_text_editor
-      page.execute_script("jQuery('.panel_grid_body .drg_item b').text('changed');")
-      trigger_grid_auto_save
+      change_the_grid
       export = saved_grid_content
       field = grid_field
       submit_post_form
@@ -563,8 +562,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     it 'refuses a changed grid that holds a script, and leaves the post as it was' do
-      page.execute_script("jQuery('.panel_grid_body .drg_item b').text('changed');")
-      trigger_grid_auto_save
+      change_the_grid
       submit_post_form
 
       expect(page).to have_css('.alert-danger', text: /script/i)

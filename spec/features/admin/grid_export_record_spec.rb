@@ -40,8 +40,7 @@ RSpec.describe 'the record of what the grid exports', :js do
   # The grid still hands its export to the text editor first, which is what the record holds.
   it 'holds the export once a block form has loaded a text editor of its own' do
     load_a_block_form_text_editor
-    page.execute_script("jQuery('.panel_grid_body .drg_item b').text('changed');")
-    trigger_grid_auto_save
+    change_the_grid
 
     expect(saved_grid_content).to include('<b>changed</b>',
                                           '<script>window.__cama_widget_loaded = true;</script>')

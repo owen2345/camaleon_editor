@@ -293,6 +293,12 @@ def trigger_grid_auto_save
   page.execute_script("jQuery('.panel_grid_editor').trigger('auto_save');")
 end
 
+# Changes the text of the grid's first block, as a block's form would, and has the grid export.
+def change_the_grid
+  page.execute_script("jQuery('.panel_grid_body .drg_item b').text('changed');")
+  trigger_grid_auto_save
+end
+
 # Sends the post form with its own button, and waits for the page the server answers with. The
 # form asks before a page with unsaved changes is left; nobody is there to answer.
 def submit_post_form
