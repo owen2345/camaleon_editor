@@ -335,13 +335,24 @@ RSpec.describe 'scripts in the text editor', :js do
   # The markup of a paste comes from wherever it was copied, a page that puts what it likes on the
   # clipboard included, and a script would sit in the editor unseen. So the scripts are taken out
   # of what is pasted; out of markup that says it was copied in the editor too, which any markup
-  # can say.
+  # can say. They are found as the editor will find them: a browser reads some markup otherwise -
+  # a script behind a plaintext tag or an unfinished tag, one inside a comment that a noscript or
+  # an svg style ends early for the editor, one inside a template - and would see no script where
+  # the editor does. And they are found in the markup as the editor's paste plugin leaves it: its
+  # own filters run first, and the one that takes style attributes out of tags (in a WebKit
+  # browser) can glue a script tag together out of a tag that spelled none.
   it 'takes the scripts out of pasted markup' do
-    ["<p>pasted</p>#{script}", "<!-- x-tinymce/html --><p>pasted</p>#{script}"].each do |markup|
+    glued = script.sub('<script>', '<scr style="x"ipt>').sub('</script>', '</scr style="x"ipt>')
+    markups = ["<p>pasted</p>#{script}", "<!-- x-tinymce/html --><p>pasted</p>#{script}",
+               "<p>pasted</p><plaintext>#{script}", "<p>pasted</p><i#{script}",
+               "<p>pasted</p><noscript><!-- </noscript>#{script} --></noscript>",
+               "<p>pasted</p><svg><style><!-- </style>#{script} --></style></svg>",
+               "<p>pasted</p><template>#{script}</template>", "<p>pasted</p>#{glued}"]
+    markups.each do |markup|
       answer = pasted_into_the_text_editor(markup)
 
       expect(answer).to include('pasted', 'written in the text editor')
-      expect(answer).not_to include('script')
+      expect(answer).not_to match(/<script[\s>]/i)
       expect(script_types_in_the_text_editor).to be_empty
     end
     expect(script_ran).to be_nil

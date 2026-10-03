@@ -1027,19 +1027,27 @@ jQuery(function(){
         // unseen. The editor's paste filter took scripts out by the editor's list of elements,
         // which now holds the script: so they are taken out here, of whatever is pasted or dropped
         // in. Markup copied in the editor itself loses them too: any markup can say it is that.
-        // They are taken out of the markup before the editor reads it, in the inert document,
-        // where nothing of the markup runs or loads. Asked for the markup once read instead,
-        // the editor would read it in its own document first, where a handler of an element
-        // that fails to load - a video's source, an image - runs over the admin's page. A paste
-        // that spells no script is left to the editor as it came.
+        // They are taken out of the markup as it is handed to the editor's paste plugin, read as
+        // the editor will read it, with its own parser and its own lists: a browser reads some
+        // markup otherwise - a script behind a plaintext tag or an unfinished one, inside a
+        // comment a noscript ends early for the editor, inside a template - and would find no
+        // script where the editor does. Asked for the markup once read instead, the editor would
+        // read it in its own document first, where a handler of an element that fails to load
+        // runs over the admin's page. The listener is added once the editor's plugins have added
+        // theirs, so it reads what they leave: the paste plugin's own filters run before it, and
+        // the one that takes style attributes out of tags can glue a script tag together out of
+        // a tag that spelled none. A paste that spells no script by then is left to the editor as
+        // it came.
         var paste_without_scripts = function(editor){
-            editor.on("PastePreProcess", function(e){
-                if(!/<script/i.test(e.content)) return;
-                var holder = inert().createElement("div");
-                holder.innerHTML = e.content;
-                var scripts = holder.getElementsByTagName("script");
-                while(scripts.length) scripts[0].parentNode.removeChild(scripts[0]);
-                e.content = holder.innerHTML;
+            editor.on("PreInit", function(){
+                editor.on("PastePreProcess", function(e){
+                    if(!/<script/i.test(e.content)) return;
+                    var settings = {validate: editor.settings.validate !== false};
+                    var parser = new tinymce.html.DomParser(settings, editor.schema);
+                    parser.addNodeFilter("script", function(nodes){ for(var i = nodes.length - 1; i >= 0; i--) nodes[i].remove(); });
+                    var root = parser.parse(e.content, {forced_root_block: false, isRootContent: true});
+                    e.content = new tinymce.html.Serializer(settings, editor.schema).serialize(root);
+                });
             });
         }
 
