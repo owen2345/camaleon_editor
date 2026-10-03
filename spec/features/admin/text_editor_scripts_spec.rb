@@ -19,12 +19,12 @@ RSpec.describe 'scripts in the text editor', :js do
     open_post_in_editor(@post)
   end
 
-  # What the post's text editor answers with after it was handed the markup, and after the markup
-  # in `inserted` went in at the caret.
-  def through_the_text_editor(markup, inserted: nil)
+  # What a text editor, the post's unless another is given, answers with after it was handed the
+  # markup, and after the markup in `inserted` went in at the caret.
+  def through_the_text_editor(markup, inserted: nil, editor: POST_TEXT_EDITOR)
     page.evaluate_script(<<~JS, markup, inserted)
       (function(markup, inserted){
-        var editor = #{POST_TEXT_EDITOR};
+        var editor = #{editor};
         editor.setContent(markup);
         if(inserted) editor.insertContent(inserted);
         return editor.getContent();
@@ -176,17 +176,6 @@ RSpec.describe 'scripts in the text editor', :js do
       page.evaluate_script("tinymce.get('#{id}').settings.extended_valid_elements")
     end
 
-    # What the text editor of a field answers with after it was handed the markup.
-    def through(id, markup)
-      page.evaluate_script(<<~JS, id, markup)
-        (function(id, markup){
-          var editor = tinymce.get(id);
-          editor.setContent(markup);
-          return editor.getContent();
-        })(arguments[0], arguments[1])
-      JS
-    end
-
     # The settings a page sets its editors up with are the page's: they stay as it wrote them,
     # however many editors it sets up with them, and so do core's defaults.
     it "adds the script to a page's own list for each editor, and to the default one otherwise" do
@@ -206,13 +195,17 @@ RSpec.describe 'scripts in the text editor', :js do
         jQuery.extend(cama_get_tinymce_settings({selector: selector}), {extended_valid_elements: 'video[*]'})
       JS
 
-      expect(through('late_list', "<p>a</p>#{script}").delete("\n")).to eq("<p>a</p>#{script}")
+      answer = through_the_text_editor("<p>a</p>#{script}", editor: "tinymce.get('late_list')")
+
+      expect(answer.delete("\n")).to eq("<p>a</p>#{script}")
     end
 
     it "keeps a script in an editor set up without core's settings" do
       set_up_text_editors(%w[not_cores], '{selector: selector}')
 
-      expect(through('not_cores', "<p>a</p>#{script}").delete("\n")).to eq("<p>a</p>#{script}")
+      answer = through_the_text_editor("<p>a</p>#{script}", editor: "tinymce.get('not_cores')")
+
+      expect(answer.delete("\n")).to eq("<p>a</p>#{script}")
     end
 
     # A rule the page's own lists hold for the script is the page's say on scripts, a narrower one
@@ -227,7 +220,8 @@ RSpec.describe 'scripts in the text editor', :js do
                           "cama_get_tinymce_settings({selector: selector, valid_elements: 'p,script[src]'})")
       set_up_text_editors(%w[rule_for_all],
                           "cama_get_tinymce_settings({selector: selector, valid_elements: '*[class|style|id]'})")
-      answer = through('own_rule', '<p>a</p><script src="/w.js" type="text/x" charset="utf-8"></script>')
+      answer = through_the_text_editor('<p>a</p><script src="/w.js" type="text/x" charset="utf-8"></script>',
+                                       editor: "tinymce.get('own_rule')")
 
       expect(answer.delete("\n")).to eq('<p>a</p><script src="/w.js" type="text/x"></script>')
       expect(list_of('own_rule')).to eq('video[*],script[src|type]')
