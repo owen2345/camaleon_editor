@@ -48,7 +48,10 @@ handed, where they used to take them out: a grid, an Editor block in its form, a
 content, markup written in the source view. That goes for every text editor of the page,
 whatever settings it was set up with; an editor whose own list of elements has a rule for the
 script keeps that rule. Pasted markup still loses its scripts. A script stays inert in both
-editors and runs on the public page.
+editors and runs on the public page. As the page is being left, each of those editors writes its
+content into its field as a save does (the grid's export, while the grid editor is shown), where
+TinyMCE wrote the editor's raw markup: a page the author stays on after all keeps content in its
+fields.
 
 A text editor gives a script back where it stood, on a line of its own, with its text as it was
 and no paragraph put around it. The attributes come back in the editor's spelling (double
