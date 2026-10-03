@@ -41,8 +41,8 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     expect(script_ran).to be_nil
   end
 
-  # An Editor block is edited in a text editor of its own, which holds the block's script under a
-  # type that does not run and gives it back as it was, where it stood.
+  # The author edits an Editor block in its own text editor. That editor holds the script of the
+  # block under a type that does not run, and returns it unchanged in the same position.
   it 'keeps the script of an editor block edited in its form, and does not run it' do
     open_block_form("<p>widget</p>#{script}", kind: 'editor')
     find('#ow_inline_modal .mce-tinymce')

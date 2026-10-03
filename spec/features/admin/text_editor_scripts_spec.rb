@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
-# A text editor takes the scripts out of the content it is handed. A grid's scripts are content for
-# the public page, and the grid hands its export to the text editor it stands in front of: a grid
-# that went through the text editor came back without them. So the plugin has the text editors keep
-# scripts, as the editor keeps any element it is allowed: in its document, under a type that makes
-# it no script to the browser, and given back under its own type with its text as it was. The
-# editors go by the markup, whatever it is: a grid, any other content, markup a script puts in at
-# the caret. A paste is another matter: its markup comes from wherever it was copied, and the
-# plugin takes the scripts out of it.
+# A text editor removes the scripts from its content. The scripts of a grid are content for the
+# public page, and the grid editor gives its export to the text editor behind it. A grid that went
+# through the text editor lost its scripts. For this reason, the plugin makes the text editors keep
+# scripts as they keep other valid elements: in the document under a type that a browser does not
+# run, and returned under their own type with their text unchanged. This applies to all markup: a
+# grid, other content, and markup that a script inserts at the caret. A paste is different: its
+# markup can come from any page, and the plugin removes its scripts.
 RSpec.describe 'scripts in the text editor', :js do
   init_site
 
@@ -19,8 +18,8 @@ RSpec.describe 'scripts in the text editor', :js do
     open_post_in_editor(@post)
   end
 
-  # What a text editor, the post's unless another is given, answers with after it was handed the
-  # markup, and after the markup in `inserted` went in at the caret.
+  # The content that a text editor returns after it gets the markup, and after `inserted` goes in at
+  # the caret. The default editor is the text editor of the post.
   def through_the_text_editor(markup, inserted: nil, editor: POST_TEXT_EDITOR)
     page.evaluate_script(<<~JS, markup, inserted)
       (function(markup, inserted){
@@ -32,7 +31,7 @@ RSpec.describe 'scripts in the text editor', :js do
     JS
   end
 
-  # The types the text editor holds the scripts of its content under.
+  # The types under which the text editor holds the scripts of its content.
   def script_types_in_the_text_editor
     page.evaluate_script(<<~JS)
       jQuery.map(#{POST_TEXT_EDITOR}.getBody().getElementsByTagName('script'), function(script){
@@ -41,8 +40,8 @@ RSpec.describe 'scripts in the text editor', :js do
     JS
   end
 
-  # What a text editor, the post's unless another is given, answers with after the markup was
-  # pasted into it.
+  # The content that a text editor returns after a paste of the markup. The default editor is the
+  # text editor of the post.
   def pasted_into_the_text_editor(markup, editor: POST_TEXT_EDITOR)
     page.evaluate_script(<<~JS, markup)
       (function(markup){
@@ -57,8 +56,8 @@ RSpec.describe 'scripts in the text editor', :js do
     JS
   end
 
-  # What a text editor answers with after it was handed the markup and its caret came to stand
-  # outside any block, at the very start of its content.
+  # The content that a text editor returns after it gets the markup and its caret moves outside all
+  # blocks, to the start of the content.
   def with_the_caret_outside_any_block(markup, editor: POST_TEXT_EDITOR)
     page.evaluate_script(<<~JS, markup)
       (function(markup){
@@ -92,8 +91,8 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
-  # A script's text is no markup to the editor: it comes back character for character, whatever it
-  # holds, under the type the script was written with.
+  # The editor does not read the text of a script as markup. The text comes back character for
+  # character, under the type of the script.
   it "gives back a script's text as it was, under its own type" do
     data = %(<script type="application/ld+json">{\n  "name": "A & B <c>",\n  "url": "https://example.invalid/?a=1&b=2"\n}</script>)
     template = '<script id="row" type="text/template"><tr class="row"><td>{{ name }}</td></tr></script>'
@@ -104,10 +103,9 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
-  # A script's text is text of the editor's document, where a plugin of the editor that marks text
-  # (a no-break space made visible, for one) wraps it in elements of its own. Outside a script the
-  # editor takes those off as its content is read; inside one they would come back as part of the
-  # script. Read, a script holds its text alone.
+  # A plugin of the editor can mark text in the document with its own elements (for example, a
+  # visible no-break space). The editor removes them when its content is read, but not in a script.
+  # The grid editor plugin removes them there: a script comes back with only its text.
   it "gives back a script's text as it was while the editor shows invisible characters" do
     content = "<p>written in the text editor</p><script>var name =\u00a0'A B';</script>"
 
@@ -128,8 +126,8 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(hidden.delete("\n")).to eq(content)
   end
 
-  # A script's attributes come back as the editor writes those of any element: each with its
-  # value, in double quotes, in the order they were written.
+  # The attributes of a script come back as the editor writes all attributes: each with a value, in
+  # double quotes, in the same sequence.
   it "gives back a script's attributes in the editor's spelling" do
     written = "<script async src='https://example.invalid/w.js?a=1&b=2' data-id=w1 defer></script>"
 
@@ -137,12 +135,12 @@ RSpec.describe 'scripts in the text editor', :js do
       .to eq('<script async="" src="https://example.invalid/w.js?a=1&amp;b=2" data-id="w1" defer="defer"></script>')
   end
 
-  # The editor ends a script at the first closing tag it reads, or at a tag that only begins like
-  # one. A browser reads a script's text otherwise: "<!--" opens a comment there, "<script" inside
-  # the comment a script of the text's own, and a closing tag then ends that script, not the
-  # element. A script hidden in a comment, the old way, may so write another script out. The
-  # editor is given a browser's reading: what a browser takes for the script comes back whole, and
-  # what stands behind it stays content.
+  # TinyMCE ends a script at the first closing tag, or at a tag that only starts like one. A browser
+  # reads the text of a script differently. "<!--" starts a comment, and "<script" in that comment
+  # starts a second script. The next closing tag then ends the second script, not the element. An
+  # old technique hides a script in a comment and writes a second script from it. The plugin gives
+  # the editor the rule of a browser: the full script comes back, and the markup after it stays
+  # content.
   it 'reads where a script ends as a browser does' do
     written_out = '<script src="//example.invalid/widget.js"></script>'
     [
@@ -159,16 +157,16 @@ RSpec.describe 'scripts in the text editor', :js do
     end
   end
 
-  # Outside such a comment the first closing tag ends the script, for a browser too: a script that
-  # writes one out unescaped ends there, and the rest of it is content.
+  # Outside such a comment, the first closing tag ends the script, also for a browser. A script that
+  # writes an unescaped closing tag ends there, and the remainder is content.
   it 'ends a script at the first closing tag outside a comment of its text, as a browser does' do
     answer = through_the_text_editor(%q(<script>document.write('<script src="/w.js"></script>');</script><p>after</p>))
 
     expect(answer.delete("\n")).to eq(%q(<script>document.write('<script src="/w.js"></script><p>');</p><p>after</p>))
   end
 
-  # A script nothing ends holds all that follows it, for a browser too: here the one closing tag
-  # ends the script its text spells inside a comment, and what stands behind is still that text.
+  # A script with no end contains all the markup after it, also for a browser. Here the closing tag
+  # ends the second script in the comment, and the markup after it is still script text.
   it 'reads a script that nothing ends up to the end of the content, as a browser does' do
     content = '<p>before</p><script><!-- <script> </script><b>after</b>'
 
@@ -176,19 +174,19 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
   end
 
-  # The script joins the list of elements each text editor is added with, whatever made that list:
-  # core's default, a list of the page's own handed to core's settings or put onto them afterwards,
-  # settings that are not core's.
+  # The plugin adds the script element to the list of valid elements of each text editor. The source
+  # of the list does not matter. It can be the default of core, or a list that the page gives to the
+  # settings of core or adds later. It can also be in settings that are not from core.
   context "with text editors set up with settings of the page's own" do
-    # The list of elements a text editor was added with, by its field's id.
+    # The list of valid elements of the text editor with this field id.
     def list_of(id)
       page.evaluate_script("tinymce.get('#{id}').settings.extended_valid_elements")
     end
 
-    # The settings a page sets its editors up with are the page's: they stay as it wrote them,
-    # however many editors it sets up with them, and so do core's defaults.
+    # The plugin does not change the settings object of a page, for any number of editors that the
+    # page sets up with it. It also does not change the defaults of core.
     it "adds the script to a page's own list for each editor, and to the default one otherwise" do
-      # the settings object the page made stays at hand as the page's
+      # Keep a reference to the settings object of the page, to read it after the editors are ready.
       set_up_text_editors(%w[own_a own_b], <<~JS)
         window.__cama_own_settings = cama_get_tinymce_settings({selector: selector, extended_valid_elements: 'video[*]'})
       JS
@@ -219,10 +217,11 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(answer.delete("\n")).to eq("<p>a</p>#{script}")
     end
 
-    # A rule the page's own lists hold for the script is the page's say on scripts, a narrower one
-    # included: the editor goes by the last rule it is given for an element, so none is put behind
-    # it, and a script comes back with the attributes the page allows it. A rule for every element
-    # ("*[...]") is no say on scripts: behind it the script still joins the list.
+    # A rule for the script element in the lists of a page stays in effect, also a narrower rule.
+    # The editor uses the last rule that it gets for an element. For this reason, the plugin adds no
+    # rule after it, and a script comes back with the attributes that the page permits. A rule for
+    # all elements ("*[...]") is not a script rule: the plugin still adds the script element after
+    # it.
     it "leaves a rule that a page's own lists hold for the script as the page wrote it" do
       set_up_text_editors(%w[own_rule], <<~JS)
         cama_get_tinymce_settings({selector: selector, extended_valid_elements: 'video[*],script[src|type]'})
@@ -241,10 +240,10 @@ RSpec.describe 'scripts in the text editor', :js do
     end
   end
 
-  # As the page is being left, a text editor writes its content into its field, where its own
-  # write would put its raw body, a script under the type the editor holds it with
-  # (grid_post_save_spec has what a page that is not left would send otherwise). An editor hidden
-  # for its field to be edited writes nothing.
+  # Before the page unloads, a text editor writes its content into its field. TinyMCE's own write
+  # puts the raw content there, with each script under the type that the editor gives it.
+  # grid_post_save_spec shows what a page then sends if the author cancels the unload. An editor
+  # that TinyMCE hid, so that the author can edit its field, writes nothing.
   it 'writes its content as the page is being left, unless it is hidden for its field to be edited' do
     written, typed = page.evaluate_script(<<~JS, "<p>written in the text editor</p>#{script}")
       (function(markup){
@@ -265,19 +264,19 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(typed).to eq('typed in the field')
   end
 
-  # The editor gives whatever stands at the top level of its content a paragraph, once the caret
-  # comes to stand outside any block, unless its map of block elements has the element's name.
-  # The map has the script's: a script stays where it was written.
+  # When the caret moves outside all blocks, the editor puts each top-level node of its content into
+  # a paragraph. It does not do this if the block element map has the name of the node. The map has
+  # the script name: a script stays in its position.
   it 'leaves a script at the top level of the content where it stands' do
     content = "#{script}<p>written in the text editor</p>"
 
     expect(with_the_caret_outside_any_block(content).delete("\n")).to eq(content)
   end
 
-  # Markup put in at the caret leaves the caret behind its last piece of content, and the editor
-  # steps back over what it takes for a block to find it: a script loaded by its src that ends the
-  # markup is stepped over, so what the author types next goes behind the text before the script,
-  # not behind the script.
+  # After the editor inserts markup at the caret, it puts the caret after the last content of the
+  # markup. To find that content, it steps back across the blocks. It steps across a script with a
+  # src at the end of the markup: the next text that the author types goes before the script, not
+  # after it.
   it 'leaves the caret before a script that ends markup put in at the caret' do
     widget = '<div class="widget"><div>body</div><script src="/widget.js"></script></div>'
 
@@ -297,10 +296,10 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(answer.delete("\n")).to include(widget.sub('body', 'bodytyped'))
   end
 
-  # The editor's search goes through the text of the content and leaves out the text of an element
-  # that shows none, a script's for one, as long as the element is no block to it. The script is
-  # kept out of a paragraph without becoming a block to the search: its text is not found, and
-  # Replace does not rewrite it unseen.
+  # The search of the editor ignores the text of an element that shows no text (for example, a
+  # script). This applies only if the element is not a block. The plugin keeps a script out of a
+  # paragraph and does not make it a block for the search: the search does not find the script text,
+  # and Replace does not change it.
   it "leaves a script's text out of the editor's find and replace" do
     content = "<p>pick a color</p><script>var tint = 'color';</script>"
 
@@ -319,9 +318,9 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(replaced.delete("\n")).to eq("<p>pick a colour</p><script>var tint = 'color';</script>")
   end
 
-  # The post's text editor is handed the stored content as the form opens, and writes its content
-  # into the field as the form is sent: a post that is not a grid keeps its script through both,
-  # where it stood.
+  # The post's text editor gets the stored content when the form opens, and writes its content into
+  # the field at submit. A post that is not a grid keeps its script, in the same position, through
+  # the two steps.
   context 'with a post whose content holds a script' do
     let(:stored_content) { "<p>written in the text editor</p>#{script}<p>and below it</p>" }
 
@@ -343,22 +342,25 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
-  # The markup of a paste comes from wherever it was copied, a page that puts what it likes on the
-  # clipboard included, and a script would sit in the editor unseen. So the scripts are taken out
-  # of what is pasted; out of markup that says it was copied in the editor too, which any markup
-  # can say. They are found as the editor will find them: a browser reads some markup otherwise -
-  # a script behind a plaintext tag or an unfinished tag, one inside a comment that a noscript, an
-  # svg style or a video (raw text to the editor's media plugin) ends early for the editor, one
-  # inside a template - and would see no script where the editor does. The other way round too:
-  # a comment or a CDATA section the editor reads to its end, where a browser ends it at its first
-  # ">" ("<!--->", "<![CDATA[ >") and reads a script behind it; and a processing instruction the
-  # editor writes back ("<?xml ?>" as "<?xml?>"), which its next read takes up to the first "/>",
-  # a tag further, so that a script in a textarea's text behind it becomes a script. None of the
-  # three is content: a paste that spells a script loses them (a processing instruction with text,
-  # "<?x >…", comes back with that text encoded and so carries none; it is pasted to say so). And
-  # they are found in the markup as the editor's paste plugin leaves it: its own filters run first,
-  # and the one that takes style attributes out of tags (in a WebKit browser) can glue a script tag
-  # together out of a tag that spelled none.
+  # The markup of a paste can come from any page, and a pasted script stays in the editor where the
+  # author does not see it. For this reason, the plugin removes the scripts from pasted markup. This
+  # includes markup that says it was copied in the editor, because any markup can say that.
+  # - The plugin finds the scripts as the editor reads the markup. A browser reads some markup
+  #   differently and finds no script there. Examples are a script after a plaintext tag or an
+  #   incomplete tag, and a script in a template. A third example is a script in a comment that a
+  #   noscript, an svg style or a video ends early for the editor (the media plugin reads a video as
+  #   raw text).
+  # - The editor reads a comment or a CDATA section to its end. A browser can end it at the first
+  #   ">" ("<!--->", "<![CDATA[ >") and read a script after it.
+  # - The editor writes a processing instruction "<?xml ?>" as "<?xml?>", and its next read
+  #   continues to the first "/>", one tag too far. A script in the text of a textarea after it then
+  #   becomes a script.
+  # - A comment, a CDATA section and a processing instruction are not content: a paste that spells a
+  #   script loses them. A processing instruction with text ("<?x >…") comes back with the text
+  #   encoded and hides no script. The example pastes one to prove that.
+  # - The plugin reads the markup after the filters of the paste plugin. In a WebKit browser, the
+  #   filter that removes style attributes from tags can make a script tag from a tag that spelled
+  #   none.
   it 'takes the scripts out of pasted markup' do
     glued = script.sub('<script>', '<scr style="x"ipt>').sub('</script>', '</scr style="x"ipt>')
     markups = ["<p>pasted</p>#{script}", "<!-- x-tinymce/html --><p>pasted</p>#{script}",
@@ -379,10 +381,9 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
-  # Once a block form has loaded a text editor, jQuery's remove() takes the text editor of an
-  # element along, found by the element's id. A pasted script carries whatever id its markup gives
-  # it, the id of the post's text editor for one: it is taken out like any other, and that editor
-  # stays.
+  # After a block form loads a text editor, jQuery's remove() also removes the text editor that has
+  # the id of a removed element. A pasted script can have any id (for example, the id of the post's
+  # text editor). The plugin removes that script, and the editor stays.
   it 'takes out a pasted script that carries the id of a text editor, and leaves that editor in place' do
     load_a_block_form_text_editor
     id = page.evaluate_script("#{POST_TEXT_EDITOR}.id")
@@ -395,11 +396,11 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
-  # The markup of a paste is read in no document of the page's, with or without a script in it
-  # to take out. What a browser makes of markup read in the document of a page runs there: a
-  # handler of an image or of a video's source that fails to load, for one, in the editor's
-  # window over the admin's page. An element the editor's window defines says, the moment it is
-  # made there, whether the markup was read in that document.
+  # The plugin does not parse pasted markup in a document of the page, with or without a script to
+  # remove. Markup that a browser parses in a document of the page can run code there. For example,
+  # the error handler of a video source that does not load runs in the window of the editor, on the
+  # admin page. The example defines a custom element in the window of the editor: its constructor
+  # records a parse of the markup in that document.
   it 'runs no handler of pasted markup' do
     page.execute_script("#{POST_TEXT_EDITOR}.getWin().eval(arguments[0]);", <<~JS)
       customElements.define('cama-pasted-witness', class extends HTMLElement {
@@ -417,11 +418,11 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
-  # A page may set a text editor up with a setup of its own, which takes the place of core's, and
-  # with it of the hooks core's setup runs for the plugins; that editor keeps scripts like the
-  # others. So every text editor of a page that loads the grid editor has its pastes filtered,
-  # keeps a script out of a paragraph and writes its content as the page is being left, whatever
-  # it was set up with, a list of block elements of its own included.
+  # A page can set up a text editor with its own setup. That setup replaces the setup of core, and
+  # with it the hooks that core runs for plugins. That editor still keeps scripts. For this reason,
+  # the plugin attaches its hooks to each text editor of a page that loads the grid editor. Each
+  # editor filters its pastes, keeps a script out of a paragraph and writes its content before the
+  # page unloads. This applies with all settings, also with its own list of block elements.
   context 'with a text editor set up with a setup and a list of block elements of its own' do
     let(:own_editor) { "tinymce.get('own_editor')" }
 

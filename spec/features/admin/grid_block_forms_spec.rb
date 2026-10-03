@@ -7,8 +7,8 @@
 RSpec.describe 'the grid editor block forms', :js do
   init_site
 
-  # The list of a block's items opens the form of one in a second modal. The list is still sliding
-  # into place when its link can be found: the click waits, or it may land beside the link.
+  # The item list of a block opens the form of an item in a second modal. Capybara can find the link
+  # while the list still slides into position. Wait first, or the click can miss the link.
   def add_block_item(label)
     wait_for_modal_at_rest('#ow_inline_modal')
     find('#ow_inline_modal a.add_item', text: label).click

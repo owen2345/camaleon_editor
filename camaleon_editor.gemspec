@@ -25,8 +25,8 @@ Gem::Specification.new do |s|
   # allowlists the grid template scan is built on; on an older core there would be no scan.
   s.add_dependency 'camaleon_cms', '>= 2.9.3'
   s.add_dependency 'rails'
-  # The text editors keep scripts by ways of TinyMCE's that hold from 4.7.4 on: an older one gives a
-  # script's text back inside a CDATA wrapper and puts a paragraph around a script at the top level
-  # of the content. Core asks for a tinymce-rails below 5.
+  # The text editors keep scripts with TinyMCE behavior that starts at 4.7.4. An older TinyMCE puts
+  # the text of a script in a CDATA wrapper, and puts a top-level script in a paragraph. Core
+  # requires a tinymce-rails below 5.
   s.add_dependency 'tinymce-rails', '>= 4.7.4'
 end

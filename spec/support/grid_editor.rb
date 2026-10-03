@@ -36,7 +36,7 @@ def store_post_content(post, content)
   CamaleonCms::Post.where(id: post.id).update_all(content: content)
 end
 
-# What the post stores for its content by now.
+# The content that the post stores now.
 def post_content
   CamaleonCms::Post.find(@post.id).content
 end
@@ -92,28 +92,28 @@ def open_grid_editor
   accept_confirm { find('.mce-btn', text: 'Grid Editor').click }
 end
 
-# Answers yes to every prompt the page asks from here on, for a script that clicks through several:
-# accept_confirm answers the one prompt of the step it wraps.
+# Accepts each confirm prompt of the page from now on. Use it when one script clicks through more
+# than one prompt: accept_confirm accepts only the prompt of the step that it wraps.
 def confirm_every_prompt
   page.execute_script('window.confirm = function(){ return true; };')
 end
 
-# Opens the form of the grid's first block, once the grid is rebuilt from what the post stores.
+# Opens the form of the first block, after the grid is rebuilt from the stored content.
 def open_first_block_form
   find('.panel_grid_body .drg_item')
   page.execute_script("jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();")
 end
 
-# Stores a grid of one block holding `inner` (nothing, by default), of the kind, opens the post in
-# the editor and opens that block's form.
+# Stores a grid with one block of the given kind that contains `inner` (empty by default). Then
+# opens the post in the editor and opens the form of that block.
 def open_block_form(inner = '', kind: 'text')
   store_post_content(@post, grid_post_content(grid_with_block(inner, kind: kind)))
   open_post_in_editor(@post)
   open_first_block_form
 end
 
-# A drag that moves nothing passes an example on what a drag must not do. So the page is watched
-# for a sort that starts, and the example says it saw one.
+# A drag that moves nothing lets an example pass when it tests what a drag must not do. Watch the
+# page for the start of a sort, and let the example assert that it saw one.
 def watch_for_a_sort
   page.execute_script("jQuery(document).on('sortstart', function(){ window.__cama_sort_started = true; });")
 end
@@ -122,26 +122,26 @@ def sort_started
   page.evaluate_script('window.__cama_sort_started')
 end
 
-# Drags the grid's first block by its header, slowly enough for a sort to start, and lets it go:
-# two steps down, or onto `to` (an element) and a step further.
+# Drags the first block by its header, slowly enough to start a sort, and releases it: two steps
+# down, or onto the element `to` and one step more.
 def drag_the_first_block(to: nil)
   drag = hold_the_first_block
   to ? drag.move_to(to).pause(duration: 0.2).move_by(0, 3) : drag.move_by(0, 25).pause(duration: 0.2).move_by(0, 25)
   drag.pause(duration: 0.2).release.perform
 end
 
-# The first block held by its header, for long enough that jQuery UI takes the hold for a drag.
+# Holds the first block by its header until jQuery UI reads the hold as a drag.
 def hold_the_first_block
   handle = first('.panel_grid_body .drg_item .header_box').native
   page.driver.browser.action.click_and_hold(handle).pause(duration: 0.4)
 end
 
-# The grid's root, as the editor finds it, and the area of its first column: the two sortables.
+# The two sortables: the grid root, as the grid editor finds it, and the area of the first column.
 GRID_ROOT = "jQuery('.panel_grid_editor > .panel_grid_body_w > .panel_grid_body')"
 FIRST_COLUMN_AREA = "#{GRID_ROOT}.children('.drg_column').first().children('.grid_sortable_items')".freeze
 
-# What a sortable of the grid does as a sort ends on the first of its items: `sortable` is the
-# script that answers with it, `items` the selector of its items.
+# Runs the handler of a grid sortable for the end of a sort on its first item. `sortable` is the
+# script that returns the sortable, and `items` is the selector of its items.
 def end_a_sort(sortable, items)
   page.execute_script(<<~JS, items)
     var sortable = #{sortable};
@@ -149,20 +149,20 @@ def end_a_sort(sortable, items)
   JS
 end
 
-# The way back: leaves the grid editor for the text editor, and answers the prompt its link asked.
+# Leaves the grid editor for the text editor, and accepts the prompt of the link.
 def leave_for_the_text_editor
   accept_confirm { find('.grid_editor_menu .toggle_panel_grid').click }
   find('.mce-tinymce')
 end
 
-# What a link to "#" that was followed leaves on the page's URL: an empty fragment, which the
-# browser's location.hash hides.
+# The fragment of the page URL. A followed link to "#" leaves an empty fragment, which location.hash
+# does not show.
 def current_url_fragment
   URI(page.current_url).fragment
 end
 
-# Keeps the errors the page reports from here on (a listener that throws at a real click reports
-# one), for page_errors to answer with; called again, it starts the count over.
+# Records the errors that the page reports from now on, for page_errors to return. A listener that
+# throws an error at a real click reports one. A second call clears the record.
 def watch_the_page_errors
   page.execute_script(<<~JS)
     if(!window.__cama_errors){
@@ -176,21 +176,21 @@ def page_errors
   page.evaluate_script('window.__cama_errors')
 end
 
-# The field of the post's text editor. In a post of several languages each language has a field
-# and a text editor of its own, and this is the first language's: the field they are composed into
-# has no editor.
+# The field of the post's text editor. In a post in more than one language, each language has its
+# own field and text editor. This is the field of the first language. The field that holds the
+# composed content has no editor.
 POST_TEXT_EDITOR_FIELD = "jQuery('#form-post textarea.tinymce_textarea:not(.translated-item)').first()"
 # The text editor of that field.
 POST_TEXT_EDITOR = "tinymce.get(#{POST_TEXT_EDITOR_FIELD}.attr('id'))".freeze
 
-# Waits until a text editor is set up: its content loaded, the hooks of its init run. `editor` is
-# the script that answers with the editor, or with nothing while there is none yet.
+# Waits until a text editor is ready: it has its content, and its init hooks ran. `editor` is the
+# script that returns the editor, or nothing while there is no editor.
 def wait_for_text_editor(editor)
   wait_until { page.evaluate_script("!!(#{editor} || {}).initialized") }
 end
 
-# Sets a text editor up over a new field for each id, and waits until each is set up. `settings`
-# is the script of the settings the page sets them up with; `selector` there finds the fields.
+# Makes a new field with a text editor for each id, and waits until each editor is ready. `settings`
+# is the script of the editor settings. `selector` in that script finds the fields.
 def set_up_text_editors(ids, settings)
   page.execute_script(<<~JS, ids)
     var selector = jQuery.map(arguments[0], function(id){
@@ -202,24 +202,23 @@ def set_up_text_editors(ids, settings)
   ids.each { |id| wait_for_text_editor("tinymce.get('#{id}')") }
 end
 
-# Hands the post's text editor its content, as an author who writes there does.
+# Sets the content of the post's text editor, as an author who writes there does.
 def text_editor_holds(markup)
   page.execute_script("#{POST_TEXT_EDITOR}.setContent(arguments[0]);", markup)
 end
 
-# What a block's form does as it opens: it loads a text editor of its own through jQuery's
-# tinymce(). From then on jQuery goes by the page's text editors: val() reads and writes the text
-# editor of a field that has one and leaves the field alone, and remove() takes the text editor
-# of an element along.
+# Does what a block form does when it opens: it loads its own text editor through jQuery's
+# tinymce(). After that, jQuery uses the text editors of the page: val() reads and writes the text
+# editor of a field and not the field, and remove() also removes the text editor of an element.
 def load_a_block_form_text_editor
   page.execute_script(
     "jQuery('<textarea></textarea>').appendTo('body').tinymce(cama_get_tinymce_settings({height: '120px'}));"
   )
 end
 
-# What a script of the content left under `name`, had it run: nil when it did not. A text editor
-# has a document of its own, and a script that ran there left its mark there, not in the page: so
-# the page is asked, and the document of each of its text editors.
+# The value that a content script sets under `name` when it runs, or nil if it did not run. A text
+# editor has its own window, and a script that runs there sets the value there. The step reads the
+# window of the page and the window of each text editor.
 def script_flag(name)
   page.evaluate_script(<<~JS, name)
     (function(name){
@@ -230,13 +229,13 @@ def script_flag(name)
   JS
 end
 
-# What a post in several languages sends for its content. Core composes it from the fields of the
-# languages when one of them says it changed, which a text editor does when it loses focus.
+# The content that a post in more than one language sends. Core composes it from the language fields
+# when one of them triggers a change, which occurs when a text editor loses focus.
 def composed_content
   page.evaluate_script("jQuery('#form-post textarea.tinymce_textarea.translated-item')[0].value")
 end
 
-# Closes core's alert, and waits until it is gone: it would take the clicks meant for the page.
+# Closes the alert of core and waits until it is gone: an open alert gets the clicks for the page.
 def close_alert
   page.execute_script("jQuery('#cama_alert_modal').modal('hide');")
   expect(page).to have_no_css('#cama_alert_modal')
@@ -247,9 +246,9 @@ def open_templates_menu(label: 'Templates')
   find('.grid_editor_menu a.dropdown-toggle', text: label).click
 end
 
-# Opens the options menu of the grid's first column ('.drg_column') or block ('.drg_item'), and
-# answers with its toggle, found again if the page replaces it (Capybara's allow_reload, which it
-# calls a beta option; its FindAllFirst cop rewrites the find(…, match: :first) that reloads too).
+# Opens the options menu of the first column ('.drg_column') or block ('.drg_item') and returns its
+# toggle. Capybara finds the toggle again if the page replaces it (allow_reload, a beta option).
+# find(…, match: :first) also reloads, but the FindAllFirst cop rewrites it.
 def open_the_menu_of(part)
   toggle = first(".panel_grid_body #{part} > .header_box .dropdown-toggle", allow_reload: true)
   toggle.click
@@ -279,9 +278,9 @@ def have_link_with_tooltip(label, tooltip)
   have_link(label) { |link| tooltip_of(link) == tooltip }
 end
 
-# The link that applies the listed template, once the list stands still. The list's modal slides
-# into place for a moment after it opens, and the link moves by twice its height meanwhile: a
-# click aimed at it as it appears can land above it, and no prompt is asked.
+# The link that applies the listed template, after the list stops. The modal of the list slides into
+# position after it opens, and the link moves by two times its height. A click during that time can
+# land above the link, and then no prompt shows.
 def listed_template_link
   wait_for_modal_at_rest('#ow_inline_modal')
   find('#grid_table_list .import_item')
@@ -304,18 +303,21 @@ def wait_for_modal_at_rest(selector)
   end
 end
 
-# The post's textarea has more than one writer. The grid writes its export there at every
-# auto_save. The text editor writes its content there when it loses focus, with every draft and as
-# the form is sent: the grid's export while the grid editor is shown, and its own serialization (a
-# newline between tags, #rrggbb for rgb(), <strong> for <b>) once the author went back to it.
+# The post's field has more than one writer. The grid editor writes its export there at each
+# auto_save. The text editor writes its content there when it loses focus, with each draft and at
+# submit. That content is the grid export while the grid editor is visible. After the author goes
+# back to the text editor, it is the text editor's own serialization (a newline between tags,
+# #rrggbb for rgb(), <strong> for <b>).
 #
-# So the export is not read off the field. The grid hands it to the text editor right before the
-# change_in its auto_save triggers, and what a text editor was last handed at that moment goes on
-# record, when the field of that editor is the one that said so: core triggers change_in on a
-# field of its own too (core master's draft save, on the first language's copy of a translated
-# field that has no editor, the summary), which was handed nothing. The record does not look for
-# the editor beside the field: a rebuild that fails never puts its editor in the page. It listens
-# ahead of the editor's own listeners, which may rewrite what it was handed.
+# For this reason, the specs do not read the export from the field. At each auto_save, the grid
+# editor gives the export to the text editor and then triggers change_in on the field. The record:
+# - Keeps the last content that a text editor got, and the field of that editor.
+# - Stores that content as the export when the same field triggers change_in. Core also triggers
+#   change_in on a field that has no editor (the draft save of core master does, for the summary of
+#   the first language).
+# - Does not look for the grid editor near the field: a rebuild that fails does not put its grid
+#   editor into the page.
+# - Listens before the listeners of the editor, which can change the content that the editor got.
 def record_grid_exports
   page.execute_script(<<~JS)
     if(window.jQuery && !window.__cama_grid_exports){
@@ -337,14 +339,14 @@ def record_grid_exports
   JS
 end
 
-# What the field behind the grid editor holds, read off the field itself: jQuery's val() answers
-# with the content of the field's text editor once a block form has loaded a text editor.
+# The value of the field behind the grid editor, read from the field itself. After a block form
+# loads a text editor, jQuery's val() returns the content of the field's text editor.
 def grid_field
   page.evaluate_script("jQuery('.panel_grid_editor').next('textarea')[0].value")
 end
 
-# The grid as the last auto_save exported it, nil when none did since the editor page was opened.
-# Saving the post while the grid editor is shown stores it as it is.
+# The grid as the last auto_save exported it, or nil if there was no auto_save since the editor page
+# opened. A save while the grid editor is visible stores this export unchanged.
 def saved_grid_content
   page.evaluate_script('window.__cama_grid_exports.last')
 end
@@ -365,19 +367,19 @@ def trigger_grid_auto_save
   page.execute_script("jQuery('.panel_grid_editor').trigger('auto_save');")
 end
 
-# A listener of the grid's export that throws, as a block plugin's might, from here on.
+# Adds an export listener that throws an error from now on, as the listener of a block plugin can.
 def make_the_grid_export_throw
   page.execute_script("jQuery('.panel_grid_editor').on('auto_save', function(){ throw new Error('listener broke'); });")
 end
 
-# Changes the text of the grid's first block, as a block's form would, and has the grid export.
+# Changes the text of the first block, as a block form does, and makes the grid editor export.
 def change_the_grid
   page.execute_script("jQuery('.panel_grid_body .drg_item b').text('changed');")
   trigger_grid_auto_save
 end
 
-# Sends the post form with its own button, and waits for the page the server answers with. The
-# form asks before a page with unsaved changes is left; nobody is there to answer.
+# Submits the post form with its own button and waits for the response page. It removes the unload
+# prompt of the form: nobody can answer a prompt about unsaved changes here.
 def submit_post_form
   page.execute_script(<<~JS)
     window.onbeforeunload = null;

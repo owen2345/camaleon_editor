@@ -36,40 +36,58 @@ bundle exec rake camaleon_editor:security:scan_templates
 Plugin settings stay under the core **plugins** permission. A role holding neither editor permission
 is refused the grid-template endpoints.
 
-## Saving a post
+## How a post is saved
 
-A post saved from the grid editor stores the grid as the editor exported it; the text editor
-behind it does not rewrite it. An author who leaves the grid editor for the text editor works on
-the grid's markup there, and that editor's content is what is saved; a grid opened over a post's
-other content hands the text editor that content back instead. Back in the grid editor, the
-grid is made again from what was changed in the text editor, and the post stores that content,
-as the text editor wrote it, until the grid's next change. Other content written there is no
-grid to make: the grid comes back as it was left and is what is saved, and that content waits in
-the text editor. A grid opened over a post's other content takes over at its first change: until
-then, the post keeps what the text editor holds.
+**From the grid editor.** The post stores the grid as the grid editor exports it. The text editor
+behind the grid editor does not rewrite it.
 
-As the page is being left, each text editor that TinyMCE would write then (one not hidden for its
-field to be edited, whose settings let it) writes its content into its field as a save does, the
-grid's export while the grid editor is shown. TinyMCE wrote the editor's raw markup, which a page
-the author stays on after all kept in its fields.
+**From the text editor.** An author who leaves the grid editor for the text editor edits the
+markup of the grid there. The post then stores the content of the text editor. A grid opened on
+other post content gives that content back to the text editor.
 
-Where the grid editor is loaded, the text editors keep the scripts of the content they are
-handed, where they used to take them out: a grid, an Editor block in its form, any other post
-content, markup written in the source view. That goes for every text editor of the page,
-whatever settings it was set up with; an editor whose own list of elements has a rule for the
-script keeps that rule. Pasted markup still loses its scripts. A script stays inert in both
-editors and runs on the public page.
+**Back in the grid editor.** The result depends on the changes that the author made in the text
+editor:
 
-A text editor gives a script back where it stood, on a line of its own, with its text as it was
-and no paragraph put around it. The attributes come back in the editor's spelling (double
-quotes, `async=""`). It reads a script to the closing tag a browser ends it at. All of this
-takes TinyMCE 4.7.4 or later, which the gem asks of `tinymce-rails`.
+- No changes: the grid stays as the author left it.
+- A changed grid: the grid is built again from it. The post stores that content, as the text
+  editor wrote it, until the next change of the grid.
+- Other content: there is no grid to build. The grid comes back as the author left it, and the
+  post stores the grid. The other content stays in the text editor.
 
-Core then applies its own rules to content that changed, and the text editor's version of a grid
-counts as changed. The grid's marker is a shortcode, so saving a changed grid takes **Allow
-shortcodes in content**, and changed content holding a script (an embed in a Text or Editor
-block, a script the text editor kept) is stored for an administrator or a role trusted with
-unfiltered HTML and refused, with core's message, for anyone else.
+A grid opened on other post content is stored only after its first change. Until then, the post
+keeps the content of the text editor.
+
+**Before the page unloads.** Each text editor writes its content into its field, as a save does
+(the grid export while the grid editor is visible). Before, TinyMCE wrote the raw markup of the
+editor there, and a page that the author did not leave kept that markup in its fields. An editor
+that TinyMCE hid, or an editor with the unload write disabled, writes nothing.
+
+### Scripts
+
+On a page that loads the grid editor, the text editors keep the scripts of their content. This
+applies to a grid, an Editor block in its form, other post content, and markup written in the
+source view.
+
+- Each text editor of the page keeps scripts. This does not depend on its settings. If its list
+  of valid elements has a rule for the script element, the editor keeps that rule.
+- Pasted markup still loses its scripts.
+- A script does not run in the editors. It runs on the public page.
+- A text editor returns a script in its position, on its own line, with its text unchanged and
+  with no paragraph around it. The attributes come back as the editor writes them (double quotes,
+  `async=""`).
+- A text editor ends a script at the same closing tag as a browser.
+- TinyMCE 4.7.4 or later is necessary. The gem requires it from `tinymce-rails`.
+
+### Permissions for a save
+
+Core applies its rules to changed content, and the text editor's version of a grid is changed
+content.
+
+- The grid marker is a shortcode. To save a changed grid, a role needs **Allow shortcodes in
+  content**.
+- Changed content can have a script: an embed in a Text or Editor block, or a script that the
+  text editor kept. Core stores it for an administrator or a role with unfiltered HTML. For other
+  roles, core refuses the save with its message.
 
 ## Loading the editor on another admin page
 

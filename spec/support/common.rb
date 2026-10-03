@@ -56,9 +56,9 @@ end
 # loads the grid editor's JS. Shared by the feature specs that drive the editor's builders.
 # as: a user built by the :user factory (whose password the instance still holds) instead of
 # the site's administrator. post: an existing post to edit instead of a new one.
-# From here on the grid's exports are on record (see record_grid_exports), and the post's text
-# editor is set up: its toolbar shows as soon as the skin's stylesheet has loaded, which is before
-# the editor has its content and the hooks of its init have run.
+# After this step, the record keeps the grid exports (see record_grid_exports) and the post's text
+# editor is ready. The step waits for the editor: its toolbar shows before the editor has its
+# content and before its init hooks run.
 def install_plugin_and_open_post_editor(as: nil, post: nil)
   store_current_site(@site)
   plugin_install('camaleon_editor')
@@ -69,8 +69,8 @@ def install_plugin_and_open_post_editor(as: nil, post: nil)
   wait_for_text_editor(POST_TEXT_EDITOR)
 end
 
-# Waits until the block answers true, for as long as Capybara waits for an element. For what
-# the page says only to a script: Capybara's own waits look for elements.
+# Waits until the block returns true, for the time that Capybara waits for an element. Use it for
+# page state that only a script can read: Capybara's own waits find elements.
 def wait_until
   Timeout.timeout(Capybara.default_max_wait_time) { sleep 0.05 until yield }
 end

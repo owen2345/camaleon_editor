@@ -351,8 +351,8 @@ RSpec.describe 'importing a grid template', :js do
     expect(page).to have_css('#grid_table_list .import_item')
   end
 
-  # The grid's root goes back with the grid: by the time the rebuild throws, the style the template
-  # carries had been put on it.
+  # The rollback also restores the grid root: when the rebuild throws an error, the root already has
+  # the style of the template.
   it 'puts the style of the previous grid back when rebuilding the grid throws' do
     @template.update!(description: grid_body_markup(attributes: 'style="background-color: rgb(255, 204, 0);"'))
     apply_listed_template
@@ -406,7 +406,7 @@ RSpec.describe 'importing a grid template', :js do
 
     expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
     expect(page).to have_css('.panel_grid_body .drg_column .drg_item')
-    # read from the grid itself: it is what the way back puts in place
+    # Read the grid itself: the rollback puts these nodes back.
     expect(page.evaluate_script("jQuery('.panel_grid_body .drg_item script').text()"))
       .to eq('window.__cama_widget_loaded = true;')
     expect(script_flag('__cama_widget_loaded')).to be_nil

@@ -30,9 +30,9 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(text_editor_content).to eq(content)
   end
 
-  # The author mends such content in the text editor, and the button makes the grid from what the
-  # text editor holds by then. The field behind it holds what the editor last wrote there - when it
-  # lost focus, with a draft - which may still be the content as it was.
+  # The author repairs such content in the text editor, and the button builds the grid from the
+  # current content of the text editor. The field holds the last write of the editor (at a focus
+  # loss or with a draft), which can still be the old content.
   it 'opens the grid from what the text editor holds once the content was mended there' do
     grid = grid_post_content(grid_with_block('<p>kept</p>'))
     store_post_content(@post, "#{grid}<p>written after the grid</p>")
@@ -51,8 +51,8 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(post_content).not_to include('written after the grid')
   end
 
-  # In a post of several languages the field of a language is a copy, and the post sends what the
-  # copies composed the last time one of them said it changed: the button has the field say so.
+  # In a post in more than one language, the field of a language is a copy. The post sends the
+  # content that core composed when a copy last triggered a change. The button triggers that change.
   it 'has a post in several languages send the content mended in the text editor' do
     grid = grid_post_content(grid_with_block('<p>kept</p>'))
     @site.set_meta('languages_site', %w[en es])
@@ -69,9 +69,8 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(composed_content).not_to include('written after the grid')
   end
 
-  # Going to the text editor and back with nothing changed there shows the editor built earlier:
-  # the content is not parsed again. (Changed there, the grid is made again from it: see
-  # grid_post_save_spec.)
+  # A visit to the text editor with no changes there shows the same grid editor again, and does not
+  # parse the content again. (With changes, the grid is built again: see grid_post_save_spec.)
   it 'shows the existing editor again without parsing the content a second time' do
     store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
     open_post_in_editor(@post)
@@ -88,15 +87,15 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page.evaluate_script('window.__cama_parses')).to eq(0)
   end
 
-  # A column or a block dropped in from the palette is a copy of the palette's entry, which
-  # carries no menu: the copy is given its menu as the sort that placed it ends, and once.
+  # A column or block dropped from the palette is a copy of a palette entry, which has no menu. The
+  # copy gets its menu one time, when the sort that puts it in the grid ends.
   it 'gives a column and a block dropped in from the palette their one menu, kept as they are sorted' do
     install_plugin_and_open_post_editor
     open_grid_editor
     expect(page).to have_css('.grid_editor_menu .drg_column, .grid_editor_menu .drg_item')
     expect(page).to have_no_css('.grid_editor_menu .header_box .dropdown', visible: :all)
 
-    # what a drop hands each sortable: a copy of the entry, placed in it, as the sort ends
+    # Do what a drop does for each sortable: put a copy of the entry in it, then end the sort.
     page.execute_script("jQuery('.grid_editor_menu [data-col=\"6\"]').first().clone().appendTo(#{GRID_ROOT});")
     end_a_sort(GRID_ROOT, '.drg_column')
     page.execute_script("jQuery('.grid_editor_menu [data-kind=\"text\"]').first().clone()" \
@@ -109,12 +108,12 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page).to have_css('.panel_grid_body .drg_item > .header_box .dropdown', count: 1, visible: :all)
   end
 
-  # Those of a grid rebuilt from content have their menu already: sorting one adds no second.
+  # The columns and blocks of a rebuilt grid already have a menu: a sort adds no second menu.
   it 'leaves a column and a block of a rebuilt grid their one menu when they are sorted' do
     store_post_content(@post, grid_post_content(grid_with_block('<p>kept</p>')))
     open_post_in_editor(@post)
 
-    # what the grid's sortables do as a sort ends, for the column and for its block
+    # Run the sort-end handler of the grid sortables, for the column and for its block.
     end_a_sort(GRID_ROOT, '.drg_column')
     end_a_sort(FIRST_COLUMN_AREA, '.drg_item')
 

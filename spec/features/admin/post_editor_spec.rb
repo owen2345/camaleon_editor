@@ -12,11 +12,10 @@ RSpec.describe 'the grid editor in the admin post editor', :js do
     expect(page).to have_css('.mce-btn', text: 'Grid Editor')
   end
 
-  # A page loaded in place (the Admin AJAX plugin swaps the admin's content for a response that
-  # brings the editor's script along) evaluates the script again, while jQuery, the lists of hooks
-  # the script adds to and what other scripts registered with the editor are the page's and stay.
-  # The script does its work once: a text editor set up afterwards has one Grid Editor button, and
-  # a block kind another script registered is still there.
+  # The Admin AJAX plugin loads an admin page in place, and the response evaluates the editor script
+  # again. jQuery, the hook lists and the registrations of other scripts stay. The script runs only
+  # one time: a text editor set up later has one Grid Editor button, and a block kind that another
+  # script registered is still there.
   it 'does its work once, however often its script is evaluated' do
     install_plugin_and_open_post_editor
 
@@ -30,8 +29,7 @@ RSpec.describe 'the grid editor in the admin post editor', :js do
         var before = hooks(), tabs_builder = window.grid_tab_builder;
         jQuery.fn.gridEditor_options.faq = {title: 'FAQ', callback: function(){}};
         jQuery.ajax({url: jQuery('script[src*="editor-manifest"]').attr('src'), dataType: 'script', async: false});
-        // the script does its work once the document is ready, which jQuery may run later: the
-        // reads of what it did queue behind it
+        // The script runs at document ready, which jQuery can run later. Queue the reads after it.
         window.__cama_after = null;
         jQuery(function(){ window.__cama_after = [hooks(), 'faq' in jQuery.fn.gridEditor_options]; });
         return [window.grid_tab_builder !== tabs_builder, before];
