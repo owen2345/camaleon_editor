@@ -518,11 +518,12 @@ jQuery(function(){
             column.addClass("drg_column btn btn-default");
             if(column.children(".header_box").length == 0) column.prepend(html);
             if(!skip_options){
-                // Marked as built, with its blocks: the sort that ends on a column or a block not marked
-                // yet - one dropped in from the palette - is what gives it its menu, and gives it once.
-                column.addClass("grid-col-built");
                 // the column's own header, area and blocks: a block may hold grid markup of its own
                 column.children('.header_box').append(options);
+                // Marked as built once its menu is in: the sort that ends on a column or a block not
+                // marked yet - one dropped in from the palette - is what gives it its menu, and gives
+                // it once. Marked before, a throw on the way to the menu would leave it with none.
+                column.addClass("grid-col-built");
                 grid_content_manager(column.children(".grid_sortable_items"));
                 column.children(".grid_sortable_items").children().each(function(){ //contents
                     parse_content_content($(this));
@@ -560,7 +561,8 @@ jQuery(function(){
             content.addClass("drg_item btn btn-default");
             if(content.children(".header_box").length == 0) content.prepend(html);
             if(!skip_options){
-                content.addClass("grid-item-built").children('.header_box').append(options);
+                content.children('.header_box').append(options);
+                content.addClass("grid-item-built");
             }
             // save used libraries
             // TODO: finish or retire the list of libraries a grid uses, a design of the plugin's first
