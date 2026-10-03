@@ -30,12 +30,10 @@ RSpec.describe 'the grid editor in the admin post editor', :js do
         var before = hooks(), tabs_builder = window.grid_tab_builder;
         jQuery.fn.gridEditor_options.faq = {title: 'FAQ', callback: function(){}};
         jQuery.ajax({url: jQuery('script[src*="editor-manifest"]').attr('src'), dataType: 'script', async: false});
-        jQuery('<textarea id="later_editor"></textarea>').appendTo('body');
-        tinymce.init(cama_get_tinymce_settings({selector: '#later_editor'}));
         return [window.grid_tab_builder !== tabs_builder, before, hooks(), 'faq' in jQuery.fn.gridEditor_options];
       })()
     JS
-    wait_for_text_editor("tinymce.get('later_editor')")
+    set_up_text_editors(%w[later_editor], 'cama_get_tinymce_settings({selector: selector})')
     buttons = page.evaluate_script(<<~JS)
       jQuery(tinymce.get('later_editor').editorContainer).find('.mce-btn').filter(function(){
         return jQuery(this).text() === 'Grid Editor';

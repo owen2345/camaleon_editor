@@ -171,20 +171,6 @@ RSpec.describe 'scripts in the text editor', :js do
   # core's default, a list of the page's own handed to core's settings or put onto them afterwards,
   # settings that are not core's.
   context "with text editors set up with settings of the page's own" do
-    # Sets a text editor up over a new field for each id. `settings` is the script of the settings
-    # the page sets them up with, which stay at hand as the page's; `selector` there finds the fields.
-    def set_up_text_editors(ids, settings)
-      page.execute_script(<<~JS, ids)
-        var selector = jQuery.map(arguments[0], function(id){
-          jQuery('<textarea>').attr('id', id).appendTo('body');
-          return '#' + id;
-        }).join(', ');
-        window.__cama_own_settings = #{settings};
-        tinymce.init(window.__cama_own_settings);
-      JS
-      ids.each { |id| wait_for_text_editor("tinymce.get('#{id}')") }
-    end
-
     # The list of elements a text editor was added with, by its field's id.
     def list_of(id)
       page.evaluate_script("tinymce.get('#{id}').settings.extended_valid_elements")
@@ -411,13 +397,11 @@ RSpec.describe 'scripts in the text editor', :js do
     let(:own_editor) { "tinymce.get('own_editor')" }
 
     before do
-      page.execute_script(<<~JS)
-        jQuery('<textarea id="own_editor"></textarea>').appendTo('body');
-        tinymce.init(cama_get_tinymce_settings({
-          selector: '#own_editor', setup: function(){}, block_elements: 'p div h1 h2 ul ol li table tr td blockquote'
-        }));
+      set_up_text_editors(%w[own_editor], <<~JS)
+        cama_get_tinymce_settings({
+          selector: selector, setup: function(){}, block_elements: 'p div h1 h2 ul ol li table tr td blockquote'
+        })
       JS
-      wait_for_text_editor(own_editor)
     end
 
     it 'takes the scripts out of markup pasted into it' do
