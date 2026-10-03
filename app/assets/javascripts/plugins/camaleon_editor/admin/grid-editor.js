@@ -847,13 +847,13 @@ jQuery(function(){
         // part-way: a half-built grid is worse than the one left behind.
         function rebuild_grid(body){
             var grid = grid_root(editor);
-            var sortable = grid.hasClass("ui-sortable");
             var previous = set_aside(grid);
             try {
-                // as the editor was built: the root's own class, then what the content's root carries
+                // as the editor was built: the root's own class, then what the content's root carries,
+                // then the class its sortable gave it, which stays on the widget's root
                 set_attributes(grid, [{name: "class", value: GRID_ROOT_CLASS}]);
                 grid_from(grid, body);
-                if(sortable) grid.addClass("ui-sortable");
+                grid.addClass("ui-sortable");
             } catch(error) {
                 if(window.console) console.error(error);
                 previous.restore();

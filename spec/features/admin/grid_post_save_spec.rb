@@ -285,7 +285,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
                                   '<div id="hero" class="panel_grid_body row wide">')
         open_grid_editor
 
-        expect(page).to have_css('.panel_grid_editor .panel_grid_body#hero.wide .drg_item')
+        expect(page).to have_css('.panel_grid_editor .panel_grid_body#hero.wide.ui-sortable .drg_item')
         expect(page).to have_no_css('.panel_grid_editor .panel_grid_body[style]', visible: :all)
 
         trigger_grid_auto_save
