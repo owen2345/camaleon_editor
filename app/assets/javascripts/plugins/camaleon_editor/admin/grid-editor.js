@@ -781,6 +781,15 @@ jQuery(function(){
                 editor.trigger("auto_save");
             }
 
+            // A browser without the inert attribute lets the keyboard click the links and menu
+            // toggles of a block or column that fades out. This handler runs before the options
+            // below and ignores that click: no second delete, and no clone with the mark.
+            grid_root(editor).on("click", "."+DELETED+" a, ."+DELETED+" .dropdown-toggle", function(e){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
+            });
+
             // Block options. Each is a link to "#", and each handler stops the link first. The
             // column options below do the same. The menu toggle at the end of this chain is not a
             // link.

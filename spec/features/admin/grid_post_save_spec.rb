@@ -175,6 +175,31 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(post_content).to eq(without_column[0])
     end
 
+    # A browser without the inert attribute lets the keyboard click the links of a deleted block or
+    # column while it fades out. The script removes the attribute to show that the links then do
+    # nothing: Clone makes no copy, and Delete asks for no second confirmation.
+    it 'ignores the links of a deleted block or column while it fades out' do
+      blocks, columns, prompts = page.evaluate_script(<<~JS)
+        (function(){
+          jQuery.fx.speeds._default = 60000;
+          var prompts = 0;
+          window.confirm = function(){ prompts++; return true; };
+          var click_again = function(element, links){
+            element.find(links[0])[0].click();
+            element.removeAttr('inert');
+            element.find(links[1])[0].click();
+            element.find(links[0])[0].click();
+          };
+          click_again(jQuery('.panel_grid_body .drg_item'), ['.grid_content_remove', '.grid_content_clone']);
+          var blocks = jQuery('.panel_grid_body .drg_item').length;
+          click_again(jQuery('.panel_grid_body .drg_column'), ['.grid_col_remove', '.grid_col_clone']);
+          return [blocks, jQuery('.panel_grid_body .drg_column').length, prompts];
+        })()
+      JS
+
+      expect([blocks, columns, prompts]).to eq([1, 1, 2])
+    end
+
     # An export listener (for example, of a block plugin) can throw an error. The deleted element
     # still fades out and goes, because the fade starts before the export. The Delete entry is a
     # link to "#": after a real click, the browser does not follow it and the page does not move.
