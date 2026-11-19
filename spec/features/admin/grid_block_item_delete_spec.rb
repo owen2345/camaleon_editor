@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-# The form of a tabs, slider or accordion block lists the items of the block: its tabs, slides or
-# panels. A deleted item fades out, and its row stays in the list until the fade ends. A click on
-# Save during the fade builds the block without the deleted item.
+# The form of a tabs, slider, accordion or gallery block lists the items of the block: its tabs,
+# slides, panels or media. A deleted item fades out, and its row stays in the list until the fade
+# ends. A click on Save during the fade builds the block without the deleted item.
 RSpec.describe 'deleting an item in a grid block form', :js do
   init_site
 
@@ -85,5 +85,21 @@ RSpec.describe 'deleting an item in a grid block form', :js do
     expect(saved_grid_content).to include('Kept panel', 'Kept body')
     expect(saved_grid_content).not_to include('Deleted')
     expect(saved_grid_content.scan('class="panel-body"').size).to eq(1)
+  end
+
+  # No block kind on offer opens the gallery form, but a host can register the gallery kind.
+  it 'exports a gallery block without an item deleted just before Save' do
+    items = %w[Deleted Kept].map do |title|
+      %(<div class="gallery-item" data-url="#{ONE_PIXEL_IMAGE}"><div class="g-title">#{title} item</div></div>)
+    end
+    store_post_content(@post, grid_post_content(grid_with_block(items.join, kind: 'gallery')))
+    open_post_in_editor(@post)
+    page.execute_script("jQuery.fn.gridEditor_options.gallery = {title: 'Gallery', callback: grid_gallery_builder};")
+    open_first_block_form
+    delete_the_first_item_and_save
+
+    expect(saved_grid_content).to include('Kept item')
+    expect(saved_grid_content).not_to include('Deleted')
+    expect(saved_grid_content.scan('class="gallery-item"').size).to eq(1)
   end
 end
