@@ -20,7 +20,7 @@ window.grid_gallery_builder = function(panel, editor){
   }).on("click", "a.del_item", function() {
     if(!confirm(I18n("msg.confirm_del")))
       { return false; }
-    $(this).closest("tr").fadeDestroy();
+    $(this).closest("tr").gridEditorFadeDeleted();
     return false;
   });
 
@@ -102,7 +102,7 @@ window.grid_gallery_builder = function(panel, editor){
   // save information in editor
   const submit_callback = function(modal){
     let res = "";
-    tpl.find("tbody tr").each(function() {
+    tpl.gridEditorListedItems().each(function() {
       const url = $(this).find(".url").val();
       // the extension is read from the url as typed; what goes into a quoted attribute is escaped
       const u = $.fn.gridEditorEscapeHtml(url);

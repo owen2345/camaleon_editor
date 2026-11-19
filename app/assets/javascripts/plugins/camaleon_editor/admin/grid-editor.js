@@ -7,6 +7,17 @@ jQuery(function(){
     init_grid_editor();
 
     $.fn.fadeDestroy = function(speed){ $(this).fadeOut(speed, function(){ $(this).remove(); }) }
+    // The class of a part that the author deleted: a column or block of the grid, or an item in the
+    // list of a block form (a tab, a slide, an accordion panel). The part stays in the page while it
+    // fades out, and it gets no clicks. No export of the grid includes it, and no block form reads
+    // it at Save.
+    var DELETED = "grid-deleted";
+    $.fn.gridEditorFadeDeleted = function(){
+        this.addClass(DELETED).css("pointer-events", "none").fadeDestroy();
+        return this;
+    };
+    // The items in the list of a block form, without the deleted items that still fade out.
+    $.fn.gridEditorListedItems = function(){ return this.find("tbody tr").not("."+DELETED); };
     $.fn.isGridEditorContent = function(str){ return str.match(/^\<div\>\[grid_editor/); } // verify is text is a content for grid editor
     // remove libraries shortcode text from grid editor: the marker only, up to ITS closing bracket - a greedy
     // match would run on to the last "]</div>" of the content and take the grid along. Whatever isGridEditorContent
@@ -364,10 +375,6 @@ jQuery(function(){
         // sortable along with the grid, and saved with the editor's chrome in it.
         var GRID_ROOT = "#"+editor_id+" > .panel_grid_body_w > .panel_grid_body"; // for the widgets that take a selector
         function grid_root(editor){ return $(editor).children(".panel_grid_body_w").children(".panel_grid_body"); }
-
-        // The class of a column or block that the author deleted. The element stays in the grid
-        // while it fades out, but no export includes it (see fade_out_of_grid).
-        var DELETED = "grid-deleted";
 
         // grid editor export
         function export_content(editor){
@@ -751,7 +758,7 @@ jQuery(function(){
             // starts before the export, in case an export listener throws an error.
             function fade_out_of_grid(element){
                 element.children(".grid_sortable_items").filter(":ui-sortable").sortable("disable");
-                element.addClass(DELETED).css("pointer-events", "none").fadeDestroy();
+                element.gridEditorFadeDeleted();
                 editor.trigger("auto_save");
             }
 

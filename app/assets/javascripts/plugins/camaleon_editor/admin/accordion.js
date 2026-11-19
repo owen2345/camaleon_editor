@@ -37,7 +37,7 @@ window.grid_accordion_builder = function (panel, editor) {
         if (!confirm(I18n("msg.confirm_del"))) {
           return false;
         }
-        $(this).closest("tr").fadeDestroy();
+        $(this).closest("tr").gridEditorFadeDeleted();
         return false;
       });
 
@@ -131,7 +131,7 @@ window.grid_accordion_builder = function (panel, editor) {
     // Migrate off the shared data-style name (see the recover comment above): write the accordion's
     // own attribute and drop any legacy value left on this element.
     panel.attr("data-accordion-style", tpl.find(".style-accordion").val()).removeAttr("data-style");
-    tpl.find("tbody tr").each(function (index, item) {
+    tpl.gridEditorListedItems().each(function (index, item) {
       (res +=
         '<div class="panel panel-' +
         tpl.find(".style-accordion").val() +

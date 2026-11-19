@@ -19,7 +19,7 @@ window.grid_tab_builder = function(panel, editor){
   }).on("click", "a.del_item", function() {
     if(!confirm(I18n("msg.confirm_del")))
       { return false; }
-    $(this).closest("tr").fadeDestroy();
+    $(this).closest("tr").gridEditorFadeDeleted();
     return false;
   });
 
@@ -93,7 +93,7 @@ window.grid_tab_builder = function(panel, editor){
   const submit_callback = function(modal){
     let res1 = "";
     let res2 = "";
-    tpl.find("tbody tr").each(function(index, item){
+    tpl.gridEditorListedItems().each(function(index, item){
       const _in  = index === 0 ? 'active' : "";
       res1 +=
           '<li role="presentation" class="'+_in+'">' +

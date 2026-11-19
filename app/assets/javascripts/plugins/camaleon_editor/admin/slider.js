@@ -18,7 +18,7 @@ window.grid_slider_builder = function(panel, editor){
     return false;
   }).on("click", "a.del_item", function() {
     if(!confirm(I18n("msg.confirm_del"))) { return false; }
-    $(this).closest("tr").fadeDestroy();
+    $(this).closest("tr").gridEditorFadeDeleted();
     return false;
   });
 
@@ -118,7 +118,7 @@ window.grid_slider_builder = function(panel, editor){
           <span class="sr-only">Next</span> \
         </a>`;
 
-    tpl.find("tbody tr").each(function(index, item){
+    tpl.gridEditorListedItems().each(function(index, item){
       res1 += '<li data-target="#'+id_accor+'" data-slide-to="'+index+'" class="'+(index === 0 ? "active" : "") +'">' +
               '</li>';
       res2 += '<div class="item '+(index === 0 ? "active" : "")+'">' +
