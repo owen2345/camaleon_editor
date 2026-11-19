@@ -130,6 +130,20 @@ jQuery(function(){
         return "<a href='#' class='edit_item'"+tooltip("grid_editor.edit_item", "Edit")+"><i class='fa fa-pencil'></i></a> "+
             "<a href='#' class='del_item'"+tooltip("grid_editor.delete_item", "Delete")+"><i class='fa fa-trash'></i></a>";
     };
+    // Binds the actions of the items to the list of a block form. Edit calls show_form with the row
+    // of the item. Delete asks for a confirmation, then the row fades out. The Edit link goes to "#".
+    // Its handler stops the link first, in case the form throws an error.
+    $.fn.gridEditorBindItemActions = function(show_form){
+        return this.on("click", "a.edit_item", function(e){
+            e.preventDefault();
+            show_form($(this).closest("tr"));
+            return false;
+        }).on("click", "a.del_item", function(){
+            if(!confirm(I18n("msg.confirm_del"))) { return false; }
+            $(this).closest("tr").gridEditorFadeDeleted();
+            return false;
+        });
+    };
 
     // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too. The
     // alert is core's modal, often the very code whose throw is being reported, and the report runs

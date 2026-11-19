@@ -13,17 +13,6 @@ window.grid_slider_builder = function(panel, editor){
     show_form(add_item());
     return false;
   });
-  // The Edit link goes to "#". The handler stops the link first, in case the form throws an error.
-  tpl.on("click", "a.edit_item", function(e) {
-    e.preventDefault();
-    show_form($(this).closest("tr"));
-    return false;
-  }).on("click", "a.del_item", function() {
-    if(!confirm(I18n("msg.confirm_del"))) { return false; }
-    $(this).closest("tr").gridEditorFadeDeleted();
-    return false;
-  });
-
   // sortable
   tpl.find("tbody").sortable({handle: ".fa-arrows"});
 
@@ -105,6 +94,7 @@ window.grid_slider_builder = function(panel, editor){
       on_submit: submit_form_callback
     });
   };
+  tpl.gridEditorBindItemActions(show_form);
 
   // save information in editor
   const submit_callback = function(modal){
