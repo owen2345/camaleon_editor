@@ -38,19 +38,21 @@ RSpec.describe 'deleting an item in a grid block form', :js do
 
   # Deletes the first of the two listed items and clicks Save in the same script. The fade of the
   # deleted row starts at the click on Delete but does not end in the script. Thus the row is still in
-  # the list at the click on Save.
+  # the list at the click on Save. The row gets no mouse clicks while it fades out.
   def delete_the_first_item_and_save
     expect(page).to have_css('#ow_inline_modal tbody tr', count: 2)
     confirm_every_prompt
-    rows_at_save = page.evaluate_script(<<~JS)
+    rows_and_pointer_events_at_save = page.evaluate_script(<<~JS)
       (function(){
-        jQuery('#ow_inline_modal tbody tr').first().find('a.del_item').click();
+        var deleted_row = jQuery('#ow_inline_modal tbody tr').first();
+        deleted_row.find('a.del_item').click();
         var rows = jQuery('#ow_inline_modal tbody tr').length;
+        var pointer_events = deleted_row.css('pointer-events');
         jQuery('#ow_inline_modal .modal_submit').click();
-        return rows;
+        return [rows, pointer_events];
       })()
     JS
-    expect(rows_at_save).to eq(2)
+    expect(rows_and_pointer_events_at_save).to eq([2, 'none'])
     expect(page).to have_no_css('#ow_inline_modal')
   end
 
