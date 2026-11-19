@@ -38,21 +38,25 @@ RSpec.describe 'deleting an item in a grid block form', :js do
 
   # Deletes the first of the two listed items and clicks Save in the same script. The fade of the
   # deleted row starts at the click on Delete but does not end in the script. Thus the row is still in
-  # the list at the click on Save. The row gets no mouse clicks while it fades out.
+  # the list at the click on Save. While the row fades out, it gets no mouse clicks, and its Edit
+  # link cannot get the keyboard focus.
   def delete_the_first_item_and_save
     expect(page).to have_css('#ow_inline_modal tbody tr', count: 2)
     confirm_every_prompt
-    rows_and_pointer_events_at_save = page.evaluate_script(<<~JS)
+    row_state_at_save = page.evaluate_script(<<~JS)
       (function(){
         var deleted_row = jQuery('#ow_inline_modal tbody tr').first();
         deleted_row.find('a.del_item').click();
         var rows = jQuery('#ow_inline_modal tbody tr').length;
         var pointer_events = deleted_row.css('pointer-events');
+        var edit_link = deleted_row.find('a.edit_item')[0];
+        edit_link.focus();
+        var edit_link_focused = document.activeElement === edit_link;
         jQuery('#ow_inline_modal .modal_submit').click();
-        return [rows, pointer_events];
+        return [rows, pointer_events, edit_link_focused];
       })()
     JS
-    expect(rows_and_pointer_events_at_save).to eq([2, 'none'])
+    expect(row_state_at_save).to eq([2, 'none', false])
     expect(page).to have_no_css('#ow_inline_modal')
   end
 

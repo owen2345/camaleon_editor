@@ -145,15 +145,15 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     # The export at the click already excludes the deleted element, while it still fades out. A save
-    # before the end of the fade stores the grid without it. The element gets no mouse clicks during
-    # the fade.
+    # before the end of the fade stores the grid without it. During the fade, the element is inert:
+    # it gets no mouse clicks and no keyboard focus.
     it 'exports the grid without a deleted block or column at the click, while it still fades out' do
       confirm_every_prompt
       without_block, without_column = page.evaluate_script(<<~JS)
         (function(){
           var seen = function(kind){
             var fading = jQuery('.panel_grid_body .' + kind);
-            return [window.__cama_grid_exports.last, fading.length, fading.css('pointer-events')];
+            return [window.__cama_grid_exports.last, fading.length, fading.css('pointer-events'), fading.is('[inert]')];
           };
           jQuery('.panel_grid_body .drg_item .grid_content_remove').click();
           var without_block = seen('drg_item');
@@ -165,10 +165,10 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
       expect(without_block[0]).to include('data-col="6"')
       expect(without_block[0]).not_to include('embedded widget')
-      expect(without_block[1..]).to eq([1, 'none'])
+      expect(without_block[1..]).to eq([1, 'none', true])
       expect(without_column[0]).to start_with(grid_post_content('<div class="panel_grid_body row'))
       expect(without_column[0]).not_to include('data-col=')
-      expect(without_column[1..]).to eq([1, 'none'])
+      expect(without_column[1..]).to eq([1, 'none', true])
       expect(post_content).to eq(without_column[0])
     end
 
