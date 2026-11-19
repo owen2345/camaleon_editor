@@ -145,8 +145,8 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     # The export at the click already excludes the deleted element, while it still fades out. A save
-    # before the end of the fade stores the grid without it. The element gets no clicks during the
-    # fade.
+    # before the end of the fade stores the grid without it. The element gets no mouse clicks during
+    # the fade.
     it 'exports the grid without a deleted block or column at the click, while it still fades out' do
       confirm_every_prompt
       without_block, without_column = page.evaluate_script(<<~JS)

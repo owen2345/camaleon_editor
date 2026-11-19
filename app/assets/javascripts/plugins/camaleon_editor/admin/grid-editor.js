@@ -9,8 +9,8 @@ jQuery(function(){
     $.fn.fadeDestroy = function(speed){ $(this).fadeOut(speed, function(){ $(this).remove(); }) }
     // The class of a part that the author deleted: a column or block of the grid, or an item in the
     // list of a block form (a tab, a slide, an accordion panel). The part stays in the page while it
-    // fades out, and it gets no clicks. No export of the grid includes it, and no block form reads
-    // it at Save.
+    // fades out, and it gets no mouse clicks. No export of the grid includes it, and no block form
+    // reads it at Save.
     var DELETED = "grid-deleted";
     $.fn.gridEditorFadeDeleted = function(){
         this.addClass(DELETED).css("pointer-events", "none").fadeDestroy();
@@ -753,7 +753,7 @@ jQuery(function(){
             // Deletes a block or column. The element fades out, and stays in the grid until the
             // fade ends. A mark removes it from each export, and the grid is exported at the click.
             // A later export lets a save during the fade store the element. While it fades out, the
-            // element gets no clicks: no second delete, and no clone with the mark. A column that
+            // element gets no mouse clicks: no second delete, and no clone with the mark. A column that
             // fades out accepts no dropped block, because the block goes with the column. The fade
             // starts before the export, in case an export listener throws an error.
             function fade_out_of_grid(element){
