@@ -75,12 +75,10 @@ RSpec.describe 'the grid editor block forms', :js do
   # the form of the item in a modal. After a real click, the browser does not follow the link when
   # the modal cannot open. The page error proves that the modal threw an error at the click.
   context 'when the form of a listed item cannot be opened' do
-    # An image that needs no request: the dummy app raises an error in the example for a missing file.
-    image = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
     {
       'tab' => '<ul class="nav nav-tabs"><li><a href="#t0">Tab</a></li></ul>' \
                '<div class="tab-content"><div class="tab-pane" id="t0">Pane</div></div>',
-      'slider' => %(<div class="carousel-inner"><div class="item"><img src="#{image}" alt=""></div></div>),
+      'slider' => %(<div class="carousel-inner"><div class="item"><img src="#{ONE_PIXEL_IMAGE}" alt=""></div></div>),
       'accordion' => '<div class="panel"><div class="panel-heading"><h4 class="panel-title"><a>Panel</a></h4></div>' \
                      '<div><div class="panel-body">Body</div></div></div>'
     }.each do |kind, block|

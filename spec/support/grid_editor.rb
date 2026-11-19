@@ -87,6 +87,9 @@ def abort_template_requests
   JS
 end
 
+# An image that needs no request. The dummy app raises an error in the example for a missing file.
+ONE_PIXEL_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+
 # Switches the text editor to the grid editor, and answers with the prompt its button asked.
 def open_grid_editor
   accept_confirm { find('.mce-btn', text: 'Grid Editor').click }

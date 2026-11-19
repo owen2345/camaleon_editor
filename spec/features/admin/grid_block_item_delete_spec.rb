@@ -6,8 +6,6 @@
 RSpec.describe 'deleting an item in a grid block form', :js do
   init_site
 
-  # An image that needs no request: the dummy app raises an error in the example for a missing file.
-  let(:image) { 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' }
   let(:tabs) do
     <<~HTML.delete("\n")
       <ul class="nav nav-tabs" role="tablist">
@@ -21,9 +19,9 @@ RSpec.describe 'deleting an item in a grid block form', :js do
     <<~HTML.delete("\n")
       <ol class="carousel-indicators"><li data-target="#s1" data-slide-to="0" class="active"></li>
       <li data-target="#s1" data-slide-to="1" class=""></li></ol>
-      <div class="carousel-inner" role="listbox"> <div class="item active"><img src="#{image}" alt="">
+      <div class="carousel-inner" role="listbox"> <div class="item active"><img src="#{ONE_PIXEL_IMAGE}" alt="">
       <div class="carousel-caption">Deleted caption</div></div>
-      <div class="item "><img src="#{image}" alt=""><div class="carousel-caption">Kept caption</div></div> </div>
+      <div class="item "><img src="#{ONE_PIXEL_IMAGE}" alt=""><div class="carousel-caption">Kept caption</div></div> </div>
     HTML
   end
   let(:accordion) do
