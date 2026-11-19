@@ -132,15 +132,19 @@ jQuery(function(){
     };
     // Binds the actions of the items to the list of a block form. Edit calls show_form with the row
     // of the item. Delete asks for a confirmation, then the row fades out. The Edit link goes to "#".
-    // Its handler stops the link first, in case the form throws an error.
+    // Its handler stops the link first, in case the form throws an error. A browser without the inert
+    // attribute lets the keyboard click the links of a deleted row while it fades out. Both handlers
+    // ignore that click, so that no edit goes to a row that is removed.
     $.fn.gridEditorBindItemActions = function(show_form){
         return this.on("click", "a.edit_item", function(e){
             e.preventDefault();
-            show_form($(this).closest("tr"));
+            var row = $(this).closest("tr");
+            if(!row.hasClass(DELETED)) { show_form(row); }
             return false;
         }).on("click", "a.del_item", function(){
-            if(!confirm(I18n("msg.confirm_del"))) { return false; }
-            $(this).closest("tr").gridEditorFadeDeleted();
+            var row = $(this).closest("tr");
+            if(row.hasClass(DELETED) || !confirm(I18n("msg.confirm_del"))) { return false; }
+            row.gridEditorFadeDeleted();
             return false;
         });
     };

@@ -39,12 +39,17 @@ RSpec.describe 'deleting an item in a grid block form', :js do
   # Deletes the first of the two listed items and clicks Save in the same script. The fade of the
   # deleted row starts at the click on Delete but does not end in the script. Thus the row is still in
   # the list at the click on Save. While the row fades out, it gets no mouse clicks, and its Edit
-  # link cannot get the keyboard focus.
+  # link cannot get the keyboard focus. A browser without the inert attribute lets the keyboard
+  # click the links of the row. The script removes the attribute to show that the links then do
+  # nothing: Edit opens no form, and Delete asks for no second confirmation.
   def delete_the_first_item_and_save
     expect(page).to have_css('#ow_inline_modal tbody tr', count: 2)
-    confirm_every_prompt
     row_state_at_save = page.evaluate_script(<<~JS)
       (function(){
+        var prompts = 0;
+        var item_forms = 0;
+        window.open_modal = function(){ item_forms++; };
+        window.confirm = function(){ prompts++; return true; };
         var deleted_row = jQuery('#ow_inline_modal tbody tr').first();
         deleted_row.find('a.del_item').click();
         var rows = jQuery('#ow_inline_modal tbody tr').length;
@@ -52,11 +57,14 @@ RSpec.describe 'deleting an item in a grid block form', :js do
         var edit_link = deleted_row.find('a.edit_item')[0];
         edit_link.focus();
         var edit_link_focused = document.activeElement === edit_link;
+        deleted_row.removeAttr('inert');
+        edit_link.click();
+        deleted_row.find('a.del_item')[0].click();
         jQuery('#ow_inline_modal .modal_submit').click();
-        return [rows, pointer_events, edit_link_focused];
+        return [rows, pointer_events, edit_link_focused, item_forms, prompts];
       })()
     JS
-    expect(row_state_at_save).to eq([2, 'none', false])
+    expect(row_state_at_save).to eq([2, 'none', false, 0, 1])
     expect(page).to have_no_css('#ow_inline_modal')
   end
 
