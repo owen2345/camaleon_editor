@@ -13,7 +13,9 @@ window.grid_slider_builder = function(panel, editor){
     show_form(add_item());
     return false;
   });
-  tpl.on("click", "a.edit_item", function() {
+  // The Edit link goes to "#". The handler stops the link first, in case the form throws an error.
+  tpl.on("click", "a.edit_item", function(e) {
+    e.preventDefault();
     show_form($(this).closest("tr"));
     return false;
   }).on("click", "a.del_item", function() {

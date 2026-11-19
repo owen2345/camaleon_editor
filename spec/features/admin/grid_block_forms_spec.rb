@@ -71,6 +71,32 @@ RSpec.describe 'the grid editor block forms', :js do
     end
   end
 
+  # The Edit link of a listed item (a tab, a slide, an accordion panel) is a link to "#". It opens
+  # the form of the item in a modal. After a real click, the browser does not follow the link when
+  # the modal cannot open. The page error proves that the modal threw an error at the click.
+  context 'when the form of a listed item cannot be opened' do
+    # An image that needs no request: the dummy app raises an error in the example for a missing file.
+    image = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='
+    {
+      'tab' => '<ul class="nav nav-tabs"><li><a href="#t0">Tab</a></li></ul>' \
+               '<div class="tab-content"><div class="tab-pane" id="t0">Pane</div></div>',
+      'slider' => %(<div class="carousel-inner"><div class="item"><img src="#{image}" alt=""></div></div>),
+      'accordion' => '<div class="panel"><div class="panel-heading"><h4 class="panel-title"><a>Panel</a></h4></div>' \
+                     '<div><div class="panel-body">Body</div></div></div>'
+    }.each do |kind, block|
+      it "leaves the page where it was at the Edit link of a #{kind} item" do
+        open_block_form(block, kind: kind)
+        wait_for_modal_at_rest('#ow_inline_modal')
+        page.execute_script("window.open_modal = function(){ throw new Error('modal broke'); };")
+        watch_the_page_errors
+        find('#ow_inline_modal tbody tr a.edit_item').click
+
+        expect(current_url_fragment).to be_nil
+        expect(page_errors.length).to eq(1)
+      end
+    end
+  end
+
   # A block of a kind no script registers - its plugin gone - has no form to be edited in. Its menu
   # offers what needs none; an Edit entry could only fail.
   context 'with a block of a kind no script registers' do
