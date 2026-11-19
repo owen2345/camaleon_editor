@@ -39,7 +39,8 @@ RSpec.describe 'deleting an item in a grid block form', :js do
   end
 
   # Deletes the first of the two listed items and clicks Save in the same script. The fade of the
-  # deleted row did not start yet, so the row is still in the list at the click on Save.
+  # deleted row starts at the click on Delete but does not end in the script. Thus the row is still in
+  # the list at the click on Save.
   def delete_the_first_item_and_save
     expect(page).to have_css('#ow_inline_modal tbody tr', count: 2)
     confirm_every_prompt
