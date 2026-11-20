@@ -15,6 +15,14 @@ RSpec.configure do |config|
     CamaleonCms::Site.instance_variable_set(:@main_site, nil)
     PluginRoutes.instance_variable_set(:@all_sites, nil)
     PluginRoutes.instance_variable_get(:@cache)&.clear
-    FactoryBot.create(:site)
+    site = FactoryBot.create(:site)
+    # The shared site has the plugin, so the plugin_install call of an example returns early. Without
+    # this row, each call draws the routes again: the transaction of the example rolls its row back.
+    # An example that needs a site without the plugin uninstalls it, deletes its row or uses
+    # init_site(fresh: true).
+    CurrentRequest.site = site.decorate
+    plugin_install('camaleon_editor')
+  ensure
+    CurrentRequest.reset
   end
 end

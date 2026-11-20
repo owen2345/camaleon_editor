@@ -32,4 +32,13 @@ RSpec.describe 'camaleon_editor plugin', type: :model do
     expect(Rails.application.routes.url_helpers)
       .to respond_to(:admin_plugins_camaleon_editor_grid_editor_index_path)
   end
+
+  # An example group with a site of its own (init_site(fresh: true)) draws the routes for that site.
+  # At its end, the group draws them again for the shared site. In a run of the whole suite, this file
+  # runs last, so it shows a group that did not. A run of fewer files can leave such a group out.
+  it 'has the routes of the post types of the shared site' do
+    route_names = CamaleonCms::Site.first.post_types.pluck(:id).map { |id| :"cama_post_type_#{id}_path" }
+
+    expect(Rails.application.routes.url_helpers).to respond_to(*route_names)
+  end
 end

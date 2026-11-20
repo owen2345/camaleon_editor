@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Tooling: the specs install the plugin one time
+
+The suite installs the plugin on its shared site, so an example does not draw the routes again for its own install. Development tooling only. [#22](https://github.com/owen2345/camaleon_editor/pull/22).
+
 ### Fix: a block form leaves a deleted item out of the saved block
 
 A tab, slide or accordion panel deleted just before Save is no longer in the saved block. The Edit link of an item does not send the page to "#" when its form cannot open. [#21](https://github.com/owen2345/camaleon_editor/pull/21).
