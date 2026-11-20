@@ -126,6 +126,26 @@ Lint with the same configuration CI enforces:
 bin/rubocop
 ```
 
+### The suite against Camaleon `master`
+
+CI also runs the suite against the `master` branch of camaleon_cms, on each pull request and each
+push to `master` (`.github/workflows/core_master.yml`). The check is `camaleon_cms master / RSpec`.
+CI skips it when that branch has no commit after the latest Camaleon release. The check is advisory:
+a red check blocks no merge and no release.
+
+To run it locally, point `CAMALEON_CMS_PATH` at a checkout of that branch:
+
+```bash
+export RAILS_ENV=test CAMALEON_CMS_PATH=../camaleon-cms
+rm -rf spec/dummy/tmp/cache spec/dummy/public/assets
+bundle lock && bundle install
+(cd spec/dummy && bin/rails db:test:prepare && bin/rails db:migrate)
+bin/rspec
+unset CAMALEON_CMS_PATH && git checkout Gemfile.lock spec/dummy/db/schema.rb && bundle install
+```
+
+The last line restores the lock and the schema of the released gem.
+
 ## Releasing
 
 Bump `lib/camaleon_editor/version.rb`, cut a `## <version>` section in `CHANGELOG.md`, merge, then

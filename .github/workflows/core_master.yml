@@ -1,0 +1,70 @@
+# Camaleon master: runs this plugin's suite against the `master` branch of camaleon_cms, on the pull
+# requests and the `master` pushes of this repository. ci.yml tests against the released gem that
+# Gemfile.lock pins. This workflow tests against the code that the next Camaleon release ships.
+#
+# The check is advisory. It is a workflow of its own, because the Release workflow reads only the
+# result of ci.yml: a red check here blocks no merge and no release. A red check means that this
+# commit fails against Camaleon `master`. The cause is this commit or a Camaleon change. The
+# `camaleon_editor / RSpec` checks on the camaleon_cms commits show which.
+#
+# The first job skips the suite when Camaleon `master` has no commit after the latest release,
+# because ci.yml tests that same code then.
+#
+# A pull request from a fork runs the same jobs. The token can only read, the workflow uses no
+# secret, and the run can write only the caches of its own pull request.
+name: Camaleon master
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: core-master-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unreleased:
+    name: Unreleased Camaleon commits
+    # core_compat.yml takes this plugin from owen2345/camaleon_editor. A commit that only a fork
+    # holds is not there, so a run inside a fork is skipped. A pull request from a fork to this
+    # repository runs here, and is not skipped.
+    if: github.repository == 'owen2345/camaleon_editor'
+    runs-on: ubuntu-latest
+    outputs:
+      ahead_by: ${{ steps.compare.outputs.ahead_by }}
+
+    steps:
+      # A Camaleon release is a tag on a `master` commit, so `ahead_by` counts the `master`
+      # commits that no release holds. The output is `unknown` when a request fails, and the
+      # suite runs: only a known 0 skips it.
+      - name: Count the Camaleon commits after the latest release
+        id: compare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CORE: owen2345/camaleon-cms
+        run: |
+          ahead_by=unknown
+          tag=$(gh api "repos/$CORE/releases/latest" --jq '.tag_name') || tag=''
+          if [ -n "$tag" ]; then
+            ahead_by=$(gh api "repos/$CORE/compare/$tag...master" --jq '.ahead_by') || ahead_by=unknown
+          fi
+          # A failed request prints its error, which is not a count.
+          case "$ahead_by" in '' | *[!0-9]*) ahead_by=unknown ;; esac
+          echo "camaleon_cms master: $ahead_by commits after release ${tag:-unknown}"
+          echo "ahead_by=$ahead_by" >> "$GITHUB_OUTPUT"
+
+  # The check shows as `camaleon_cms master / RSpec`. `github.sha` is the commit that ci.yml tests
+  # too: the merge commit of a pull request, the pushed commit on `master`. The two RSpec checks
+  # of a commit thus differ only in the Camaleon code. core_compat.yml is read from that commit.
+  rspec:
+    name: camaleon_cms master
+    needs: unreleased
+    if: needs.unreleased.outputs.ahead_by != '0'
+    uses: ./.github/workflows/core_compat.yml
+    with:
+      camaleon_cms_ref: master
+      member_ref: ${{ github.sha }}

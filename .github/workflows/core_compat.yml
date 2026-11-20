@@ -1,16 +1,19 @@
 # Core compatibility: runs this plugin's suite against an unreleased camaleon_cms commit instead of
 # the released gem the committed Gemfile.lock pins. camaleon_cms calls it from its own pipeline
 # (.github/workflows/ecosystem.yml there) with the commit under test, so a core change that breaks
-# this plugin shows up as a check on the core pull request.
+# this plugin shows up as a check on the core pull request. core_master.yml of this repository calls
+# it too, with the commit under test of this plugin and the `master` branch of camaleon_cms.
 #
 # A called workflow runs in the CALLER's context: `github.repository`, `github.sha` and a bare
-# `actions/checkout` all mean camaleon_cms there, not this repository. Both checkouts below therefore
-# name their repository and ref explicitly, side by side under the workspace.
+# `actions/checkout` all mean the caller there. The caller is camaleon_cms, or this repository when
+# core_master.yml calls. Both checkouts below therefore name their repository and ref explicitly,
+# side by side under the workspace.
 #
 # Deliberately no `workflow_dispatch`: a manual run executes in this repository's default-branch
 # context, where code checked out from a free-form ref could write the Actions caches every later run
 # restores. A pull request run has no such reach, so to try a camaleon_cms branch by hand, open a
-# draft pull request there.
+# draft pull request there. A core_master.yml run on a push to `master` does write those caches. The
+# code that it runs is the pushed `master` commit and camaleon_cms `master`, never a free-form ref.
 name: Core compatibility
 
 on:
