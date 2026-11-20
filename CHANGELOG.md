@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Tooling: CI runs the suite against Camaleon master
+
+An advisory check runs the suite against the `master` branch of camaleon_cms, on each pull request and each push to `master`. The RSpec check of CI shows the camaleon_cms version that it tests. Development tooling only. [#23](https://github.com/owen2345/camaleon_editor/pull/23).
+
 ### Tooling: the specs install the plugin one time
 
 The suite installs the plugin on its shared site, so an example does not draw the routes again for its own install. Development tooling only. [#22](https://github.com/owen2345/camaleon_editor/pull/22).
