@@ -14,16 +14,6 @@ window.grid_gallery_builder = function(panel, editor){
     show_form(add_item(I18n("grid_editor.title_sample", "Title sample")));
     return false;
   });
-  tpl.on("click", "a.edit_item", function() {
-    show_form($(this).closest("tr"));
-    return false;
-  }).on("click", "a.del_item", function() {
-    if(!confirm(I18n("msg.confirm_del")))
-      { return false; }
-    $(this).closest("tr").fadeDestroy();
-    return false;
-  });
-
   // sortable
   tpl.find("tbody").sortable({handle: ".fa-arrows"});
 
@@ -98,11 +88,12 @@ window.grid_gallery_builder = function(panel, editor){
       on_submit: submit_form_callback
     });
   };
+  tpl.gridEditorBindItemActions(show_form);
 
   // save information in editor
   const submit_callback = function(modal){
     let res = "";
-    tpl.find("tbody tr").each(function() {
+    tpl.gridEditorListedItems().each(function() {
       const url = $(this).find(".url").val();
       // the extension is read from the url as typed; what goes into a quoted attribute is escaped
       const u = $.fn.gridEditorEscapeHtml(url);

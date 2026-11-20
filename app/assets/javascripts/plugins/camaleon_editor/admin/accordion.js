@@ -29,18 +29,6 @@ window.grid_accordion_builder = function (panel, editor) {
     show_form(add_item(I18n("grid_editor.title_sample", "Title sample")));
     return false;
   });
-  tpl.on("click", "a.edit_item", function () {
-    show_form($(this).closest("tr"));
-    return false;
-  })
-      .on("click", "a.del_item", function () {
-        if (!confirm(I18n("msg.confirm_del"))) {
-          return false;
-        }
-        $(this).closest("tr").fadeDestroy();
-        return false;
-      });
-
   // sortable
   tpl.find("tbody").sortable({ handle: ".fa-arrows" });
 
@@ -124,6 +112,7 @@ window.grid_accordion_builder = function (panel, editor) {
       on_submit: submit_form_callback,
     });
   };
+  tpl.gridEditorBindItemActions(show_form);
 
   // save information in editor
   const submit_callback = function (modal) {
@@ -131,7 +120,7 @@ window.grid_accordion_builder = function (panel, editor) {
     // Migrate off the shared data-style name (see the recover comment above): write the accordion's
     // own attribute and drop any legacy value left on this element.
     panel.attr("data-accordion-style", tpl.find(".style-accordion").val()).removeAttr("data-style");
-    tpl.find("tbody tr").each(function (index, item) {
+    tpl.gridEditorListedItems().each(function (index, item) {
       (res +=
         '<div class="panel panel-' +
         tpl.find(".style-accordion").val() +

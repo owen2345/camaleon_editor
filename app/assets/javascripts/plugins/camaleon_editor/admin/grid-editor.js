@@ -7,6 +7,18 @@ jQuery(function(){
     init_grid_editor();
 
     $.fn.fadeDestroy = function(speed){ $(this).fadeOut(speed, function(){ $(this).remove(); }) }
+    // The class of a part that the author deleted: a column or block of the grid, or an item in the
+    // list of a block form (a tab, a slide, an accordion panel). The part stays in the page while it
+    // fades out. During the fade it is inert: it gets no mouse clicks and no keyboard focus. The
+    // pointer-events style also stops mouse clicks in a browser without the inert attribute. No
+    // export of the grid includes the part, and no block form reads it at Save.
+    var DELETED = "grid-deleted";
+    $.fn.gridEditorFadeDeleted = function(){
+        this.addClass(DELETED).attr("inert", "").css("pointer-events", "none").fadeDestroy();
+        return this;
+    };
+    // The items in the list of a block form, without the deleted items that still fade out.
+    $.fn.gridEditorListedItems = function(){ return this.find("tbody tr").not("."+DELETED); };
     $.fn.isGridEditorContent = function(str){ return str.match(/^\<div\>\[grid_editor/); } // verify is text is a content for grid editor
     // remove libraries shortcode text from grid editor: the marker only, up to ITS closing bracket - a greedy
     // match would run on to the last "]</div>" of the content and take the grid along. Whatever isGridEditorContent
@@ -117,6 +129,24 @@ jQuery(function(){
     $.fn.gridEditor_item_actions = function(){
         return "<a href='#' class='edit_item'"+tooltip("grid_editor.edit_item", "Edit")+"><i class='fa fa-pencil'></i></a> "+
             "<a href='#' class='del_item'"+tooltip("grid_editor.delete_item", "Delete")+"><i class='fa fa-trash'></i></a>";
+    };
+    // Binds the actions of the items to the list of a block form. Edit calls show_form with the row
+    // of the item. Delete asks for a confirmation, then the row fades out. The Edit link goes to "#".
+    // Its handler stops the link first, in case the form throws an error. A browser without the inert
+    // attribute lets the keyboard click the links of a deleted row while it fades out. Both handlers
+    // ignore that click, so that no edit goes to a row that is removed.
+    $.fn.gridEditorBindItemActions = function(show_form){
+        return this.on("click", "a.edit_item", function(e){
+            e.preventDefault();
+            var row = $(this).closest("tr");
+            if(!row.hasClass(DELETED)) { show_form(row); }
+            return false;
+        }).on("click", "a.del_item", function(){
+            var row = $(this).closest("tr");
+            if(row.hasClass(DELETED) || !confirm(I18n("msg.confirm_del"))) { return false; }
+            row.gridEditorFadeDeleted();
+            return false;
+        });
     };
 
     // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too. The
@@ -364,10 +394,6 @@ jQuery(function(){
         // sortable along with the grid, and saved with the editor's chrome in it.
         var GRID_ROOT = "#"+editor_id+" > .panel_grid_body_w > .panel_grid_body"; // for the widgets that take a selector
         function grid_root(editor){ return $(editor).children(".panel_grid_body_w").children(".panel_grid_body"); }
-
-        // The class of a column or block that the author deleted. The element stays in the grid
-        // while it fades out, but no export includes it (see fade_out_of_grid).
-        var DELETED = "grid-deleted";
 
         // grid editor export
         function export_content(editor){
@@ -746,14 +772,23 @@ jQuery(function(){
             // Deletes a block or column. The element fades out, and stays in the grid until the
             // fade ends. A mark removes it from each export, and the grid is exported at the click.
             // A later export lets a save during the fade store the element. While it fades out, the
-            // element gets no clicks: no second delete, and no clone with the mark. A column that
+            // element is inert: no second delete, and no clone with the mark. A column that
             // fades out accepts no dropped block, because the block goes with the column. The fade
             // starts before the export, in case an export listener throws an error.
             function fade_out_of_grid(element){
                 element.children(".grid_sortable_items").filter(":ui-sortable").sortable("disable");
-                element.addClass(DELETED).css("pointer-events", "none").fadeDestroy();
+                element.gridEditorFadeDeleted();
                 editor.trigger("auto_save");
             }
+
+            // A browser without the inert attribute lets the keyboard click the links and menu
+            // toggles of a block or column that fades out. This handler runs before the options
+            // below and ignores that click: no second delete, and no clone with the mark.
+            grid_root(editor).on("click", "."+DELETED+" a, ."+DELETED+" .dropdown-toggle", function(e){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
+            });
 
             // Block options. Each is a link to "#", and each handler stops the link first. The
             // column options below do the same. The menu toggle at the end of this chain is not a

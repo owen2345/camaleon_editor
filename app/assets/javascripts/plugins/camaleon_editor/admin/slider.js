@@ -13,15 +13,6 @@ window.grid_slider_builder = function(panel, editor){
     show_form(add_item());
     return false;
   });
-  tpl.on("click", "a.edit_item", function() {
-    show_form($(this).closest("tr"));
-    return false;
-  }).on("click", "a.del_item", function() {
-    if(!confirm(I18n("msg.confirm_del"))) { return false; }
-    $(this).closest("tr").fadeDestroy();
-    return false;
-  });
-
   // sortable
   tpl.find("tbody").sortable({handle: ".fa-arrows"});
 
@@ -103,6 +94,7 @@ window.grid_slider_builder = function(panel, editor){
       on_submit: submit_form_callback
     });
   };
+  tpl.gridEditorBindItemActions(show_form);
 
   // save information in editor
   const submit_callback = function(modal){
@@ -118,7 +110,7 @@ window.grid_slider_builder = function(panel, editor){
           <span class="sr-only">Next</span> \
         </a>`;
 
-    tpl.find("tbody tr").each(function(index, item){
+    tpl.gridEditorListedItems().each(function(index, item){
       res1 += '<li data-target="#'+id_accor+'" data-slide-to="'+index+'" class="'+(index === 0 ? "active" : "") +'">' +
               '</li>';
       res2 += '<div class="item '+(index === 0 ? "active" : "")+'">' +

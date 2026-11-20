@@ -13,16 +13,6 @@ window.grid_tab_builder = function(panel, editor){
     show_form(add_item(I18n("grid_editor.title_sample", "Title sample")));
     return false;
   });
-  tpl.on("click", "a.edit_item", function() {
-    show_form($(this).closest("tr"));
-    return false;
-  }).on("click", "a.del_item", function() {
-    if(!confirm(I18n("msg.confirm_del")))
-      { return false; }
-    $(this).closest("tr").fadeDestroy();
-    return false;
-  });
-
   // sortable
   tpl.find("tbody").sortable({handle: ".fa-arrows"});
 
@@ -88,12 +78,13 @@ window.grid_tab_builder = function(panel, editor){
       on_submit: submit_form_callback
     });
   };
+  tpl.gridEditorBindItemActions(show_form);
 
   // save information in editor
   const submit_callback = function(modal){
     let res1 = "";
     let res2 = "";
-    tpl.find("tbody tr").each(function(index, item){
+    tpl.gridEditorListedItems().each(function(index, item){
       const _in  = index === 0 ? 'active' : "";
       res1 +=
           '<li role="presentation" class="'+_in+'">' +
