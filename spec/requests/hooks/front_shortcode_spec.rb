@@ -30,6 +30,11 @@ RSpec.describe 'the front hook' do
   end
 
   context 'with the plugin inactive' do
+    before do
+      store_current_site(@site)
+      plugin_uninstall('camaleon_editor')
+    end
+
     it 'renders the shortcode text verbatim and loads no plugin stylesheet' do
       @post.object.update!(content: 'before [grid_editor] after')
 

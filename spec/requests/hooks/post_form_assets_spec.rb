@@ -40,6 +40,11 @@ RSpec.describe 'the post-form hook' do
   end
 
   context 'with the plugin inactive' do
+    before do
+      store_current_site(@site)
+      plugin_uninstall('camaleon_editor')
+    end
+
     it 'leaves the admin post form untouched' do
       get "/admin/post_type/#{post_type.id}/posts/new"
 
