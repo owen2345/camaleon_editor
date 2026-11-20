@@ -20,6 +20,10 @@ def init_site(fresh: false)
     @site = nil
     @post = nil
   end
+
+  # The routes hold the post type ids of the site that drew them last, and the transaction of the
+  # example rolls the fresh site back. Draw the routes again for the shared site after the group.
+  after(:all) { PluginRoutes.reload } if fresh
 end
 
 # The site's seeded admin user (username 'admin', see spec/factories/site.rb).
