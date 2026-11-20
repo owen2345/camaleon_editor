@@ -194,7 +194,6 @@ RSpec.describe 'saving a post from the grid editor', :js do
     it 'ignores the links of a deleted block or column while it fades out' do
       blocks, columns, prompts = page.evaluate_script(<<~JS)
         (function(){
-          jQuery.fx.speeds._default = 60000;
           var prompts = 0;
           window.confirm = function(){ prompts++; return true; };
           var click_again = function(element, links){
