@@ -129,9 +129,9 @@ bin/rubocop
 ### The suite against Camaleon `master`
 
 CI also runs the suite against the `master` branch of camaleon_cms, on each pull request and each
-push to `master` (`.github/workflows/core_master.yml`). The check is `camaleon_cms master / RSpec`.
-CI skips it when that branch has no commit after the latest Camaleon release. The check is advisory:
-a red check blocks no merge and no release.
+push to `master` (`.github/workflows/camaleon_master.yml`). The check is
+`Camaleon master / Suite / RSpec`. CI skips it when that branch has no commit after the latest
+Camaleon release. The check is advisory: a red check blocks no merge and no release.
 
 To run it locally, point `CAMALEON_CMS_PATH` at a checkout of that branch:
 

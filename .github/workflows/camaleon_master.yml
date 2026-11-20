@@ -23,12 +23,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: core-master-${{ github.ref }}
+  group: camaleon-master-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   unreleased:
-    name: Unreleased Camaleon commits
+    name: Is master ahead of the release?
     # core_compat.yml takes this plugin from owen2345/camaleon_editor. A commit that only a fork
     # holds is not there, so a run inside a fork is skipped. A pull request from a fork to this
     # repository runs here, and is not skipped.
@@ -57,11 +57,11 @@ jobs:
           echo "camaleon_cms master: $ahead_by commits after release ${tag:-unknown}"
           echo "ahead_by=$ahead_by" >> "$GITHUB_OUTPUT"
 
-  # The check shows as `camaleon_cms master / RSpec`. `github.sha` is the commit that ci.yml tests
+  # The check shows as `Camaleon master / Suite / RSpec`. `github.sha` is the commit that ci.yml tests
   # too: the merge commit of a pull request, the pushed commit on `master`. The two RSpec checks
   # of a commit thus differ only in the Camaleon code. core_compat.yml is read from that commit.
   rspec:
-    name: camaleon_cms master
+    name: Suite
     needs: unreleased
     if: needs.unreleased.outputs.ahead_by != '0'
     uses: ./.github/workflows/core_compat.yml
