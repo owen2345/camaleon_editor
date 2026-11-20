@@ -146,26 +146,39 @@ RSpec.describe 'saving a post from the grid editor', :js do
 
     # The export at the click already excludes the deleted element, while it still fades out. A save
     # before the end of the fade stores the grid without it. During the fade, the element is inert:
-    # it gets no mouse clicks and no keyboard focus.
+    # it gets no mouse clicks and no keyboard focus. The script opens the options menu of the
+    # element for each focus test, because an entry of a closed menu gets no focus in any case.
+    # Before the click on Delete, the first entry of the open menu gets the focus.
     it 'exports the grid without a deleted block or column at the click, while it still fades out' do
       confirm_every_prompt
-      without_block, without_column = page.evaluate_script(<<~JS)
+      focused_before, without_block, without_column = page.evaluate_script(<<~JS)
         (function(){
+          var menu_entry_gets_focus = function(element){
+            var menu = element.children('.header_box').children('.dropdown').addClass('open');
+            var entry = menu.find('a[href]')[0];
+            entry.focus();
+            var focused = document.activeElement === entry;
+            entry.blur();
+            menu.removeClass('open');
+            return focused;
+          };
           var seen = function(kind){
             var fading = jQuery('.panel_grid_body .' + kind);
-            var link = fading.find('a[href]')[0];
-            link.focus();
-            var link_focused = document.activeElement === link;
-            return [window.__cama_grid_exports.last, fading.length, fading.css('pointer-events'), link_focused];
+            var focused = menu_entry_gets_focus(fading);
+            return [window.__cama_grid_exports.last, fading.length, fading.css('pointer-events'), focused];
           };
+          var focused_before = jQuery.map(['.drg_item', '.drg_column'], function(part){
+            return menu_entry_gets_focus(jQuery('.panel_grid_body ' + part));
+          });
           jQuery('.panel_grid_body .drg_item .grid_content_remove').click();
           var without_block = seen('drg_item');
           jQuery('.panel_grid_body .drg_column .grid_col_remove').click();
-          return [without_block, seen('drg_column')];
+          return [focused_before, without_block, seen('drg_column')];
         })()
       JS
       submit_post_form
 
+      expect(focused_before).to eq([true, true])
       expect(without_block[0]).to include('data-col="6"')
       expect(without_block[0]).not_to include('embedded widget')
       expect(without_block[1..]).to eq([1, 'none', false])
