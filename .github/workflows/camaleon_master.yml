@@ -1,6 +1,10 @@
-# Camaleon master: runs this plugin's suite against the `master` branch of camaleon_cms, on the pull
-# requests and the `master` pushes of this repository. ci.yml tests against the released gem that
-# Gemfile.lock pins. This workflow tests against the code that the next Camaleon release ships.
+# Runs on: a pull request or a `master` push of this repository.
+# Tests:   the commit of this plugin, against the `master` branch of camaleon_cms.
+# Check:   `Camaleon master / Suite / RSpec`.
+#
+# ci.yml tests against the released gem that Gemfile.lock pins. This workflow tests against the
+# code that the next Camaleon release ships. The steps of the suite are in core_compat.yml, which
+# this workflow calls.
 #
 # The check is advisory. It is a workflow of its own, because the Release workflow reads only the
 # result of ci.yml: a red check here blocks no merge and no release. A red check means that this
