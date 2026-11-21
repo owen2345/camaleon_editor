@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
   # 2.9.3 brought the shared markup detector (CamaleonCms::UnsafeMarkup) and the post content
   # allowlists the grid template scan is built on; on an older core there would be no scan.
   s.add_dependency 'camaleon_cms', '>= 2.9.3'
-  s.add_dependency 'rails'
+  s.add_dependency 'rails', '>= 6.1'
   # The text editors keep scripts with TinyMCE behavior that starts at 4.7.4. An older TinyMCE puts
   # the text of a script in a CDATA wrapper, and puts a top-level script in a paragraph. Core
   # requires a tinymce-rails below 5.
