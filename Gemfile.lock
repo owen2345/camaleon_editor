@@ -3,7 +3,7 @@ PATH
   specs:
     camaleon_editor (0.0.1)
       camaleon_cms (>= 2.9.3)
-      rails
+      rails (>= 6.1)
       tinymce-rails (>= 4.7.4)
 
 GEM
