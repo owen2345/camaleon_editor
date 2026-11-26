@@ -871,14 +871,17 @@ jQuery(function(){
             if(saved_body) content_unreadable(); else editor_failed();
             return textarea;
         }
-        // inserted natively: jQuery's before() would run the scripts of the grid just rebuilt from saved content
-        // like jQuery's before(), nothing to do for a field that is not in a document yet
         // The grid editor goes before the panel of the field's text editor, and the field stays
         // immediately after that panel. While the author drags a custom field group, Camaleon
         // removes the text editors of the group and sets them up again at the drop. Camaleon 2.9.4
-        // takes the element after the panel of a text editor for the field of that editor. A field
-        // that has no text editor of its own gets the grid editor immediately before it. A text
-        // editor that the page removed has no panel.
+        // takes the element after the panel of a text editor for the field of that editor.
+        // The grid editor goes immediately before the field in these cases:
+        // - The field has no text editor of its own.
+        // - The text editor has no panel, because the page removed it.
+        // - An element is between the panel and the field.
+        // The insert is native, because jQuery's before() runs the scripts of a grid that is built
+        // again from saved content. A field that has no parent element gets no grid editor, as with
+        // jQuery's before().
         var place = tinymce_panel.length && textarea.prev()[0] === tinymce_panel[0] ? tinymce_panel[0] : textarea[0];
         if(place.parentNode){
             place.parentNode.insertBefore(editor[0], place);
