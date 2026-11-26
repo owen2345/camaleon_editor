@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix: a grid editor stays after a sort of its custom field group
+
+An author can sort a custom field group that has a grid editor. The grid editor stays, and a later grid change is stored. The grid editor also works with a text editor that a page sets up again for its field. [#26](https://github.com/owen2345/camaleon_editor/pull/26).
+
 ### Tooling: the browser specs pass on Chrome 158
 
 Chrome 158 refuses the call that Capybara 3.40.0 sends to clear the cookies after each example. The specs now clear the cookies and the local storage in a different way. Development tooling only. [#25](https://github.com/owen2345/camaleon_editor/pull/25).
