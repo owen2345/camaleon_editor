@@ -62,6 +62,12 @@ keeps the content of the text editor.
 editor there, and a page that the author did not leave kept that markup in its fields. An editor
 that TinyMCE hid, or an editor with the unload write disabled, writes nothing.
 
+**A new text editor for the field.** A page can remove the text editor of a field and set up a new
+one while the grid editor of the field stays. Camaleon does this when the author sorts a custom
+field group. The grid editor then works with the new text editor, and the author stays in the
+editor that was visible. While the grid editor is visible, the new text editor gets the grid export
+as its content.
+
 ### Scripts
 
 On a page that loads the grid editor, the text editors keep the scripts of their content. This
