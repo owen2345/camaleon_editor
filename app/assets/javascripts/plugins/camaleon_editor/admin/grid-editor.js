@@ -1275,10 +1275,11 @@ jQuery(function(){
         // The page can set up a text editor for a field that has its grid editor. The grid editor
         // then takes that text editor (see take_text_editor). The hook tells each grid editor at
         // "init", when the new text editor has its panel and its content. Each grid editor decides
-        // if it takes the new text editor. The grid editor of the field can be outside the page.
+        // if it takes the new text editor. A grid editor outside the page takes no text editor: the
+        // author cannot see that grid editor, so the panel of the new text editor stays.
         var grid_takes_text_editor = function(editor){
             editor.on("init", function(){
-                $(".panel_grid_editor").add(built_grid_of(editor.targetElm)).each(function(){
+                $(".panel_grid_editor").each(function(){
                     $(this).triggerHandler("text_editor_made_again", [editor]);
                 });
             });

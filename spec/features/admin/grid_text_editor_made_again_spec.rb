@@ -210,6 +210,34 @@ RSpec.describe 'a text editor made again for a field that has its grid editor', 
           expect(panel_shown).to be(true)
         end
       end
+
+      # A page can move a field out of the element that holds its grid editor, and then remove
+      # that element from the page.
+      context 'when the grid editor of the field is outside the page' do
+        before do
+          open_post_in_editor(@post)
+          page.execute_script(<<~JS, stored_content)
+            jQuery('<div id="cama_box"><textarea id="cama_moved_field"></textarea></div>').appendTo('#form-post');
+            jQuery('#cama_moved_field')[0].value = arguments[0];
+            tinymce.init(cama_get_tinymce_settings({selector: '#cama_moved_field'}));
+          JS
+          find('#cama_box .panel_grid_editor .drg_item')
+        end
+
+        it 'leaves the new text editor of the field shown' do
+          page.execute_script(<<~JS)
+            tinymce.get('cama_moved_field').remove();
+            jQuery('#cama_moved_field').appendTo('#form-post');
+            jQuery('#cama_box').detach();
+            var selector = '#cama_moved_field';
+            tinymce.init(#{settings});
+          JS
+          wait_for_text_editor("tinymce.get('cama_moved_field')")
+          panel_shown = page.evaluate_script("jQuery(tinymce.get('cama_moved_field').editorContainer).is(':visible')")
+
+          expect(panel_shown).to be(true)
+        end
+      end
     end
   end
 end
