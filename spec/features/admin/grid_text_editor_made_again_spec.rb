@@ -200,6 +200,15 @@ RSpec.describe 'a text editor made again for a field that has its grid editor', 
 
           expect(page.evaluate_script("#{POST_TEXT_EDITOR}.getContent({format: 'raw'})")).to include('[grid_editor')
         end
+
+        # A grid editor takes only the text editor that replaces the removed one, by its id.
+        it 'does not take the new text editor of another field' do
+          page.execute_script("#{POST_TEXT_EDITOR}.remove();")
+          set_up_text_editors(['cama_other_field'], settings)
+          panel_shown = page.evaluate_script("jQuery(tinymce.get('cama_other_field').editorContainer).is(':visible')")
+
+          expect(panel_shown).to be(true)
+        end
       end
     end
   end
