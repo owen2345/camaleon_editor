@@ -12,8 +12,8 @@ RSpec.describe 'a grid editor in a custom field that the author sorts', :js do
   let(:post_type) { @site.post_types.find_by(slug: 'post') }
 
   # The script of the field that has the grid editor, and the script of its text editor.
-  let(:grid_field) { "jQuery('.custom_sortable_grouped .panel_grid_editor').nextAll('textarea').first()" }
-  let(:grid_field_editor) { "tinymce.get(#{grid_field}.attr('id'))" }
+  let(:grid_field_script) { "jQuery('.custom_sortable_grouped .panel_grid_editor').nextAll('textarea').first()" }
+  let(:grid_field_editor_script) { "tinymce.get(#{grid_field_script}.attr('id'))" }
 
   def field_ids
     page.evaluate_script(<<~JS)
@@ -26,7 +26,7 @@ RSpec.describe 'a grid editor in a custom field that the author sorts', :js do
   end
 
   def grid_field_editor_shown
-    page.evaluate_script("jQuery(#{grid_field_editor}.editorContainer).is(':visible')")
+    page.evaluate_script("jQuery(#{grid_field_editor_script}.editorContainer).is(':visible')")
   end
 
   # Waits until the page has two fields, each with its text editor ready, and builds a grid editor
@@ -87,7 +87,7 @@ RSpec.describe 'a grid editor in a custom field that the author sorts', :js do
 
       expect(sort_started).to be(true)
       expect(text_editor_ids).to match_array(editors)
-      expect(page.evaluate_script("#{grid_field_editor} !== window.__cama_first_field_editor")).to be(true)
+      expect(page.evaluate_script("#{grid_field_editor_script} !== window.__cama_first_field_editor")).to be(true)
       expect(page).to have_css('.custom_sortable_grouped .panel_grid_editor', count: 1)
       expect(grid_field_editor_shown).to be(false)
     end
@@ -100,7 +100,7 @@ RSpec.describe 'a grid editor in a custom field that the author sorts', :js do
       page.execute_script('tinymce.triggerSave();')
 
       expect(export).to include('<strong>changed</strong>')
-      expect(page.evaluate_script("#{grid_field}[0].value")).to eq(export)
+      expect(page.evaluate_script("#{grid_field_script}[0].value")).to eq(export)
     end
 
     # The author stays in the text editor. The grid editor comes back as the author left it.
@@ -111,7 +111,7 @@ RSpec.describe 'a grid editor in a custom field that the author sorts', :js do
 
       expect(grid_field_editor_shown).to be(true)
       expect(page).to have_css('.custom_sortable_grouped .panel_grid_editor', count: 1, visible: :hidden)
-      page.execute_script("#{grid_field}.gridEditor(#{grid_field_editor});")
+      page.execute_script("#{grid_field_script}.gridEditor(#{grid_field_editor_script});")
       block_text = '.custom_sortable_grouped .panel_grid_editor .drg_item strong'
       expect(page).to have_css(block_text, text: 'bold', visible: :all)
       expect(grid_field_editor_shown).to be(false)
