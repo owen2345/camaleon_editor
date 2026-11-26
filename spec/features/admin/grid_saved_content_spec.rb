@@ -308,4 +308,21 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
 
     expect(error).to be_nil
   end
+
+  # A text editor that the page removed has no panel.
+  it 'does not break on a text field that is not in the page yet, with a text editor that has no panel' do
+    open_post_in_editor(@post)
+    set_up_text_editors(['removed_editor_field'], '{selector: selector}')
+
+    error = page.evaluate_script(<<~JS)
+      (function(){
+        var editor = tinymce.get('removed_editor_field');
+        editor.remove();
+        try { jQuery('<textarea></textarea>').gridEditor(editor); return null; }
+        catch(e){ return e.message; }
+      })()
+    JS
+
+    expect(error).to be_nil
+  end
 end

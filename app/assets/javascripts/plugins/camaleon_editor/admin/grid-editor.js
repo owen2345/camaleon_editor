@@ -876,8 +876,9 @@ jQuery(function(){
         // immediately after that panel. While the author drags a custom field group, Camaleon
         // removes the text editors of the group and sets them up again at the drop. Camaleon 2.9.4
         // takes the element after the panel of a text editor for the field of that editor. A field
-        // that has no text editor of its own gets the grid editor immediately before it.
-        var place = textarea.prev()[0] === tinymce_panel[0] ? tinymce_panel[0] : textarea[0];
+        // that has no text editor of its own gets the grid editor immediately before it. A text
+        // editor that the page removed has no panel.
+        var place = tinymce_panel.length && textarea.prev()[0] === tinymce_panel[0] ? tinymce_panel[0] : textarea[0];
         if(place.parentNode) place.parentNode.insertBefore(editor[0], place);
 
         // The field has a second writer. Core writes the content of the text editor into the field
