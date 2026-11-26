@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Tooling: the browser specs pass on Chrome 158
+
+Chrome 158 refuses the call that Capybara 3.40.0 sends to clear the cookies after each example. The specs now clear the cookies and the local storage in a different way. Development tooling only. [#25](https://github.com/owen2345/camaleon_editor/pull/25).
+
 ### Security: Ruby 3.4.13, Rails 8.1.4.1 and a Rails floor
 
 The gem now declares `rails >= 6.1`, the floor of camaleon_cms. The development Ruby moves to 3.4.13, because Ruby 3.4.12 and earlier has CVE-2026-132825. `Gemfile.lock` moves to Rails 8.1.4.1 and to fixed releases of the other gems with an open advisory. [#24](https://github.com/owen2345/camaleon_editor/pull/24).
