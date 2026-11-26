@@ -181,6 +181,26 @@ RSpec.describe 'a text editor made again for a field that has its grid editor', 
           expect(text_editor_panel_shown).to be(false)
         end
       end
+
+      # The grid editor of a field that has no text editor of its own can work with the text editor
+      # of another field.
+      context 'with grid editors on fields that work with the text editor of the post' do
+        before do
+          open_post_in_editor(@post)
+          page.execute_script(<<~JS)
+            jQuery('<div id="cama_two_fields"><textarea></textarea><textarea></textarea></div>').appendTo('#form-post');
+            jQuery('#cama_two_fields textarea').gridEditor(#{POST_TEXT_EDITOR});
+          JS
+          first('#cama_two_fields .panel_grid_editor')
+        end
+
+        it 'gives a later grid change to the new text editor' do
+          make_the_text_editor_again(settings)
+          page.execute_script("jQuery('#cama_two_fields .panel_grid_editor').first().trigger('auto_save');")
+
+          expect(page.evaluate_script("#{POST_TEXT_EDITOR}.getContent({format: 'raw'})")).to include('[grid_editor')
+        end
+      end
     end
   end
 end

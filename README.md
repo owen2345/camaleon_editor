@@ -68,6 +68,9 @@ field group. The grid editor then works with the new text editor, and the author
 editor that was visible. While the grid editor is visible, the new text editor gets the grid export
 as its content. A grid that has no export yet leaves the new text editor its content.
 
+A grid editor can work with the text editor of another field. It then takes the new text editor of
+that field too.
+
 ### Scripts
 
 On a page that loads the grid editor, the text editors keep the scripts of their content. This

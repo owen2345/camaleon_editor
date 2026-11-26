@@ -923,7 +923,14 @@ jQuery(function(){
             tinymce_panel.hide();
             if(exported !== null) tinyEditor.setContent(exported);
         }
-        editor.bind("text_editor_made_again", function(_event, text_editor){ take_text_editor(text_editor); });
+        // The grid editor takes a new text editor of its field. It also takes a new text editor
+        // that replaces the removed text editor that it works with. That editor can be the text
+        // editor of another field: a field that has no text editor of its own can use one.
+        editor.bind("text_editor_made_again", function(_event, text_editor){
+            var of_its_field = built_grid_of(text_editor.targetElm)[0] === editor[0];
+            var replaces_its_editor = tinyEditor.removed && tinyEditor.id === text_editor.id;
+            if(of_its_field || replaces_its_editor) take_text_editor(text_editor);
+        });
 
         // Keeps the current grid while a new grid replaces it (a template is applied, or the grid
         // is built again from the text editor), in case the build throws an error. It keeps the
@@ -1263,11 +1270,14 @@ jQuery(function(){
         }
 
         // The page can set up a text editor for a field that has its grid editor. The grid editor
-        // then takes that text editor (see take_text_editor). The hook tells the grid editor at
-        // "init", when the new text editor has its panel and its content.
+        // then takes that text editor (see take_text_editor). The hook tells each grid editor at
+        // "init", when the new text editor has its panel and its content. Each grid editor decides
+        // if it takes the new text editor. The grid editor of the field can be outside the page.
         var grid_takes_text_editor = function(editor){
             editor.on("init", function(){
-                built_grid_of(editor.targetElm).triggerHandler("text_editor_made_again", [editor]);
+                $(".panel_grid_editor").add(built_grid_of(editor.targetElm)).each(function(){
+                    $(this).triggerHandler("text_editor_made_again", [editor]);
+                });
             });
         }
 
