@@ -201,7 +201,8 @@ RSpec.describe 'a text editor made again for a field that has its grid editor', 
           expect(page.evaluate_script("#{POST_TEXT_EDITOR}.getContent({format: 'raw'})")).to include('[grid_editor')
         end
 
-        # A grid editor takes only the text editor that replaces the removed one, by its id.
+        # A grid editor takes the new text editor of another field only when that editor has the id
+        # of the removed one.
         it 'does not take the new text editor of another field' do
           page.execute_script("#{POST_TEXT_EDITOR}.remove();")
           set_up_text_editors(['cama_other_field'], settings)
