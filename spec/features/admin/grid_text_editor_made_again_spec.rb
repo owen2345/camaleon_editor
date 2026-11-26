@@ -166,6 +166,21 @@ RSpec.describe 'a text editor made again for a field that has its grid editor', 
           expect(post_content.delete("\n")).to eq('<p>written <strong>before</strong> the grid</p>')
         end
       end
+
+      # A page can put its own element between the panel of the text editor and the field.
+      context 'with an element between the panel of the text editor and the field' do
+        before do
+          open_stored_post
+          page.execute_script("#{POST_TEXT_EDITOR_FIELD}.before('<span class=\"cama_between\"></span>');")
+        end
+
+        it 'keeps the new text editor hidden, and builds no second grid editor' do
+          make_the_text_editor_again(settings)
+
+          expect(page).to have_css('.panel_grid_editor', count: 1)
+          expect(text_editor_panel_shown).to be(false)
+        end
+      end
     end
   end
 end

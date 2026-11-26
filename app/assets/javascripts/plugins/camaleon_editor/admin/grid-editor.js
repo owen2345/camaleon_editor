@@ -284,15 +284,16 @@ jQuery(function(){
     // returns the content of the field's text editor, as that editor serializes it.
     function field_value(field){ return $(field)[0].value || ""; }
 
-    // Returns the grid editor of a field, if there is one. It is before the panel of the field's
-    // text editor, and that panel is immediately before the field. A field that has no text editor
-    // has the grid editor immediately before it. The page removed the text editor of that field,
-    // or the field never had one of its own.
+    // The names of the jQuery data that link a field and its grid editor.
+    var GRID_OF_FIELD = "cama_grid_editor", FIELD_OF_GRID = "cama_grid_field";
+
+    // Returns the grid editor of a field, if there is one. The field and its grid editor refer to
+    // each other, so the grid editor is found wherever it is. A page can put an element between
+    // them. A copy of the field with its jQuery data refers to the grid editor, but the grid editor
+    // does not refer to the copy. A grid editor that is not in a parent element does not count.
     function built_grid_of(field){
-        var before = $(field).prev();
-        var text_editor = tinymce.get($(field).attr("id"));
-        if(text_editor && before[0] === text_editor.editorContainer) before = before.prev();
-        return before.filter(".panel_grid_editor");
+        var grid = $(field).data(GRID_OF_FIELD);
+        return grid && grid[0].parentNode && grid.data(FIELD_OF_GRID) === $(field)[0] ? grid : $();
     }
 
     // A grid editor is hidden while the author is in the text editor. Read the display of the grid
@@ -879,7 +880,11 @@ jQuery(function(){
         // that has no text editor of its own gets the grid editor immediately before it. A text
         // editor that the page removed has no panel.
         var place = tinymce_panel.length && textarea.prev()[0] === tinymce_panel[0] ? tinymce_panel[0] : textarea[0];
-        if(place.parentNode) place.parentNode.insertBefore(editor[0], place);
+        if(place.parentNode){
+            place.parentNode.insertBefore(editor[0], place);
+            textarea.data(GRID_OF_FIELD, editor);
+            editor.data(FIELD_OF_GRID, textarea[0]);
+        }
 
         // The field has a second writer. Core writes the content of the text editor into the field
         // when the text editor loses focus, with each draft and at submit. The text editor does not
