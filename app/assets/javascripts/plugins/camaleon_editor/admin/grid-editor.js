@@ -284,8 +284,10 @@ jQuery(function(){
     // returns the content of the field's text editor, as that editor serializes it.
     function field_value(field){ return $(field)[0].value || ""; }
 
-    // Returns the grid editor of a field, if there is one. It is immediately before its field. When
-    // the page set up a new text editor for the field, the panel of that editor is between them.
+    // Returns the grid editor of a field, if there is one. It is before the panel of the field's
+    // text editor, and that panel is immediately before the field. A field that has no text editor
+    // has the grid editor immediately before it. The page removed the text editor of that field,
+    // or the field never had one of its own.
     function built_grid_of(field){
         var before = $(field).prev();
         var text_editor = tinymce.get($(field).attr("id"));
@@ -870,7 +872,13 @@ jQuery(function(){
         }
         // inserted natively: jQuery's before() would run the scripts of the grid just rebuilt from saved content
         // like jQuery's before(), nothing to do for a field that is not in a document yet
-        if(textarea[0].parentNode) textarea[0].parentNode.insertBefore(editor[0], textarea[0]);
+        // The grid editor goes before the panel of the field's text editor, and the field stays
+        // immediately after that panel. While the author drags a custom field group, Camaleon
+        // removes the text editors of the group and sets them up again at the drop. Camaleon 2.9.4
+        // takes the element after the panel of a text editor for the field of that editor. A field
+        // that has no text editor of its own gets the grid editor immediately before it.
+        var place = textarea.prev()[0] === tinymce_panel[0] ? tinymce_panel[0] : textarea[0];
+        if(place.parentNode) place.parentNode.insertBefore(editor[0], place);
 
         // The field has a second writer. Core writes the content of the text editor into the field
         // when the text editor loses focus, with each draft and at submit. The text editor does not

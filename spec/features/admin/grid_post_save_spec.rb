@@ -94,7 +94,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
     it 'says nothing false when the field cannot be written once the grid is shown again' do
       leave_for_the_text_editor
       page.execute_script(<<~JS)
-        jQuery('.panel_grid_editor').next('textarea').on('change', function(){
+        jQuery('.panel_grid_editor').nextAll('textarea').first().on('change', function(){
           if(jQuery('.panel_grid_editor').is(':visible')) throw new Error('the field cannot be written');
         });
       JS
@@ -365,7 +365,7 @@ RSpec.describe 'saving a post from the grid editor', :js do
         jQuery('<textarea id="later_field"></textarea>').appendTo('#form-post')[0].value = arguments[0];
         tinymce.init(cama_get_tinymce_settings({selector: '#later_field'}));
       JS
-      expect(page).to have_css('.panel_grid_editor + #later_field', visible: :all)
+      expect(page).to have_css('.panel_grid_editor + .mce-tinymce + #later_field', visible: :all)
 
       written = page.evaluate_script(<<~JS)
         (function(){
