@@ -44,7 +44,7 @@ window.grid_slider_builder = function(panel, editor){
   // recover current items
   panel.find(" > .carousel-inner > .item").each( function(index, item){
     // the slide's own caption: it sits in the slide, not under the block
-    add_item($(this).children("img").attr("src"), $(this).children(".carousel-caption").html());
+    add_item($(this).children("img").attr("src"), $(this).children(".carousel-caption").gridEditorMarkup());
   });
 
   // show form for each accordion
@@ -75,11 +75,11 @@ window.grid_slider_builder = function(panel, editor){
         });
         return false;
       });
-      setTimeout(() => form.find("textarea").tinymce(cama_get_tinymce_settings({height: '120px'})), 500);
+      form.find("textarea").gridEditorFormEditor({height: '120px'});
     };
 
     const submit_form_callback = function(modal) {
-      update_item(tr, form.find(".url_file").val(), form.find(".descr").val());
+      update_item(tr, form.find(".url_file").val(), form.find(".descr").gridEditorFormContent());
       modal.modal("hide");
     };
 

@@ -40,7 +40,7 @@ window.grid_tab_builder = function(panel, editor){
   panel.find("> .nav-tabs > li").each( function(index, item){
     // the label sits in the tab's link; an empty label is an empty label, not the link's own markup
     const link = $(this).children("a");
-    add_item($.fn.gridEditorLabelSource(link.length ? link : this), panel.find("> .tab-content > .tab-pane").eq(index).html());
+    add_item($.fn.gridEditorLabelSource(link.length ? link : this), panel.find("> .tab-content > .tab-pane").eq(index).gridEditorMarkup());
   });
 
   // show form for each accordion
@@ -58,12 +58,10 @@ window.grid_tab_builder = function(panel, editor){
     form.find(".name").val(tr.find("td.name").text());
     form.find(".descr").val(tr.find(".descr").val());
 
-    const form_callback = () => setTimeout(
-        () => form.find("textarea").tinymce(cama_get_tinymce_settings({height: '120px'})), 500
-    );
+    const form_callback = () => form.find("textarea").gridEditorFormEditor({height: '120px'});
 
     const submit_form_callback = function(modal) {
-      update_item(tr, form.find(".name").val(), form.find(".descr").val());
+      update_item(tr, form.find(".name").val(), form.find(".descr").gridEditorFormContent());
       modal.modal("hide");
     };
 

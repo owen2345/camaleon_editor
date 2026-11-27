@@ -2,8 +2,8 @@
 
 # The specs read the grid export from their own record, not from the post's field: a text editor
 # that the author went back to writes its own serialization there. These examples test that record.
-# They also test it after a block form loads a text editor, when jQuery's val() does not read or
-# write the field.
+# They also test it after a script loads a text editor through jQuery's tinymce(), when jQuery's
+# val() does not read or write the field.
 RSpec.describe 'the record of what the grid exports', :js do
   init_site
 
@@ -48,11 +48,11 @@ RSpec.describe 'the record of what the grid exports', :js do
     expect(saved_grid_content).to include('<b>kept</b>')
   end
 
-  # A block form loads its own text editor through jQuery's tinymce(). After that, val() gives a
-  # value to the text editor of a field and does not change the field. The grid editor still gives
-  # its export to the text editor first, and the record keeps that content.
-  it 'holds the export once a block form has loaded a text editor of its own' do
-    load_a_block_form_text_editor
+  # A plugin or a theme can load a text editor through jQuery's tinymce(). After that, val() gives
+  # a value to the text editor of a field and does not change the field. The grid editor still
+  # gives its export to the text editor first, and the record keeps that content.
+  it 'holds the export once a script has loaded a text editor through jQuery' do
+    load_a_text_editor_through_jquery
     change_the_grid
 
     expect(saved_grid_content).to include('<b>changed</b>',

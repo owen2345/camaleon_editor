@@ -21,6 +21,19 @@ RSpec.describe 'working on a grid that holds scripts', :js do
     expect(script_ran).to be_nil
   end
 
+  # A column can hold a script element as a block of its own. The browser reads markup in a script
+  # as text, so the header of that block must not go in as markup.
+  it 'exports a script that is a block of its own as it was stored' do
+    store_post_content(@post, grid_post_content(grid_body_markup(grid_column_markup(script))))
+    open_post_in_editor(@post)
+    find('.panel_grid_body .drg_column')
+    trigger_grid_auto_save
+
+    expect(saved_grid_content).to include('>window.__cama_script_ran = true;</script>')
+    expect(saved_grid_content).not_to include('header_box')
+    expect(script_ran).to be_nil
+  end
+
   it 'does not run a block script while the block is dragged' do
     store_post_content(@post, grid_post_content(grid_with_block("<p>widget</p>#{script}")))
     open_post_in_editor(@post)
@@ -46,7 +59,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   it 'keeps the script of an editor block edited in its form, and does not run it' do
     open_block_form("<p>widget</p>#{script}", kind: 'editor')
     find('#ow_inline_modal .mce-tinymce')
-    wait_for_text_editor("jQuery('#ow_inline_modal textarea').tinymce()")
+    wait_for_text_editor("tinymce.get(jQuery('#ow_inline_modal textarea').attr('id'))")
     find('#ow_inline_modal .modal_submit').click
 
     expect(page).to have_no_css('#ow_inline_modal')

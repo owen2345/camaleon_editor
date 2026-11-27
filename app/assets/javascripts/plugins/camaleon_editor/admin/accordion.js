@@ -59,12 +59,12 @@ window.grid_accordion_builder = function (panel, editor) {
   panel.children(".panel").each(function () {
     // the label's source, without the chevron the block puts after it
     const label = $(this).find("> .panel-heading .panel-title > a").first().clone();
-    label.children("i.glyphicon.pull-right").remove();
+    label.children("i.glyphicon.pull-right").gridEditorRemove();
     // a heading without the link is read for its text alone: its markup is the block's, not the label's
-    const heading = $("<span>").text($(this).children(".panel-heading").text());
+    const heading = $("<span>").text($(this).children(".panel-heading").gridEditorText());
     add_item(
       $.fn.gridEditorLabelSource(label.length ? label : heading),
-      $(this).find("> div > .panel-body").html(),
+      $(this).find("> div > .panel-body").gridEditorMarkup(),
     );
   });
   // Own attribute: data-style is the grid block's JSON style object (see grid_editor_style.js),
@@ -86,18 +86,10 @@ window.grid_accordion_builder = function (panel, editor) {
     form.find(".name").val(tr.find("td.name").text());
     form.find(".descr").val(tr.find(".descr").val());
 
-    const form_callback = () => {
-      setTimeout(
-        () =>
-          form
-            .find("textarea")
-            .tinymce(cama_get_tinymce_settings({ height: "120px" })),
-        500,
-      );
-    };
+    const form_callback = () => form.find("textarea").gridEditorFormEditor({ height: "120px" });
 
     const submit_form_callback = function (modal) {
-      update_item(tr, form.find(".name").val(), form.find(".descr").val());
+      update_item(tr, form.find(".name").val(), form.find(".descr").gridEditorFormContent());
       modal.modal("hide");
     };
 
