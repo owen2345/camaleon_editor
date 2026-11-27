@@ -219,6 +219,16 @@ RSpec.describe 'a grid node that carries the id of the post text editor', :js do
       expect(post_text_editor_in_place?).to be(true)
     end
 
+    # A rebuild keeps the replaced grid aside, and removes it when the new grid is complete.
+    it 'keeps the text editor when a rebuild replaces a grid that holds a column with its id' do
+      build_the_grid_again(grid_body_markup(column_with(grid_block_markup('<p>replaced</p>'), %(id="#{id}"))))
+      build_the_grid_again(grid_with_block('<p>again</p>'))
+
+      expect(page).to have_css('.panel_grid_body .drg_item p', text: 'again', visible: :all)
+      expect(page).to have_no_css('.panel_grid_body .drg_item p', text: 'replaced', visible: :all)
+      expect(post_text_editor_in_place?).to be(true)
+    end
+
     it 'gives a grid root with the id the value attribute of the content' do
       build_the_grid_again(grid_with_block('<p>again</p>', attributes: %(id="#{id}" value="kept")))
 
