@@ -599,13 +599,14 @@ jQuery(function(){
 
         // The saved grid root used to be swapped in whole, so whatever a theme hook or a hand edit left on
         // it - an id, a class, a data attribute the public page styles by - came back out on the next
-        // save. Now that the editor keeps its own root, those are carried over to it.
+        // save. Now that the editor keeps its own root, those are carried over to it. They go over as
+        // copies of their nodes: the HTML parser keeps attribute names that setAttribute refuses.
         function keep_root_attributes(grid, root){
             $.each(root[0].attributes, function(_index, attribute){
                 // the saved classes as they are - a root saved without "row" does not get it back - plus
                 // the one the editor finds its grid by
                 if(attribute.name === "class") grid.attr("class", attribute.value).addClass("panel_grid_body");
-                else if($.inArray(attribute.name, GRID_STYLE_ATTRIBUTES) < 0) grid[0].setAttribute(attribute.name, attribute.value);
+                else if($.inArray(attribute.name, GRID_STYLE_ATTRIBUTES) < 0) grid[0].setAttributeNode(document.importNode(attribute, true));
             });
             keep_id_aside(grid);
         }
@@ -1114,12 +1115,19 @@ jQuery(function(){
             previous.release();
             return true;
         }
+        // The attributes of an element, as copies of their nodes.
         function attributes_of(element){
-            return $.map(element[0].attributes, function(attribute){ return {name: attribute.name, value: attribute.value}; });
+            return $.map(element[0].attributes, function(attribute){ return attribute.cloneNode(true); });
         }
+        // Gives an element the attributes of a list in place of its own. An item of the list is a node
+        // from attributes_of, or a {name, value} pair whose name setAttribute accepts.
         function set_attributes(element, attributes){
-            $.each(attributes_of(element), function(_index, attribute){ element.removeAttr(attribute.name); });
-            $.each(attributes, function(_index, attribute){ element[0].setAttribute(attribute.name, attribute.value); });
+            var node = element[0];
+            $.each($.makeArray(node.attributes), function(_index, attribute){ node.removeAttributeNode(attribute); });
+            $.each(attributes, function(_index, attribute){
+                if(attribute.cloneNode) node.setAttributeNode(attribute.cloneNode(true));
+                else node.setAttribute(attribute.name, attribute.value);
+            });
         }
 
         // Applies the content that the author changed in the text editor, which is newer than the

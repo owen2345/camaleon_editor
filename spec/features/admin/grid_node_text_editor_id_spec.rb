@@ -61,6 +61,27 @@ RSpec.describe 'a grid node that carries the id of the post text editor', :js do
     expect(saved_grid_content).to include(area, '<p>kept</p>')
   end
 
+  it 'opens a grid whose root has the id and an attribute name that setAttribute refuses' do
+    open_the_grid(grid_with_block('<p>kept</p>', attributes: %(=x="1" id="#{id}")))
+    trigger_grid_auto_save
+
+    expect(saved_grid_content).to include(%( =x="1" id="#{id}">), '<p>kept</p>')
+  end
+
+  # A failed template puts back the attributes of the root that the grid had before.
+  it 'puts back a root with an attribute name that setAttribute refuses when a template fails' do
+    @site.grid_templates.create!(name: 'Full column', slug: 'full-column',
+                                 description: grid_body_markup(grid_column_markup(col: 12, title: '100%')))
+    open_the_grid(grid_with_block('<p>kept</p>', attributes: %(=x="1" id="#{id}")))
+    make_the_grid_export_throw
+    open_templates_list
+    apply_listed_template
+
+    expect(page).to have_css('#cama_alert_modal', text: 'The template could not be loaded')
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '50%')
+    expect(page.evaluate_script("jQuery('.panel_grid_editor .panel_grid_body')[0].getAttribute('=x')")).to eq('1')
+  end
+
   # While the grid is edited, the root and each column area keep their id in another attribute. The
   # export gives the id back at its place. That other attribute in the stored content goes.
   it 'gives back the id of a grid root and a column area at its place, and drops a stored kept id' do
