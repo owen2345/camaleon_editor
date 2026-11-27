@@ -51,6 +51,16 @@ RSpec.describe 'a grid node that carries the id of the post text editor', :js do
     expect(saved_grid_content).to include(%(id="#{id}"), '<p>kept</p>')
   end
 
+  # The HTML parser keeps an attribute name that setAttribute refuses, for example "=x" in
+  # <div =x="1">. The grid editor moves the id of a column area aside, and that attribute stays.
+  it 'opens a grid whose column area has the id and an attribute name that setAttribute refuses' do
+    area = %(class="grid_sortable_items" =x="1" id="#{id}")
+    open_the_grid(grid_with_block('<p>kept</p>').sub('class="grid_sortable_items"', area))
+    trigger_grid_auto_save
+
+    expect(saved_grid_content).to include(area, '<p>kept</p>')
+  end
+
   it 'keeps the text editor when a block holds an element with the id of its panel, and the grid exports' do
     open_the_grid(grid_with_block("<p>kept</p>#{panel_of_the_text_editor}"))
     trigger_grid_auto_save

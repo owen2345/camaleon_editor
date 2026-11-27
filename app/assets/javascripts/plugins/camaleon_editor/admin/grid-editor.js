@@ -623,15 +623,24 @@ jQuery(function(){
         function give_id_back(elements){
             rename_attribute(elements, KEPT_ID, "id");
         }
-        // Gives the attribute `from` of each element the name `to`, and keeps the order of the
-        // attributes. An attribute with the name `to` goes first.
+        // Gives the attribute `from` of each element the name `to`, at the same place among the
+        // attributes. First, the function removes the attribute with the name `to`. It moves the
+        // other attributes as nodes: the HTML parser keeps attribute names that setAttribute
+        // refuses, for example "=x" in <div =x="1">.
         function rename_attribute(elements, from, to){
             elements.each(function(){
-                var element = $(this);
-                set_attributes(element, $.map(attributes_of(element), function(attribute){
-                    if(attribute.name === to) return null;
-                    return attribute.name === from ? {name: to, value: attribute.value} : attribute;
-                }));
+                var element = this, attributes = $.makeArray(element.attributes);
+                if(!element.hasAttribute(from) && !element.hasAttribute(to)) return;
+                $.each(attributes, function(_index, attribute){ element.removeAttributeNode(attribute); });
+                $.each(attributes, function(_index, attribute){
+                    if(attribute.name === to) return;
+                    if(attribute.name === from){
+                        var renamed = element.ownerDocument.createAttribute(to);
+                        renamed.value = attribute.value;
+                        attribute = renamed;
+                    }
+                    element.setAttributeNode(attribute);
+                });
             });
         }
 
