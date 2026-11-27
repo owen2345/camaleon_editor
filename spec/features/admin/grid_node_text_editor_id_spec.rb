@@ -114,6 +114,36 @@ RSpec.describe 'a grid node that carries the id of the post text editor', :js do
     expect(post_text_editor_in_place?).to be(true)
   end
 
+  it 'keeps the text editor when a template replaces a grid that holds a column with its id' do
+    @site.grid_templates.create!(name: 'Full column', slug: 'full-column',
+                                 description: grid_body_markup(grid_column_markup(col: 12, title: '100%')))
+    open_the_grid(grid_body_markup(column_with(grid_block_markup('<p>replaced</p>'), %(id="#{id}"))))
+    open_templates_list
+    apply_listed_template
+
+    expect(page).to have_css('.panel_grid_body .drg_column .header_box', text: '100%')
+    expect(post_text_editor_in_place?).to be(true)
+    expect(saved_grid_content).not_to include('<p>replaced</p>')
+  end
+
+  # The handler of the sort start fills the placeholder from the dragged block. The example runs that
+  # handler, as end_a_sort runs the handler of the sort end.
+  it 'gives the placeholder of a sort the markup of a block with its id, and keeps the text editor' do
+    open_the_grid(grid_body_markup(grid_column_markup(block_with('<p>moved</p>', %(id="#{id}")))))
+    markup = page.evaluate_script(<<~JS)
+      (function(){
+        var area = #{FIRST_COLUMN_AREA}, placeholder = jQuery('<div>');
+        var ui = {helper: area.children('.drg_item').first(), placeholder: placeholder};
+        area.sortable('option', 'start').call(area[0], {}, ui);
+        return placeholder[0].innerHTML;
+      })()
+    JS
+
+    expect(markup).to include('<p>moved</p>')
+    expect(markup).not_to include('[grid_editor')
+    expect(post_text_editor_in_place?).to be(true)
+  end
+
   # A grid editor whose build throws an error is removed, and the text editor shows again.
   it 'keeps the text editor when a grid that holds an element with the id of its panel cannot be built' do
     open_post_in_editor(@post)
@@ -169,6 +199,18 @@ RSpec.describe 'a grid node that carries the id of the post text editor', :js do
       find('#ow_inline_modal textarea')
 
       expect(page.evaluate_script("jQuery('#ow_inline_modal textarea')[0].value")).to eq('<p>text</p>')
+    end
+
+    it 'loads the content of an Editor block whose content element carries the id into its form' do
+      block = grid_block_markup('<p>editor text</p>', kind: 'editor')
+              .sub('grid_item_editor"', %(grid_item_editor" id="#{id}"))
+      open_the_grid(grid_body_markup(grid_column_markup(block)))
+      open_first_block_form
+      text_editor = "tinymce.get(jQuery('#ow_inline_modal textarea').attr('id'))"
+      wait_for_text_editor(text_editor)
+
+      expect(page.evaluate_script("#{text_editor}.getContent()")).to eq('<p>editor text</p>')
+      expect(post_text_editor_in_place?).to be(true)
     end
 
     it 'keeps the text editor when the author saves a text block that holds an element with the id of its panel' do
