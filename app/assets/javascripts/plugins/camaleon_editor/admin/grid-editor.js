@@ -284,24 +284,39 @@ jQuery(function(){
     // returns the content of the field's text editor, as that editor serializes it.
     function field_value(field){ return $(field)[0].value || ""; }
 
-    // Returns the grid editor of a field, if there is one. It is immediately before its field.
-    function built_grid_of(field){ return $(field).prev(".panel_grid_editor"); }
+    // The names of the jQuery data that link a field and its grid editor.
+    var GRID_OF_FIELD = "cama_grid_editor", FIELD_OF_GRID = "cama_grid_field";
+
+    // Returns the grid editor of a field, if there is one. The field and its grid editor refer to
+    // each other, so the grid editor is found wherever it is. A page can put an element between
+    // them. A copy of the field with its jQuery data refers to the grid editor, but the grid editor
+    // does not refer to the copy. A grid editor that is not in a parent element does not count.
+    // A grid editor outside the page does not count for a field in the page: the author cannot see
+    // that grid editor, so the field can get a new one.
+    function built_grid_of(field){
+        var grid = $(field).data(GRID_OF_FIELD);
+        if(!grid || !grid[0].parentNode || grid.data(FIELD_OF_GRID) !== $(field)[0]) return $();
+        return $.contains(document, grid[0]) || !$.contains(document, $(field)[0]) ? grid : $();
+    }
 
     // A grid editor is hidden while the author is in the text editor. Read the display of the grid
     // editor itself: a hidden form or tab around it does not count.
     function grid_hidden(grid){ return grid[0].style.display === "none"; }
 
     // grid editor plugin
+    // tinyEditor is the text editor of the field. If the page sets up a new text editor for the
+    // field later, the grid editor works with that editor (see take_text_editor).
     var gridEditor_id = 0;
     $.fn.gridEditor = function(tinyEditor){
         // one editor per field, as jQuery's before() gave each field of a set its own
         if(this.length > 1) return this.each(function(){ $(this).gridEditor(tinyEditor); });
         var textarea = $(this);
         // If this field already has a grid editor, show that editor again and build nothing. The
-        // field is not read: the "show_again" handler reads the text editor.
+        // field is not read: the "show_again" handler reads the text editor that the grid editor
+        // works with.
         var built_editor = built_grid_of(textarea);
         if(built_editor.length){
-            built_editor.triggerHandler("show_again", [tinyEditor]);
+            built_editor.triggerHandler("show_again");
             return textarea;
         }
         // Content marked as a grid that cannot be read as one stays in the text editor: shown as an
@@ -859,9 +874,23 @@ jQuery(function(){
             if(saved_body) content_unreadable(); else editor_failed();
             return textarea;
         }
-        // inserted natively: jQuery's before() would run the scripts of the grid just rebuilt from saved content
-        // like jQuery's before(), nothing to do for a field that is not in a document yet
-        if(textarea[0].parentNode) textarea[0].parentNode.insertBefore(editor[0], textarea[0]);
+        // The grid editor goes before the panel of the field's text editor, and the field stays
+        // immediately after that panel. While the author drags a custom field group, Camaleon
+        // removes the text editors of the group and sets them up again at the drop. Camaleon 2.9.4
+        // takes the element after the panel of a text editor for the field of that editor.
+        // The grid editor goes immediately before the field in these cases:
+        // - The field has no text editor of its own.
+        // - The text editor has no panel, because the page removed it.
+        // - An element is between the panel and the field.
+        // The insert is native, because jQuery's before() runs the scripts of a grid that is built
+        // again from saved content. A field that has no parent element gets no grid editor, as with
+        // jQuery's before().
+        var place = tinymce_panel.length && textarea.prev()[0] === tinymce_panel[0] ? tinymce_panel[0] : textarea[0];
+        if(place.parentNode){
+            place.parentNode.insertBefore(editor[0], place);
+            textarea.data(GRID_OF_FIELD, editor);
+            editor.data(FIELD_OF_GRID, textarea[0]);
+        }
 
         // The field has a second writer. Core writes the content of the text editor into the field
         // when the text editor loses focus, with each draft and at submit. The text editor does not
@@ -872,9 +901,41 @@ jQuery(function(){
         // - for a read of its text, its raw content or a selection
         // - while the grid has no export (see exported)
         // - while the grid editor is hidden
-        tinyEditor.on("GetContent", function(e){
+        function answer_with_export(e){
             var grid_shown = $.contains(document, editor[0]) && !grid_hidden(editor);
             if(exported !== null && grid_shown && e.format === "html" && !e.selection) e.content = exported;
+        }
+        tinyEditor.on("GetContent", answer_with_export);
+
+        // The page can remove the text editor of the field and set up a new one while the grid
+        // editor stays. Camaleon does this for the text editors of a custom field group that the
+        // author sorts. From then on, the grid editor works with the new text editor. A read of
+        // that editor returns the export, a grid change goes to it, and the Text Editor link shows
+        // its panel. The author stays in the editor that was visible:
+        // - While the grid editor is visible, the panel of the new text editor is hidden. The new
+        //   text editor gets the export as its content, as after an auto_save, whatever it read
+        //   from the field. The field is not written here: each save of the text editor writes
+        //   the export. A grid that has no export leaves the new text editor its content.
+        // - While the grid editor is hidden, the new text editor keeps the content that it read
+        //   from the field. A text editor writes its content into its field when the page removes
+        //   it, so this is the content that the author left. left_with and the backup stay. When
+        //   the author comes back, show_again compares the new content with left_with as before.
+        function take_text_editor(text_editor){
+            tinyEditor.off("GetContent", answer_with_export);
+            tinyEditor = text_editor;
+            tinyEditor.on("GetContent", answer_with_export);
+            tinymce_panel = $(tinyEditor.editorContainer);
+            if(grid_hidden(editor)) return;
+            tinymce_panel.hide();
+            if(exported !== null) tinyEditor.setContent(exported);
+        }
+        // The grid editor takes a new text editor of its field. It also takes a new text editor
+        // that replaces the removed text editor that it works with. That editor can be the text
+        // editor of another field: a field that has no text editor of its own can use one.
+        editor.bind("text_editor_made_again", function(_event, text_editor){
+            var of_its_field = built_grid_of(text_editor.targetElm)[0] === editor[0];
+            var replaces_its_editor = tinyEditor.removed && tinyEditor.id === text_editor.id;
+            if(of_its_field || replaces_its_editor) take_text_editor(text_editor);
         });
 
         // Keeps the current grid while a new grid replaces it (a template is applied, or the grid
@@ -949,9 +1010,9 @@ jQuery(function(){
         }
 
         // The author comes back from the text editor (see the start of gridEditor). If nothing
-        // changed there, the grid and its export stay as they were. text_editor is the editor whose
-        // button the author clicked: its panel is hidden when the grid editor shows.
-        editor.bind("show_again", function(_event, text_editor){
+        // changed there, the grid and its export stay as they were. The panel of the text editor
+        // is hidden when the grid editor shows.
+        editor.bind("show_again", function(){
             var hidden = grid_hidden(editor);
             // Compare the markup of the body first, because the same document gives the same
             // content. A read of the content serializes the document (approximately a third of a
@@ -961,7 +1022,7 @@ jQuery(function(){
                 var content = tinyEditor.getContent();
                 if(content !== left_with && !follow_text_editor(content)) return;
             }
-            $(text_editor.editorContainer).hide();
+            tinymce_panel.hide();
             editor.show();
             if(hidden) field_follows(tinyEditor, textarea);
             // Clear the state of the last switch to the text editor. The next switch sets it again.
@@ -1051,8 +1112,11 @@ jQuery(function(){
 
     // init all required actions for grid editor availability
     function init_grid_editor(){
-        //auto switch on grid editor detected
+        // auto switch on grid editor detected
+        // A field that already has its grid editor is left as it is: the author stays in the
+        // editor that was visible (see grid_takes_text_editor).
         var auto_switch_editor = function(editor){
+            if(built_grid_of(editor.targetElm).length) return;
             if($.fn.isGridEditorContent(field_value(editor.targetElm)))
                 $(editor.targetElm).gridEditor(editor);
         }
@@ -1211,7 +1275,21 @@ jQuery(function(){
             editor.on("RawSaveContent", function(e){ e.content = editor.getContent({save: true}); });
         }
 
-        // Each text editor of the page gets the six hooks when TinyMCE adds it, before it reads its
+        // The page can set up a text editor for a field that has its grid editor. The grid editor
+        // then takes that text editor (see take_text_editor). The hook tells each grid editor at
+        // "init", when the new text editor has its panel and its content. Each grid editor decides
+        // if it takes the new text editor. A grid editor outside the page takes no text editor: the
+        // author cannot see that grid editor. For the new text editor, the field then has no grid
+        // editor (see built_grid_of).
+        var grid_takes_text_editor = function(editor){
+            editor.on("init", function(){
+                $(".panel_grid_editor").each(function(){
+                    $(this).triggerHandler("text_editor_made_again", [editor]);
+                });
+            });
+        }
+
+        // Each text editor of the page gets the seven hooks when TinyMCE adds it, before it reads its
         // settings. The hooks of core do not reach each editor. The settings hook runs when core
         // makes its settings, and the editor hooks run from the setup of those settings. A page can
         // add its own lists to the settings of core, pass its own setup, or set up an editor
@@ -1223,6 +1301,7 @@ jQuery(function(){
             script_ends_as_in_a_browser(added.editor);
             script_text_alone(added.editor);
             content_at_unload(added.editor);
+            grid_takes_text_editor(added.editor);
         });
 
         // grid editor button

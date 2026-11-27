@@ -345,7 +345,7 @@ end
 # The value of the field behind the grid editor, read from the field itself. After a block form
 # loads a text editor, jQuery's val() returns the content of the field's text editor.
 def grid_field
-  page.evaluate_script("jQuery('.panel_grid_editor').next('textarea')[0].value")
+  page.evaluate_script("jQuery('.panel_grid_editor').nextAll('textarea')[0].value")
 end
 
 # The grid as the last auto_save exported it, or nil if there was no auto_save since the editor page

@@ -284,6 +284,19 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     expect(page).to have_css('#cama_two_fields .panel_grid_editor + textarea', count: 2, visible: :all)
   end
 
+  # A page can put its own element between the panel of a text editor and the field. The grid
+  # editor then goes immediately before the field, and the Grid Editor button finds it there.
+  it 'puts the grid editor before the field when an element is between the panel and the field' do
+    open_post_in_editor(@post)
+    page.execute_script("#{POST_TEXT_EDITOR_FIELD}.before('<span class=\"cama_between\"></span>');")
+    open_grid_editor
+    leave_for_the_text_editor
+    open_grid_editor
+
+    expect(page).to have_css('.mce-tinymce + .cama_between + .panel_grid_editor + textarea', visible: :all)
+    expect(page).to have_css('.panel_grid_editor', count: 1)
+  end
+
   it 'does not give a saved grid root back a class it was saved without' do
     store_post_content(@post, grid_post_content(%(<div class="panel_grid_body hero">#{grid_column_markup}</div>)))
     open_post_in_editor(@post)
@@ -302,6 +315,23 @@ RSpec.describe 'reopening a post whose content is a grid', :js do
     error = page.evaluate_script(<<~JS)
       (function(){
         try { jQuery('<textarea></textarea>').gridEditor(tinymce.activeEditor); return null; }
+        catch(e){ return e.message; }
+      })()
+    JS
+
+    expect(error).to be_nil
+  end
+
+  # A text editor that the page removed has no panel.
+  it 'does not break on a text field that is not in the page yet, with a text editor that has no panel' do
+    open_post_in_editor(@post)
+    set_up_text_editors(['removed_editor_field'], '{selector: selector}')
+
+    error = page.evaluate_script(<<~JS)
+      (function(){
+        var editor = tinymce.get('removed_editor_field');
+        editor.remove();
+        try { jQuery('<textarea></textarea>').gridEditor(editor); return null; }
         catch(e){ return e.message; }
       })()
     JS
