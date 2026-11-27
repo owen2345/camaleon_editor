@@ -133,6 +133,14 @@ def drag_the_first_block(to: nil)
   drag.pause(duration: 0.2).release.perform
 end
 
+# Drags the palette entry `entry` onto the element `target` and releases it there, slowly enough
+# for jQuery UI to read a drag.
+def drop_from_the_palette(entry, target)
+  page.driver.browser.action.click_and_hold(entry.native).pause(duration: 0.4)
+      .move_by(5, 5).pause(duration: 0.2).move_to(target.native).pause(duration: 0.2)
+      .move_by(0, 3).pause(duration: 0.2).release.perform
+end
+
 # Holds the first block by its header until jQuery UI reads the hold as a drag.
 def hold_the_first_block
   handle = first('.panel_grid_body .drg_item .header_box').native

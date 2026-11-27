@@ -499,7 +499,9 @@ jQuery(function(){
                 area.children().each(function(){ //contents
                     $(this).removeClass("drg_item btn-default btn ui-draggable ui-draggable-dragging ui-sortable-handle ui-draggable-handle").children(".header_box").gridEditorRemove();
                 });
+                give_id_back(area);
             });
+            give_id_back(container);
             var res = container[0].outerHTML;
             container.gridEditorRemove();
             return res;
@@ -584,6 +586,32 @@ jQuery(function(){
                 if(attribute.name === "class") grid.attr("class", attribute.value).addClass("panel_grid_body");
                 else if($.inArray(attribute.name, GRID_STYLE_ATTRIBUTES) < 0) grid[0].setAttribute(attribute.name, attribute.value);
             });
+            keep_id_aside(grid);
+        }
+
+        // jQuery UI puts the copy of a palette entry into a sortable with jQuery's appendTo(), which
+        // calls append(). The jQuery plugin of TinyMCE changes append() for an element that carries
+        // the id of a text editor (see "Grid nodes"), and the copy then goes into no sortable. For
+        // this reason, the root and the area of each column keep their id in KEPT_ID while the grid
+        // is edited. The export gives the id back. An attribute with the name KEPT_ID in the content
+        // goes, because the export would make an id of it.
+        var KEPT_ID = "data-grid-editor-kept-id";
+        function keep_id_aside(elements){
+            rename_attribute(elements, "id", KEPT_ID);
+        }
+        function give_id_back(elements){
+            rename_attribute(elements, KEPT_ID, "id");
+        }
+        // Gives the attribute `from` of each element the name `to`, and keeps the order of the
+        // attributes. An attribute with the name `to` goes first.
+        function rename_attribute(elements, from, to){
+            elements.each(function(){
+                var element = $(this);
+                set_attributes(element, $.map(attributes_of(element), function(attribute){
+                    if(attribute.name === to) return null;
+                    return attribute.name === from ? {name: to, value: attribute.value} : attribute;
+                }));
+            });
         }
 
         // Fills the grid from a parsed grid root: the root's style when it has one, then its markup. A
@@ -650,6 +678,7 @@ jQuery(function(){
             if(!skip_options){
                 // the column's own header, area and blocks: a block may hold grid markup of its own
                 column.children('.header_box').each(function(){ this.insertAdjacentHTML("beforeend", options); });
+                keep_id_aside(column.children(".grid_sortable_items"));
                 grid_content_manager(column.children(".grid_sortable_items"));
                 column.children(".grid_sortable_items").children().each(function(){ //contents
                     parse_content_content($(this));

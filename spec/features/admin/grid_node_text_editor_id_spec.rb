@@ -162,6 +162,41 @@ RSpec.describe 'a grid node that carries the id of the post text editor', :js do
     expect(post_text_editor_in_place?).to be(true)
   end
 
+  # jQuery UI puts the copy of a palette entry into a sortable with jQuery's appendTo(), which calls
+  # append(). The plugin changes append() for an element with the id.
+  context 'when the author drops a part from the palette' do
+    # Stores `body` as the grid of the post and opens the post. Then a script of the page loads a
+    # text editor through jQuery's tinymce().
+    def open_the_empty_grid(body)
+      store_post_content(@post, grid_post_content(body))
+      open_post_in_editor(@post)
+      find('.panel_grid_editor .panel_grid_body')
+      load_a_text_editor_through_jquery
+    end
+
+    it 'puts a column into a grid root that carries the id' do
+      open_the_empty_grid(grid_body_markup('', attributes: %(id="#{id}")))
+      drop_from_the_palette(find('.grid_editor_menu .tab-pane.active [data-col="6"]'), find('.panel_grid_body'))
+
+      expect(page).to have_css('.panel_grid_body > .drg_column', count: 1)
+      expect(page).to have_css('.grid_editor_menu .tab-pane.active [data-col="6"]', count: 1)
+      expect(saved_grid_content).to include(%(id="#{id}"), 'data-col="6"')
+      expect(post_text_editor_in_place?).to be(true)
+    end
+
+    it 'puts a block into a column area that carries the id' do
+      area = grid_column_markup.sub('class="grid_sortable_items"', %(class="grid_sortable_items" id="#{id}"))
+      open_the_empty_grid(grid_body_markup(area))
+      find('.grid_editor_menu .nav-tabs a', text: 'Content Elements').click
+      drop_from_the_palette(find('.grid_editor_menu .tab-pane.active [data-kind="text"]'),
+                            find('.panel_grid_body .grid_sortable_items'))
+
+      expect(page).to have_css('.panel_grid_body .grid_sortable_items > .drg_item', count: 1)
+      expect(saved_grid_content).to include(%(id="#{id}"), 'data-kind="text"')
+      expect(post_text_editor_in_place?).to be(true)
+    end
+  end
+
   context 'when the grid is built again from the text editor' do
     # The author goes to the text editor, the content there changes to `body`, and the author goes
     # back to the grid editor. The steps look in the post form: the text editor that a script loaded

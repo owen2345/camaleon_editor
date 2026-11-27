@@ -464,13 +464,15 @@ RSpec.describe 'saving a post from the grid editor', :js do
       end
 
       # The rebuilt grid gets the root that the author wrote in the text editor, with those
-      # attributes only. The old style, which the author removed there, does not come back.
+      # attributes only. The old style, which the author removed there, does not come back. While
+      # the grid is edited, the root keeps its id in another attribute, and the export gives it back.
       it 'gives the grid made again the root written in the text editor' do
         change_in_the_text_editor(/<div class="panel_grid_body row"[^>]*>/,
                                   '<div id="hero" class="panel_grid_body row wide">')
         open_grid_editor
 
-        expect(page).to have_css('.panel_grid_editor .panel_grid_body#hero.wide.ui-sortable .drg_item')
+        expect(page).to have_css('.panel_grid_editor .panel_grid_body[data-grid-editor-kept-id="hero"]' \
+                                 '.wide.ui-sortable .drg_item')
         expect(page).to have_no_css('.panel_grid_editor .panel_grid_body[style]', visible: :all)
 
         trigger_grid_auto_save
