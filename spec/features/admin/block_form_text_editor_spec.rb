@@ -103,6 +103,27 @@ RSpec.describe 'the text editor of a block form', :js do
     end
   end
 
+  # TinyMCE registers a text editor before it loads the scripts of that editor and makes its body.
+  # Until then, getContent() returns "". The replacement of tinymce.init below registers the text
+  # editor and makes no body, so the text editor stays in that state.
+  it 'stores the content of the textarea when the author saves the form before its text editor is ready' do
+    store_post_content(@post, grid_post_content(grid_with_block('<p>stored</p>', kind: 'editor')))
+    open_post_in_editor(@post)
+    page.execute_script(<<~JS)
+      tinymce.init = function(settings){
+        var area = settings.target;
+        area.id = area.id || tinymce.DOM.uniqueId();
+        tinymce.EditorManager.add(new tinymce.Editor(area.id, settings, tinymce.EditorManager));
+      };
+    JS
+    open_first_block_form
+    wait_until { page.evaluate_script("!!#{text_editor_in('#ow_inline_modal')}") }
+    find('#ow_inline_modal .modal_submit').click
+    expect(page).to have_no_css('#ow_inline_modal', visible: :all)
+
+    expect(saved_grid_content).to include('<p>stored</p>')
+  end
+
   # Camaleon 2.9.4 writes the content of each text editor into its field with jQuery's val(). It does
   # this two seconds after the post form opens, every 60 seconds, and before the page unloads. If
   # jQuery's val() sets the content of the text editor, the caret goes to the start of the text.

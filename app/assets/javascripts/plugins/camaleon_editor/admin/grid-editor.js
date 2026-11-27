@@ -193,12 +193,13 @@ jQuery(function(){
         });
     };
     // The content of the first textarea of a set: the content of its text editor, or the value of
-    // the textarea before the form sets up its text editor.
+    // the textarea until that text editor is ready. TinyMCE registers a text editor before it makes
+    // the body of that editor, and until then getContent() returns "".
     $.fn.gridEditorFormContent = function(){
         var area = this[0];
         if(!area) return "";
         var text_editor = form_editor_of(area);
-        return text_editor ? text_editor.getContent() : area.value;
+        return text_editor && text_editor.initialized ? text_editor.getContent() : area.value;
     };
     // TinyMCE gives the textarea an id when it sets up the text editor.
     function form_editor_of(area){ return area.id ? tinymce.get(area.id) : null; }
