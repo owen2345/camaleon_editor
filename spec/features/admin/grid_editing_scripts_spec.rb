@@ -46,7 +46,7 @@ RSpec.describe 'working on a grid that holds scripts', :js do
   it 'keeps the script of an editor block edited in its form, and does not run it' do
     open_block_form("<p>widget</p>#{script}", kind: 'editor')
     find('#ow_inline_modal .mce-tinymce')
-    wait_for_text_editor("jQuery('#ow_inline_modal textarea').tinymce()")
+    wait_for_text_editor("tinymce.get(jQuery('#ow_inline_modal textarea').attr('id'))")
     find('#ow_inline_modal .modal_submit').click
 
     expect(page).to have_no_css('#ow_inline_modal')

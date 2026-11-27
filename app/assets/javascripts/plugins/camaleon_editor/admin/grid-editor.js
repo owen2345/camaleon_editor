@@ -149,6 +149,35 @@ jQuery(function(){
         });
     };
 
+    // Sets up a text editor with the settings of Camaleon for each textarea of a block form. The
+    // forms use tinymce.init and not jQuery's tinymce(). The first call of jQuery's tinymce() on a
+    // page changes jQuery's val(), html(), remove() and other methods for the whole page. The text
+    // editor goes when the modal of the form closes. A textarea that is not in the page gets no
+    // text editor: the author closed the form before the setup.
+    $.fn.gridEditorFormEditor = function(settings){
+        return this.each(function(){
+            var area = this;
+            if(!$.contains(document, area)) return;
+            // The settings of Camaleon find the post fields with a selector, and TinyMCE uses a
+            // selector before a target.
+            tinymce.init($.extend(cama_get_tinymce_settings(settings), {selector: null, target: area}));
+            $(area).closest(".modal").one("hidden.bs.modal", function(){
+                var text_editor = form_editor_of(area);
+                if(text_editor) text_editor.remove();
+            });
+        });
+    };
+    // The content of the first textarea of a set: the content of its text editor, or the value of
+    // the textarea before the form sets up its text editor.
+    $.fn.gridEditorFormContent = function(){
+        var area = this[0];
+        if(!area) return "";
+        var text_editor = form_editor_of(area);
+        return text_editor ? text_editor.getContent() : area.value;
+    };
+    // TinyMCE gives the textarea an id when it sets up the text editor.
+    function form_editor_of(area){ return area.id ? tinymce.get(area.id) : null; }
+
     // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too. The
     // alert is core's modal, often the very code whose throw is being reported, and the report runs
     // inside a request's callback: thrown on from here it would make jQuery skip the callbacks still
@@ -280,8 +309,8 @@ jQuery(function(){
         field.trigger("change");
     }
 
-    // Returns the value of the field itself. After a block form loads a text editor, jQuery's val()
-    // returns the content of the field's text editor, as that editor serializes it.
+    // Returns the value of the field itself. After a script of the page loads a text editor through
+    // jQuery's tinymce(), jQuery's val() returns the content of the field's text editor.
     function field_value(field){ return $(field)[0].value || ""; }
 
     // The names of the jQuery data that link a field and its grid editor.
@@ -765,9 +794,9 @@ jQuery(function(){
             }
 
             // trigger auto save changes
-            // Write the field directly, as field_value reads it. After a block form loads a text
-            // editor, jQuery's val() gives the export to the text editor again and does not change
-            // the field.
+            // Write the field directly, as field_value reads it. After a script of the page loads a
+            // text editor through jQuery's tinymce(), jQuery's val() gives the export to the text
+            // editor again and does not change the field.
             editor.bind("auto_save", function(){
                 var txt = exported = "<div>[grid_editor data='"+$.fn.gridEditor_libraries.join(",")+"']</div>"+export_content($(this));
                 tinyEditor.setContent(txt);

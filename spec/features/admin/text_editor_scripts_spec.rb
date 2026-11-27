@@ -381,11 +381,11 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_ran).to be_nil
   end
 
-  # After a block form loads a text editor, jQuery's remove() also removes the text editor that has
-  # the id of a removed element. A pasted script can have any id (for example, the id of the post's
-  # text editor). The plugin removes that script, and the editor stays.
+  # After a script loads a text editor through jQuery's tinymce(), jQuery's remove() also removes
+  # the text editor that has the id of a removed element. A pasted script can have any id (for
+  # example, the id of the post's text editor). The plugin removes that script, and the editor stays.
   it 'takes out a pasted script that carries the id of a text editor, and leaves that editor in place' do
-    load_a_block_form_text_editor
+    load_a_text_editor_through_jquery
     id = page.evaluate_script("#{POST_TEXT_EDITOR}.id")
 
     answer = pasted_into_the_text_editor(script.sub('<script', %(<p>pasted</p><script id="#{id}")))

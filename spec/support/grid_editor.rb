@@ -210,10 +210,11 @@ def text_editor_holds(markup)
   page.execute_script("#{POST_TEXT_EDITOR}.setContent(arguments[0]);", markup)
 end
 
-# Does what a block form does when it opens: it loads its own text editor through jQuery's
-# tinymce(). After that, jQuery uses the text editors of the page: val() reads and writes the text
-# editor of a field and not the field, and remove() also removes the text editor of an element.
-def load_a_block_form_text_editor
+# Does what a plugin or a theme can do on the page: it loads a text editor through jQuery's
+# tinymce(). The first call installs the jQuery plugin of TinyMCE. After that, jQuery uses the text
+# editors of the page: val() reads and writes the text editor of a field and not the field, and
+# remove() also removes the text editor of an element.
+def load_a_text_editor_through_jquery
   page.execute_script(
     "jQuery('<textarea></textarea>').appendTo('body').tinymce(cama_get_tinymce_settings({height: '120px'}));"
   )
@@ -342,8 +343,8 @@ def record_grid_exports
   JS
 end
 
-# The value of the field behind the grid editor, read from the field itself. After a block form
-# loads a text editor, jQuery's val() returns the content of the field's text editor.
+# The value of the field behind the grid editor, read from the field itself. After a script loads a
+# text editor through jQuery's tinymce(), jQuery's val() returns the content of the field's text editor.
 def grid_field
   page.evaluate_script("jQuery('.panel_grid_editor').nextAll('textarea')[0].value")
 end

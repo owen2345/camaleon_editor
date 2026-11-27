@@ -341,11 +341,11 @@ RSpec.describe 'saving a post from the grid editor', :js do
       expect(text_editor_content).not_to include('<b>bold</b>')
     end
 
-    # A block form loads its own text editor through jQuery's tinymce(). After that, jQuery's val()
-    # gives a value to the text editor of a field and does not change the field. The grid editor
-    # writes its field directly, and the field always holds the export.
-    it 'stores the export once a block form has loaded a text editor of its own' do
-      load_a_block_form_text_editor
+    # A plugin or a theme can load a text editor through jQuery's tinymce(). After that, jQuery's
+    # val() gives a value to the text editor of a field and does not change the field. The grid
+    # editor writes its field directly, and the field always holds the export.
+    it 'stores the export once a script has loaded a text editor through jQuery' do
+      load_a_text_editor_through_jquery
       change_the_grid
       export = saved_grid_content
       field = grid_field
@@ -357,10 +357,10 @@ RSpec.describe 'saving a post from the grid editor', :js do
     end
 
     # A grid editor builds its grid from the value of its field, and a save stores that value until
-    # the grid changes. After a block form loads a text editor, jQuery's val() returns the text
-    # editor's serialization for a field. The grid editor reads the field itself.
-    it 'stands for the content as it was when a grid editor is made after a block form loaded a text editor' do
-      load_a_block_form_text_editor
+    # the grid changes. After a script loads a text editor through jQuery's tinymce(), jQuery's val()
+    # returns the text editor's serialization for a field. The grid editor reads the field itself.
+    it 'stands for the content as it was when a grid editor is made after jQuery loaded a text editor' do
+      load_a_text_editor_through_jquery
       page.execute_script(<<~JS, stored_content)
         jQuery('<textarea id="later_field"></textarea>').appendTo('#form-post')[0].value = arguments[0];
         tinymce.init(cama_get_tinymce_settings({selector: '#later_field'}));

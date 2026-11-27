@@ -75,11 +75,11 @@ window.grid_slider_builder = function(panel, editor){
         });
         return false;
       });
-      setTimeout(() => form.find("textarea").tinymce(cama_get_tinymce_settings({height: '120px'})), 500);
+      setTimeout(() => form.find("textarea").gridEditorFormEditor({height: '120px'}), 500);
     };
 
     const submit_form_callback = function(modal) {
-      update_item(tr, form.find(".url_file").val(), form.find(".descr").val());
+      update_item(tr, form.find(".url_file").val(), form.find(".descr").gridEditorFormContent());
       modal.modal("hide");
     };
 

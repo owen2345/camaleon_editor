@@ -59,11 +59,11 @@ window.grid_tab_builder = function(panel, editor){
     form.find(".descr").val(tr.find(".descr").val());
 
     const form_callback = () => setTimeout(
-        () => form.find("textarea").tinymce(cama_get_tinymce_settings({height: '120px'})), 500
+        () => form.find("textarea").gridEditorFormEditor({height: '120px'}), 500
     );
 
     const submit_form_callback = function(modal) {
-      update_item(tr, form.find(".name").val(), form.find(".descr").val());
+      update_item(tr, form.find(".name").val(), form.find(".descr").gridEditorFormContent());
       modal.modal("hide");
     };
 
