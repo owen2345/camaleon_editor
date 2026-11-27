@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix: an undo keeps the text of a script as it was
+
+An undo while the text editor shows invisible characters no longer puts markup into the text of a script. [#28](https://github.com/owen2345/camaleon_editor/pull/28).
+
 ### Fix: the text editors stay safe from jQuery's tinymce()
 
 The block forms no longer install the jQuery plugin of TinyMCE, so the caret of the author stays in place. A grid node with the id of a text editor no longer removes that text editor or writes into it. A column or a block from the palette also goes into a grid node with that id. A save of a block form before its text editor is ready no longer empties the block. A block form no longer shows the markup of the block while its text editor loads. [#27](https://github.com/owen2345/camaleon_editor/pull/27).
