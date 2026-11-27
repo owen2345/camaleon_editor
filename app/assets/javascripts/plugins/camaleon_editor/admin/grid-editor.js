@@ -477,6 +477,9 @@ jQuery(function(){
         // sortable along with the grid, and saved with the editor's chrome in it.
         var GRID_ROOT = "#"+editor_id+" > .panel_grid_body_w > .panel_grid_body"; // for the widgets that take a selector
         function grid_root(editor){ return $(editor).children(".panel_grid_body_w").children(".panel_grid_body"); }
+        // The markup of the editor makes this root, and no path removes it or its class
+        // "panel_grid_body". For this reason, the code reads grid_root(editor)[0] with no guard. The
+        // design keeps no guard: if the root goes, a TypeError shows the bug at once.
 
         // grid editor export
         function export_content(editor){
