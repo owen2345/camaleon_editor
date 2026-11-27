@@ -145,6 +145,20 @@ RSpec.describe 'the text editor of a block form', :js do
     end
   end
 
+  # A form can set up its text editor again while its modal is open: Camaleon runs the callback of a
+  # modal again when it shows that modal again. The textarea keeps its text editor and stays shown.
+  it 'leaves a textarea with a text editor as it is when its form sets it up again' do
+    modal = open_the_text_editor_of('editor')
+    page.execute_script(<<~JS)
+      window.__cama_form_editor = #{text_editor_in(modal)};
+      jQuery('#{modal} textarea').gridEditorFormEditor({height: 120});
+    JS
+
+    expect(textarea_visibility(modal)).to eq('')
+    expect(page.evaluate_script("#{text_editor_in(modal)} === window.__cama_form_editor")).to be(true)
+    expect(text_editor_count).to eq(@editors_before + 1)
+  end
+
   # Camaleon 2.9.4 sets up the text editors of a sorted custom field again with the global settings
   # of TinyMCE.
   it 'leaves the global settings of TinyMCE as they were when a block form sets up its text editor' do

@@ -193,6 +193,10 @@ jQuery(function(){
     // modal of the form closes.
     $.fn.gridEditorFormEditor = function(settings){
         return this.each(function(){
+            // A textarea that has a text editor keeps it. A second setup hides nothing and adds
+            // no second removal: the "init" event of that text editor can have fired already.
+            remove_destroyed_editor(this);
+            if(form_editor_of(this)) return;
             var area = this, modal = $(area).closest(".modal"), visibility = area.style.visibility;
             var show_area = function(){ area.style.visibility = visibility; };
             var set_up = function(){
