@@ -75,7 +75,7 @@ window.grid_slider_builder = function(panel, editor){
         });
         return false;
       });
-      setTimeout(() => form.find("textarea").gridEditorFormEditor({height: '120px'}), 500);
+      form.find("textarea").gridEditorFormEditor({height: '120px'});
     };
 
     const submit_form_callback = function(modal) {

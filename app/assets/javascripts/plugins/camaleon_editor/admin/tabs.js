@@ -58,9 +58,7 @@ window.grid_tab_builder = function(panel, editor){
     form.find(".name").val(tr.find("td.name").text());
     form.find(".descr").val(tr.find(".descr").val());
 
-    const form_callback = () => setTimeout(
-        () => form.find("textarea").gridEditorFormEditor({height: '120px'}), 500
-    );
+    const form_callback = () => form.find("textarea").gridEditorFormEditor({height: '120px'});
 
     const submit_form_callback = function(modal) {
       update_item(tr, form.find(".name").val(), form.find(".descr").gridEditorFormContent());

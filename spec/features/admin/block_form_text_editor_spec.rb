@@ -54,6 +54,36 @@ RSpec.describe 'the text editor of a block form', :js do
     modal
   end
 
+  # Opens the form of a block as open_the_text_editor_of does, with the transitions of Bootstrap off.
+  # Bootstrap then shows the modal of the form during the click. Returns the modal, and the state of
+  # the textarea at the end of the click: if it has a text editor, and its visibility.
+  def open_the_form_with_no_transition(kind)
+    store_post_content(@post, grid_post_content(grid_with_block('<p>stored</p>', kind: kind)))
+    open_post_in_editor(@post)
+    find('.panel_grid_body .drg_item')
+    modal = '#ow_inline_modal'
+    click = "jQuery('.panel_grid_body .drg_item .grid_content_edit').first().click();"
+    unless kind == 'editor'
+      open_first_block_form
+      wait_for_modal_at_rest(modal)
+      click = "jQuery('#{modal} a.add_item').click();"
+      modal = '#cama_editor_modal2'
+    end
+    state = page.evaluate_script(<<~JS, modal)
+      (function(modal){
+        jQuery.support.transition = false;
+        #{click}
+        var area = jQuery(modal + ' textarea')[0];
+        return {text_editor: !!(area.id && tinymce.get(area.id)), visibility: area.style.visibility};
+      })(arguments[0])
+    JS
+    [modal, state]
+  end
+
+  def textarea_visibility(modal)
+    page.evaluate_script("jQuery('#{modal} textarea')[0].style.visibility")
+  end
+
   # Saves the form in `modal`. For a block with a list of items, that is the form of the item: the
   # list then saves the block. Each modal leaves the page when its fade ends.
   def save_the_form(modal)
@@ -101,6 +131,27 @@ RSpec.describe 'the text editor of a block form', :js do
 
       expect(text_editor_count).to eq(@editors_before)
     end
+
+    # The setup starts when Bootstrap reports the modal as shown, and not after a delay. The
+    # textarea is hidden until its text editor is ready, so the author does not see the markup.
+    it "sets up the text editor of the form of #{block} block when its modal is shown, " \
+       'with the textarea hidden until the text editor is ready' do
+      modal, state = open_the_form_with_no_transition(kind)
+
+      expect(state).to eq('text_editor' => true, 'visibility' => 'hidden')
+      wait_for_text_editor(text_editor_in(modal))
+      expect(textarea_visibility(modal)).to eq('')
+    end
+  end
+
+  it 'shows the textarea of a block form when TinyMCE registers no text editor for it' do
+    store_post_content(@post, grid_post_content(grid_with_block('<p>stored</p>', kind: 'editor')))
+    open_post_in_editor(@post)
+    page.execute_script('tinymce.init = function(){};')
+    open_first_block_form
+
+    expect(page).to have_css('#ow_inline_modal textarea')
+    expect(textarea_visibility('#ow_inline_modal')).to eq('')
   end
 
   # TinyMCE registers a text editor before it loads the scripts of that editor and makes its body.

@@ -177,16 +177,28 @@ jQuery(function(){
 
     // Sets up a text editor with the settings of Camaleon for each textarea of a block form. The
     // forms use tinymce.init and not jQuery's tinymce(), which installs the jQuery plugin of TinyMCE
-    // (see "Grid nodes" above). The text editor goes when the modal of the form closes. A textarea
-    // that is not in the page gets no text editor: the author closed the form before the setup.
+    // (see "Grid nodes" above). A form calls this when its modal starts to show. Bootstrap puts the
+    // modal in the page after that, so the setup starts when the modal is shown. Until the text
+    // editor is ready, the textarea is hidden, and the author does not see the markup of the block.
+    // A textarea that is not in the page at the setup gets no text editor, and shows again. It
+    // shows again also when TinyMCE registers no text editor for it. The text editor goes when the
+    // modal of the form closes.
     $.fn.gridEditorFormEditor = function(settings){
         return this.each(function(){
-            var area = this;
-            if(!$.contains(document, area)) return;
-            // The settings of Camaleon find the post fields with a selector, and TinyMCE uses a
-            // selector before a target.
-            tinymce.init($.extend(cama_get_tinymce_settings(settings), {selector: null, target: area}));
-            $(area).closest(".modal").one("hidden.bs.modal", function(){
+            var area = this, modal = $(area).closest(".modal"), visibility = area.style.visibility;
+            var show_area = function(){ area.style.visibility = visibility; };
+            var set_up = function(){
+                if(!$.contains(document, area)) return show_area();
+                // The settings of Camaleon find the post fields with a selector, and TinyMCE uses a
+                // selector before a target.
+                tinymce.init($.extend(cama_get_tinymce_settings(settings), {selector: null, target: area}));
+                // TinyMCE registers the text editor in tinymce.init, and makes it ready later.
+                var text_editor = form_editor_of(area);
+                if(text_editor) text_editor.on("init", show_area); else show_area();
+            };
+            area.style.visibility = "hidden";
+            if(!modal.length || modal.hasClass("in")) set_up(); else modal.one("shown.bs.modal", set_up);
+            modal.one("hidden.bs.modal", function(){
                 var text_editor = form_editor_of(area);
                 if(text_editor) text_editor.remove();
             });
