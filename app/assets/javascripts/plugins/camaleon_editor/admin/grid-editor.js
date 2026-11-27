@@ -291,9 +291,12 @@ jQuery(function(){
     // each other, so the grid editor is found wherever it is. A page can put an element between
     // them. A copy of the field with its jQuery data refers to the grid editor, but the grid editor
     // does not refer to the copy. A grid editor that is not in a parent element does not count.
+    // A grid editor outside the page does not count for a field in the page: the author cannot see
+    // that grid editor, so the field can get a new one.
     function built_grid_of(field){
         var grid = $(field).data(GRID_OF_FIELD);
-        return grid && grid[0].parentNode && grid.data(FIELD_OF_GRID) === $(field)[0] ? grid : $();
+        if(!grid || !grid[0].parentNode || grid.data(FIELD_OF_GRID) !== $(field)[0]) return $();
+        return $.contains(document, grid[0]) || !$.contains(document, $(field)[0]) ? grid : $();
     }
 
     // A grid editor is hidden while the author is in the text editor. Read the display of the grid
@@ -1276,7 +1279,8 @@ jQuery(function(){
         // then takes that text editor (see take_text_editor). The hook tells each grid editor at
         // "init", when the new text editor has its panel and its content. Each grid editor decides
         // if it takes the new text editor. A grid editor outside the page takes no text editor: the
-        // author cannot see that grid editor, so the panel of the new text editor stays.
+        // author cannot see that grid editor. For the new text editor, the field then has no grid
+        // editor (see built_grid_of).
         var grid_takes_text_editor = function(editor){
             editor.on("init", function(){
                 $(".panel_grid_editor").each(function(){

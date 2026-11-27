@@ -213,7 +213,7 @@ RSpec.describe 'a text editor made again for a field that has its grid editor', 
       end
 
       # A page can move a field out of the element that holds its grid editor, and then remove
-      # that element from the page.
+      # that element from the page. That grid editor then does not count for the field.
       context 'when the grid editor of the field is outside the page' do
         before do
           open_post_in_editor(@post)
@@ -223,9 +223,6 @@ RSpec.describe 'a text editor made again for a field that has its grid editor', 
             tinymce.init(cama_get_tinymce_settings({selector: '#cama_moved_field'}));
           JS
           find('#cama_box .panel_grid_editor .drg_item')
-        end
-
-        it 'leaves the new text editor of the field shown' do
           page.execute_script(<<~JS)
             tinymce.get('cama_moved_field').remove();
             jQuery('#cama_moved_field').appendTo('#form-post');
@@ -234,9 +231,27 @@ RSpec.describe 'a text editor made again for a field that has its grid editor', 
             tinymce.init(#{settings});
           JS
           wait_for_text_editor("tinymce.get('cama_moved_field')")
-          panel_shown = page.evaluate_script("jQuery(tinymce.get('cama_moved_field').editorContainer).is(':visible')")
+        end
 
-          expect(panel_shown).to be(true)
+        def moved_field_panel_shown
+          page.evaluate_script("jQuery(tinymce.get('cama_moved_field').editorContainer).is(':visible')")
+        end
+
+        # The settings of Camaleon build a grid editor for the grid content of the field. The
+        # settings of a page leave the text editor.
+        it 'shows the field in an editor that the author can see' do
+          grid_shown = page.evaluate_script("jQuery('#cama_moved_field').prevAll('.panel_grid_editor').is(':visible')")
+
+          expect(moved_field_panel_shown || grid_shown).to be(true)
+        end
+
+        # The Grid Editor button calls this function too.
+        it 'builds a grid editor in the page when the author asks for one' do
+          page.execute_script("jQuery('#cama_moved_field').gridEditor(tinymce.get('cama_moved_field'));")
+
+          expect(page).to have_css('.panel_grid_editor + .mce-tinymce + #cama_moved_field', visible: :all)
+          expect(page).to have_css('.panel_grid_editor .drg_item b', text: 'bold', count: 1, visible: :all)
+          expect(moved_field_panel_shown).to be(false)
         end
       end
     end
