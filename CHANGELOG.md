@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix: the text editors stay safe from jQuery's tinymce()
+
+The block forms no longer install the jQuery plugin of TinyMCE, so the caret of the author stays in place. A grid node with the id of a text editor no longer removes that text editor or writes into it. [#27](https://github.com/owen2345/camaleon_editor/pull/27).
+
 ### Fix: a grid editor stays after a sort of its custom field group
 
 An author can sort a custom field group that has a grid editor. The grid editor stays, and a later grid change is stored. The grid editor also works with a text editor that a page sets up again for its field. [#26](https://github.com/owen2345/camaleon_editor/pull/26).
