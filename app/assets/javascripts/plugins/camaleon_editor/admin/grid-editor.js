@@ -1412,8 +1412,9 @@ jQuery(function(){
         // document before the editor stores a level. A browser does not show a script, so the author
         // sees no change. The editor makes the level before BeforeAddUndo, from the document with
         // the marks. The listener asks the editor for a second level, stops it before the editor
-        // stores it, and copies its content into the first level. The caller of add() and the other
-        // listeners then see one level, as when no script has marks.
+        // stores it, and copies its content into the first level. The caller of add() and the
+        // listeners after this one then see one level, as when no script has marks. A listener that
+        // was added before this one sees both levels.
         var undo_levels_without_marks = function(editor){
             var clean_level = null;
             editor.on("BeforeAddUndo", function(e){
