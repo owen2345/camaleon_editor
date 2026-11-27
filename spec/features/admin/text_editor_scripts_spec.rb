@@ -12,6 +12,12 @@ RSpec.describe 'scripts in the text editor', :js do
 
   let(:script) { '<script>window.__cama_widget_loaded = 1 < 2 && true;</script>' }
   let(:stored_content) { nil }
+  # A script whose text holds a no-break space. The editor marks that character while it shows
+  # invisible characters.
+  let(:text_with_a_no_break_space) { "var name =\u00a0'A B';" }
+  let(:content_with_a_no_break_space) do
+    "<p>written in the text editor</p><script>#{text_with_a_no_break_space}</script>"
+  end
 
   before do
     store_post_content(@post, stored_content) if stored_content
@@ -105,15 +111,16 @@ RSpec.describe 'scripts in the text editor', :js do
 
   # A plugin of the editor can mark text in the document with its own elements (for example, a
   # visible no-break space). The editor removes them when its content is read, but not in a script.
-  # The grid editor plugin removes them there: a script comes back with only its text.
+  # The grid editor plugin removes them there: a script comes back with only its text. The plugin also
+  # removes the marks from each script of the document when the editor stores an undo level (see the
+  # next example). For this reason, the example shows the characters with no level stored, so that the
+  # marks stay in the script.
   it "gives back a script's text as it was while the editor shows invisible characters" do
-    content = "<p>written in the text editor</p><script>var name =\u00a0'A B';</script>"
-
-    marked, shown, hidden = page.evaluate_script(<<~JS, content)
+    marked, shown, hidden = page.evaluate_script(<<~JS, content_with_a_no_break_space)
       (function(markup){
         var editor = #{POST_TEXT_EDITOR};
         editor.setContent(markup);
-        editor.execCommand('mceVisualChars');
+        editor.undoManager.ignore(function(){ editor.execCommand('mceVisualChars'); });
         var marked = editor.getBody().querySelectorAll('script .mce-nbsp').length;
         var shown = editor.getContent();
         editor.execCommand('mceVisualChars');
@@ -122,8 +129,79 @@ RSpec.describe 'scripts in the text editor', :js do
     JS
 
     expect(marked).to eq(1)
-    expect(shown.delete("\n")).to eq(content)
-    expect(hidden.delete("\n")).to eq(content)
+    expect(shown.delete("\n")).to eq(content_with_a_no_break_space)
+    expect(hidden.delete("\n")).to eq(content_with_a_no_break_space)
+  end
+
+  # An undo level holds the markup of the editor's document, not a read of the content. When the
+  # editor writes a level back, it reads the content of a script as text, and the marks in a script
+  # then become part of its text. The plugin removes the marks from each script before the editor
+  # stores a level.
+  it "gives back a script's text as it was after an undo while the editor shows invisible characters" do
+    undone, text = page.evaluate_script(<<~JS, content_with_a_no_break_space)
+      (function(markup){
+        var editor = #{POST_TEXT_EDITOR};
+        editor.setContent(markup);
+        editor.undoManager.clear();
+        editor.undoManager.add();
+        editor.execCommand('mceVisualChars');
+        editor.selection.select(editor.getBody().firstChild, true);
+        editor.selection.collapse(false);
+        editor.insertContent(' and edited');
+        editor.undoManager.undo();
+        return [editor.getContent(), editor.getBody().querySelector('script').textContent];
+      })(arguments[0])
+    JS
+
+    expect(undone.delete("\n")).to eq(content_with_a_no_break_space)
+    expect(text).to eq(text_with_a_no_break_space)
+  end
+
+  # A redo also writes a level back. The editor stores the level of a change while the marks are in
+  # the script, and the plugin removes them from the script before the editor stores it.
+  it "gives back a script's text as it was after a redo while the editor shows invisible characters" do
+    redone, text = page.evaluate_script(<<~JS, content_with_a_no_break_space)
+      (function(markup){
+        var editor = #{POST_TEXT_EDITOR};
+        editor.setContent(markup);
+        editor.undoManager.clear();
+        editor.undoManager.add();
+        editor.undoManager.ignore(function(){ editor.execCommand('mceVisualChars'); });
+        editor.selection.select(editor.getBody().firstChild, true);
+        editor.selection.collapse(false);
+        editor.insertContent(' and edited');
+        editor.undoManager.undo();
+        editor.undoManager.redo();
+        return [editor.getContent(), editor.getBody().querySelector('script').textContent];
+      })(arguments[0])
+    JS
+
+    expect(redone.delete("\n")).to eq(content_with_a_no_break_space.sub('</p>', ' and edited</p>'))
+    expect(text).to eq(text_with_a_no_break_space)
+  end
+
+  # The editor makes some changes in two steps, with an undo level for each step: for example, a
+  # link pasted over a selection is first pasted as text and then made a link. The editor does the
+  # second step only if the first step stored its level. The plugin removes the marks from the
+  # scripts and the first step still stores its level, so the second step is done too.
+  it 'does the second step of a two-step change while a script holds the marks of invisible characters' do
+    marked, changed, levels = page.evaluate_script(<<~JS, content_with_a_no_break_space)
+      (function(markup){
+        var editor = #{POST_TEXT_EDITOR};
+        editor.setContent(markup);
+        editor.undoManager.clear();
+        editor.undoManager.add();
+        editor.undoManager.ignore(function(){ editor.execCommand('mceVisualChars'); });
+        var marked = editor.getBody().querySelectorAll('script *').length;
+        editor.undoManager.extra(function(){ editor.insertContent('first '); },
+                                 function(){ editor.insertContent('second '); });
+        return [marked, editor.getContent(), editor.undoManager.data.length];
+      })(arguments[0])
+    JS
+
+    expect(marked).to eq(1)
+    expect(changed.delete("\n")).to eq(content_with_a_no_break_space.sub('<p>', '<p>second '))
+    expect(levels).to eq(3)
   end
 
   # The attributes of a script come back as the editor writes all attributes: each with a value, in
