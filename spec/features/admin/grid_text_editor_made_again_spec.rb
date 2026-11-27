@@ -239,10 +239,12 @@ RSpec.describe 'a text editor made again for a field that has its grid editor', 
 
         # The settings of Camaleon build a grid editor for the grid content of the field. The
         # settings of a page leave the text editor.
-        it 'shows the field in an editor that the author can see' do
+        it 'shows the field in one editor that the author can see' do
           grid_shown = page.evaluate_script("jQuery('#cama_moved_field').prevAll('.panel_grid_editor').is(':visible')")
+          builds_a_grid = settings.start_with?('cama_get_tinymce_settings')
 
-          expect(moved_field_panel_shown || grid_shown).to be(true)
+          expect(grid_shown).to be(builds_a_grid)
+          expect(moved_field_panel_shown).to be(!builds_a_grid)
         end
 
         # The Grid Editor button calls this function too.
