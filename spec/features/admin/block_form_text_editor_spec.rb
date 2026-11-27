@@ -96,6 +96,46 @@ RSpec.describe 'the text editor of a block form', :js do
     expect(page).to have_no_css('#ow_inline_modal', visible: :all)
   end
 
+  # The content of a block of the kind `kind` with one item that holds <p>stored</p>.
+  def block_with_a_stored_item(kind)
+    case kind
+    when 'editor' then '<p>stored</p>'
+    when 'tab'
+      '<ul class="nav nav-tabs"><li class="active"><a href="#t0">One</a></li></ul>' \
+      '<div class="tab-content"><div class="tab-pane active" id="t0"><p>stored</p></div></div>'
+    when 'slider'
+      image = %(<img src="#{ONE_PIXEL_IMAGE}" alt="">)
+      [%(<div class="carousel-inner"><div class="item active">#{image}),
+       '<div class="carousel-caption"><p>stored</p></div></div></div>'].join
+    else
+      '<div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a>One</a></h4>' \
+      '</div><div class="panel-collapse collapse"><div class="panel-body"><p>stored</p></div></div></div>'
+    end
+  end
+
+  # Opens the form of the stored item of a block of the kind `kind`, with a replacement of
+  # tinymce.createEditor that registers the text editor and makes no body. Returns the modal of the
+  # form when TinyMCE has registered its text editor.
+  def open_the_stored_item_before_its_text_editor_is_ready(kind)
+    store_post_content(@post, grid_post_content(grid_with_block(block_with_a_stored_item(kind), kind: kind)))
+    open_post_in_editor(@post)
+    page.execute_script(<<~JS)
+      tinymce.createEditor = function(id, settings){
+        tinymce.EditorManager.add(new tinymce.Editor(id, settings, tinymce.EditorManager));
+        return {render: function(){}};
+      };
+    JS
+    open_first_block_form
+    modal = '#ow_inline_modal'
+    unless kind == 'editor'
+      wait_for_modal_at_rest(modal)
+      find("#{modal} a.edit_item").click
+      modal = '#cama_editor_modal2'
+    end
+    wait_until { page.evaluate_script("!!#{text_editor_in(modal)}") }
+    modal
+  end
+
   # The number of characters of the text before the caret of a text editor.
   def caret_position(editor)
     page.evaluate_script(<<~JS)
@@ -110,6 +150,15 @@ RSpec.describe 'the text editor of a block form', :js do
 
   { 'editor' => 'an Editor', 'tab' => 'a Tabs', 'slider' => 'a Slider',
     'accordion' => 'an Accordion' }.each do |kind, block|
+    # TinyMCE registers a text editor before it loads the scripts of that editor and makes its
+    # body. Until then, getContent() returns "".
+    it "stores the content of the textarea when the author saves the form of #{block} block " \
+       'before its text editor is ready' do
+      save_the_form(open_the_stored_item_before_its_text_editor_is_ready(kind))
+
+      expect(saved_grid_content).to include('<p>stored</p>')
+    end
+
     it "keeps the methods of jQuery when the form of #{block} block sets up its text editor" do
       open_the_text_editor_of(kind)
 
@@ -201,26 +250,6 @@ RSpec.describe 'the text editor of a block form', :js do
 
     expect(page).to have_css('#ow_inline_modal textarea')
     expect(textarea_visibility('#ow_inline_modal')).to eq('')
-  end
-
-  # TinyMCE registers a text editor before it loads the scripts of that editor and makes its body.
-  # Until then, getContent() returns "". The replacement of tinymce.createEditor below registers the
-  # text editor and makes no body, so the text editor stays in that state.
-  it 'stores the content of the textarea when the author saves the form before its text editor is ready' do
-    store_post_content(@post, grid_post_content(grid_with_block('<p>stored</p>', kind: 'editor')))
-    open_post_in_editor(@post)
-    page.execute_script(<<~JS)
-      tinymce.createEditor = function(id, settings){
-        tinymce.EditorManager.add(new tinymce.Editor(id, settings, tinymce.EditorManager));
-        return {render: function(){}};
-      };
-    JS
-    open_first_block_form
-    wait_until { page.evaluate_script("!!#{text_editor_in('#ow_inline_modal')}") }
-    find('#ow_inline_modal .modal_submit').click
-    expect(page).to have_no_css('#ow_inline_modal', visible: :all)
-
-    expect(saved_grid_content).to include('<p>stored</p>')
   end
 
   # TinyMCE makes the body of a text editor and loads the content into it before it loads the
