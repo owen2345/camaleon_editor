@@ -9,7 +9,8 @@ RSpec.describe 'a text editor made again for a field that has its grid editor', 
 
   let(:stored_content) { grid_post_content(grid_with_block('<p><b>bold</b></p>', kind: 'editor')) }
 
-  # The text editor writes <strong> for <b>, and a newline between tags.
+  # The text editor writes <strong> for <b>. It also writes a newline between tags, which
+  # text_editor_content removes.
   def as_the_text_editor_writes(content)
     content.gsub('<b>', '<strong>').gsub('</b>', '</strong>')
   end
