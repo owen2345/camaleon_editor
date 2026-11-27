@@ -124,6 +124,27 @@ RSpec.describe 'the text editor of a block form', :js do
     expect(saved_grid_content).to include('<p>stored</p>')
   end
 
+  # TinyMCE makes the body of a text editor and loads the content into it before it loads the
+  # content CSS. The author can write in the body during that load, but TinyMCE marks the text
+  # editor as initialized only after it. Below, no new text editor gets that mark.
+  it 'stores what the author wrote before TinyMCE marked the text editor as initialized' do
+    store_post_content(@post, grid_post_content(grid_with_block('<p>stored</p>', kind: 'editor')))
+    open_post_in_editor(@post)
+    page.execute_script(<<~JS)
+      Object.defineProperty(tinymce.Editor.prototype, 'initialized', {
+        configurable: true, get: function(){ return false; }, set: function(){}
+      });
+    JS
+    open_first_block_form
+    text_editor = text_editor_in('#ow_inline_modal')
+    wait_until { page.evaluate_script("!!(#{text_editor} && #{text_editor}.getBody())") }
+    page.execute_script("#{text_editor}.getBody().innerHTML = '<p>written in the form</p>';")
+    find('#ow_inline_modal .modal_submit').click
+    expect(page).to have_no_css('#ow_inline_modal', visible: :all)
+
+    expect(saved_grid_content).to include('<p>written in the form</p>')
+  end
+
   # Camaleon 2.9.4 writes the content of each text editor into its field with jQuery's val(). It does
   # this two seconds after the post form opens, every 60 seconds, and before the page unloads. If
   # jQuery's val() sets the content of the text editor, the caret goes to the start of the text.
