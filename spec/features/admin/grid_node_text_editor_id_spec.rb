@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-# A plugin or a theme can call jQuery's tinymce() on the page. The first call installs the jQuery
-# plugin of TinyMCE, which changes html(), text(), val(), append(), prepend(), remove() and empty()
-# for the whole page. These methods then act on the text editor whose id an element of the set
-# carries. remove(), replaceWith(), replaceAll() and empty() also remove the text editor whose panel
-# id a descendant carries ("post_content_parent" with the class "mceEditor"). Stored content and
-# templates can give a grid node any id. The grid editor uses DOM calls on its nodes, so the grid
-# gets each change and the text editors stay.
+# A plugin or a theme can call jQuery's tinymce() on the page. The first call with settings on a set
+# that is not empty installs the jQuery plugin of TinyMCE. That plugin changes html(), text(), val(),
+# append(), prepend(), remove() and empty() for the whole page. These methods then act on the text
+# editor whose id an element of the set carries. remove(), replaceWith(), replaceAll() and empty()
+# also remove the text editor whose panel id a descendant carries ("post_content_parent" with the
+# class "mceEditor"). Stored content and templates can give a grid node any id. The grid editor uses
+# DOM calls on its nodes, so the grid gets each change and the text editors stay.
 RSpec.describe 'a grid node that carries the id of the post text editor', :js do
   init_site
 

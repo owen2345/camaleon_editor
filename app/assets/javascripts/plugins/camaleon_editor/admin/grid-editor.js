@@ -6,15 +6,20 @@ jQuery(function(){
     if($.fn.gridEditor) return;
     init_grid_editor();
 
-    // Grid nodes and the jQuery plugin of TinyMCE. The first call of jQuery's tinymce() on a page
-    // installs that plugin, from any script: a plugin, a theme or the page. After that, html(),
-    // text(), val(), attr("value"), append() and prepend() read or write the text editor whose id
-    // an element of the set carries. These methods then skip that element. remove() also removes
-    // that text editor. remove(), replaceWith(), replaceAll() and empty() also remove the text
-    // editor whose panel id ("<id>_parent", class "mceEditor") a descendant carries. Stored content
-    // and templates can give a grid node any id, for example the id of the post's text editor. For
-    // this reason, the grid editor and its block forms use the helpers below on grid nodes.
-    // Elsewhere they use DOM calls, or the jQuery methods that the plugin does not change.
+    // Grid nodes and the jQuery plugin of TinyMCE. A script (a plugin, a theme or the page) installs
+    // that plugin when it first calls jQuery's tinymce() with settings on a set that is not empty.
+    // After that, these jQuery methods change for an element that carries the id of a text editor:
+    // - html(), text(), val() and attr("value") read the content of that text editor. With a value,
+    //   they write the value into that text editor and not into the element. They also remove each
+    //   text editor whose panel id a descendant of the element carries.
+    // - append() and prepend() add a string to the content of that text editor. They skip the
+    //   element, also for a node or a jQuery object, which then goes into no element.
+    // - remove() also removes that text editor.
+    // remove(), replaceWith(), replaceAll() and empty() also remove each text editor whose panel id
+    // ("<id>_parent", on a span or a div with the class "mceEditor") a descendant of the set carries.
+    // Stored content and templates can give a grid node any id, for example the id of the post's
+    // text editor. For this reason, the grid editor and its block forms use the helpers below on
+    // grid nodes. Elsewhere they use DOM calls, or the jQuery methods that the plugin does not change.
 
     // Removes the nodes of a set from the page with their jQuery data and handlers, as jQuery's
     // remove() does. Returns the set.

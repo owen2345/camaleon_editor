@@ -2,8 +2,8 @@
 
 # The forms of the Editor, Tabs, Slider and Accordion blocks each set up a text editor for a
 # textarea. TinyMCE's jQuery plugin changes jQuery's val(), html(), remove() and other methods for
-# the whole page the first time that the page calls jQuery's tinymce(). The block forms set up their
-# text editors with tinymce.init, so these methods stay the methods of jQuery.
+# the whole page the first time that a script calls jQuery's tinymce() with settings. The block
+# forms set up their text editors with tinymce.init, so these methods stay the methods of jQuery.
 RSpec.describe 'the text editor of a block form', :js do
   init_site
 
