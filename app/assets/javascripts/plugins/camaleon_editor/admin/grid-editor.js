@@ -10,11 +10,11 @@ jQuery(function(){
     // installs that plugin, from any script: a plugin, a theme or the page. After that, html(),
     // text(), val(), attr("value"), append() and prepend() read or write the text editor whose id
     // an element of the set carries. These methods then skip that element. remove() also removes
-    // that text editor. remove() and empty() also remove the text editor whose panel id
-    // ("<id>_parent", class "mceEditor") a descendant carries. Stored content and templates can
-    // give a grid node any id, for example the id of the post's text editor. For this reason, the
-    // grid editor and its block forms use the helpers below on grid nodes. Elsewhere they use DOM
-    // calls, or the jQuery methods that the plugin does not change.
+    // that text editor. remove(), replaceWith(), replaceAll() and empty() also remove the text
+    // editor whose panel id ("<id>_parent", class "mceEditor") a descendant carries. Stored content
+    // and templates can give a grid node any id, for example the id of the post's text editor. For
+    // this reason, the grid editor and its block forms use the helpers below on grid nodes.
+    // Elsewhere they use DOM calls, or the jQuery methods that the plugin does not change.
 
     // Removes the nodes of a set from the page with their jQuery data and handlers, as jQuery's
     // remove() does. Returns the set.
