@@ -61,6 +61,19 @@ RSpec.describe 'a grid node that carries the id of the post text editor', :js do
     expect(saved_grid_content).to include(area, '<p>kept</p>')
   end
 
+  # While the grid is edited, the root and each column area keep their id in another attribute. The
+  # export gives the id back at its place. That other attribute in the stored content goes.
+  it 'gives back the id of a grid root and a column area at its place, and drops a stored kept id' do
+    root = %(id="#{id}" data-grid-editor-kept-id="stale")
+    area = %(data-x="1" id="#{id}" class="grid_sortable_items" data-grid-editor-kept-id="stale")
+    open_the_grid(grid_with_block('<p>kept</p>', attributes: root).sub('class="grid_sortable_items"', area))
+    trigger_grid_auto_save
+
+    expect(saved_grid_content).to match(/<div class="panel_grid_body row[^"]*" id="#{id}">/)
+    expect(saved_grid_content).to include(%(<div data-x="1" id="#{id}" class="grid_sortable_items">))
+    expect(saved_grid_content).not_to include('data-grid-editor-kept-id')
+  end
+
   it 'keeps the text editor when a block holds an element with the id of its panel, and the grid exports' do
     open_the_grid(grid_with_block("<p>kept</p>#{panel_of_the_text_editor}"))
     trigger_grid_auto_save
