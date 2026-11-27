@@ -24,7 +24,7 @@ jQuery(function(){
     };
     // The markup in the first element of a set, or "" for an empty set.
     $.fn.gridEditorMarkup = function(){ return this.length ? this[0].innerHTML : ""; };
-    // The text of the nodes of a set, as jQuery's text() returns it.
+    // The text of the elements of a set, as jQuery's text() returns it.
     $.fn.gridEditorText = function(){ return $.map(this, function(node){ return node.textContent; }).join(""); };
     // Removes the children of an element with their jQuery data and handlers, as jQuery's empty() does.
     function empty_node(element){
