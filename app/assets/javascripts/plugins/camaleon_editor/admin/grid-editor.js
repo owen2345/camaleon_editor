@@ -234,8 +234,8 @@ jQuery(function(){
     // The setup gives the textarea an id before it creates the text editor.
     function form_editor_of(area){ return area.id ? tinymce.get(area.id) : null; }
     // Removes the text editor with the id of the textarea when its panel has no parent element: the
-    // page removed the panel and kept the text editor. tinymce.init does the same before it creates
-    // a text editor.
+    // page removed the panel and kept the text editor. tinymce.init also takes such a text editor
+    // out before it creates a text editor, but it does not call remove(), which saves the content.
     function remove_destroyed_editor(area){
         var text_editor = form_editor_of(area);
         if(text_editor && text_editor.initialized && !(text_editor.getContainer() || text_editor.getBody()).parentNode){
