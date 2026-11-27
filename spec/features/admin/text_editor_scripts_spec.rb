@@ -133,7 +133,7 @@ RSpec.describe 'scripts in the text editor', :js do
   # then become part of its text. The plugin removes the marks from each script before the editor
   # stores a level.
   it "gives back a script's text as it was after an undo while the editor shows invisible characters" do
-    content = "<p>written in the text editor</p><script>var name = 'A B';</script>"
+    content = "<p>written in the text editor</p><script>var name =\u00a0'A B';</script>"
 
     undone, text = page.evaluate_script(<<~JS, content)
       (function(markup){
@@ -151,7 +151,7 @@ RSpec.describe 'scripts in the text editor', :js do
     JS
 
     expect(undone.delete("\n")).to eq(content)
-    expect(text).to eq("var name = 'A B';")
+    expect(text).to eq("var name =\u00a0'A B';")
   end
 
   # The editor makes some changes in two steps, with an undo level for each step: for example, a
@@ -159,7 +159,7 @@ RSpec.describe 'scripts in the text editor', :js do
   # second step only if the first step stored its level. The plugin removes the marks from the
   # scripts and the first step still stores its level, so the second step is done too.
   it 'does the second step of a two-step change while a script holds the marks of invisible characters' do
-    content = "<p>written in the text editor</p><script>var name = 'A B';</script>"
+    content = "<p>written in the text editor</p><script>var name =\u00a0'A B';</script>"
 
     marked, changed, levels = page.evaluate_script(<<~JS, content)
       (function(markup){
