@@ -155,6 +155,32 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(text).to eq("var name =\u00a0'A B';")
   end
 
+  # A redo also writes a level back. The editor stores the level of a change while the marks are in
+  # the script, and the plugin removes them from the script before the editor stores it.
+  it "gives back a script's text as it was after a redo while the editor shows invisible characters" do
+    content = "<p>written in the text editor</p><script>var name =\u00a0'A B';</script>"
+
+    redone, text = page.evaluate_script(<<~JS, content)
+      (function(markup){
+        var editor = #{POST_TEXT_EDITOR};
+        editor.setContent(markup);
+        editor.undoManager.clear();
+        editor.undoManager.add();
+        editor.undoManager.ignore(function(){ editor.execCommand('mceVisualChars'); });
+        editor.selection.select(editor.getBody().firstChild, true);
+        editor.selection.collapse(false);
+        editor.insertContent(' and edited');
+        editor.undoManager.undo();
+        editor.undoManager.redo();
+        return [editor.getContent(), editor.getBody().querySelector('script').textContent];
+      })(arguments[0])
+    JS
+
+    expect(redone).to include('and edited</p>')
+    expect(redone.delete("\n")).to end_with("<script>var name =\u00a0'A B';</script>")
+    expect(text).to eq("var name =\u00a0'A B';")
+  end
+
   # The editor makes some changes in two steps, with an undo level for each step: for example, a
   # link pasted over a selection is first pasted as text and then made a link. The editor does the
   # second step only if the first step stored its level. The plugin removes the marks from the
