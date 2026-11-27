@@ -44,7 +44,7 @@ window.grid_slider_builder = function(panel, editor){
   // recover current items
   panel.find(" > .carousel-inner > .item").each( function(index, item){
     // the slide's own caption: it sits in the slide, not under the block
-    add_item($(this).children("img").attr("src"), $(this).children(".carousel-caption").html());
+    add_item($(this).children("img").attr("src"), $(this).children(".carousel-caption").gridEditorMarkup());
   });
 
   // show form for each accordion

@@ -6,7 +6,33 @@ jQuery(function(){
     if($.fn.gridEditor) return;
     init_grid_editor();
 
-    $.fn.fadeDestroy = function(speed){ $(this).fadeOut(speed, function(){ $(this).remove(); }) }
+    // Grid nodes and the jQuery plugin of TinyMCE. The first call of jQuery's tinymce() on a page
+    // installs that plugin, from any script: a plugin, a theme or the page. After that, html(),
+    // text(), val(), attr("value"), append() and prepend() read or write the text editor whose id
+    // an element of the set carries. These methods then skip that element. remove() also removes
+    // that text editor. remove() and empty() also remove the text editor whose panel id
+    // ("<id>_parent", class "mceEditor") a descendant carries. Stored content and templates can
+    // give a grid node any id, for example the id of the post's text editor. For this reason, the
+    // grid editor and its block forms use the helpers below on grid nodes. Elsewhere they use DOM
+    // calls, or the jQuery methods that the plugin does not change.
+
+    // Removes the nodes of a set from the page with their jQuery data and handlers, as jQuery's
+    // remove() does. Returns the set.
+    $.fn.gridEditorRemove = function(){
+        $.cleanData(this.find("*").addBack());
+        return this.detach();
+    };
+    // The markup in the first element of a set, or "" for an empty set.
+    $.fn.gridEditorMarkup = function(){ return this.length ? this[0].innerHTML : ""; };
+    // The text of the nodes of a set, as jQuery's text() returns it.
+    $.fn.gridEditorText = function(){ return $.map(this, function(node){ return node.textContent; }).join(""); };
+    // Removes the children of an element with their jQuery data and handlers, as jQuery's empty() does.
+    function empty_node(element){
+        $.cleanData($(element).find("*"));
+        element.textContent = "";
+    }
+
+    $.fn.fadeDestroy = function(speed){ $(this).fadeOut(speed, function(){ $(this).gridEditorRemove(); }) }
     // The class of a part that the author deleted: a column or block of the grid, or an item in the
     // list of a block form (a tab, a slide, an accordion panel). The part stays in the page while it
     // fades out. During the fade it is inert: it gets no mouse clicks and no keyboard focus. The
@@ -86,8 +112,8 @@ jQuery(function(){
     $.fn.gridEditorLabelSource = function(element){
         element = $(element);
         if(!element.length) return "";
-        var text = element.text();
-        return $.trim(!element.children().length && !label_is_markup(text) ? text : element.html());
+        var text = element.gridEditorText();
+        return $.trim(!element.children().length && !label_is_markup(text) ? text : element.gridEditorMarkup());
     };
     // The other way, by the same rule: a label that holds a tag or a character reference is markup
     // source and goes into the block as it is; any other is text, and is escaped like text.
@@ -114,7 +140,7 @@ jQuery(function(){
     $.fn.gridEditorInertHtml = function(markup){
         return this.each(function(){
             var target = this;
-            $(target).empty();
+            empty_node(target);
             $.each(parse_nodes(markup == null ? "" : markup), function(){ target.appendChild(this); });
         });
     };
@@ -150,10 +176,9 @@ jQuery(function(){
     };
 
     // Sets up a text editor with the settings of Camaleon for each textarea of a block form. The
-    // forms use tinymce.init and not jQuery's tinymce(). The first call of jQuery's tinymce() on a
-    // page changes jQuery's val(), html(), remove() and other methods for the whole page. The text
-    // editor goes when the modal of the form closes. A textarea that is not in the page gets no
-    // text editor: the author closed the form before the setup.
+    // forms use tinymce.init and not jQuery's tinymce(), which installs the jQuery plugin of TinyMCE
+    // (see "Grid nodes" above). The text editor goes when the modal of the form closes. A textarea
+    // that is not in the page gets no text editor: the author closed the form before the setup.
     $.fn.gridEditorFormEditor = function(settings){
         return this.each(function(){
             var area = this;
@@ -442,19 +467,19 @@ jQuery(function(){
         // grid editor export
         function export_content(editor){
             var container = grid_root(editor).clone();
-            container.children("."+DELETED).remove();
+            container.children("."+DELETED).gridEditorRemove();
             container.children().each(function(){
                 var col = $(this).removeClass("drg_column btn-default btn ui-draggable ui-draggable-handle ui-draggable-dragging ui-sortable-handle");
-                col.children(".header_box").remove();
+                col.children(".header_box").gridEditorRemove();
                 // the column's own area and blocks: what a block holds is content, chrome-like names included
                 var area = col.children(".grid_sortable_items").removeClass("ui-sortable");
-                area.children("."+DELETED).remove();
+                area.children("."+DELETED).gridEditorRemove();
                 area.children().each(function(){ //contents
-                    $(this).removeClass("drg_item btn-default btn ui-draggable ui-draggable-dragging ui-sortable-handle ui-draggable-handle").children(".header_box").remove();
+                    $(this).removeClass("drg_item btn-default btn ui-draggable ui-draggable-dragging ui-sortable-handle ui-draggable-handle").children(".header_box").gridEditorRemove();
                 });
             });
             var res = container[0].outerHTML;
-            container.remove();
+            container.gridEditorRemove();
             return res;
         }
 
@@ -535,7 +560,7 @@ jQuery(function(){
                 // the saved classes as they are - a root saved without "row" does not get it back - plus
                 // the one the editor finds its grid by
                 if(attribute.name === "class") grid.attr("class", attribute.value).addClass("panel_grid_body");
-                else if($.inArray(attribute.name, GRID_STYLE_ATTRIBUTES) < 0) grid.attr(attribute.name, attribute.value);
+                else if($.inArray(attribute.name, GRID_STYLE_ATTRIBUTES) < 0) grid[0].setAttribute(attribute.name, attribute.value);
             });
         }
 
@@ -599,10 +624,10 @@ jQuery(function(){
                 "</ul>"+
                 "</div>" ;
             column.addClass("drg_column btn btn-default");
-            if(column.children(".header_box").length == 0) column.prepend(html);
+            if(column.children(".header_box").length == 0) column[0].insertBefore(html[0], column[0].firstChild);
             if(!skip_options){
                 // the column's own header, area and blocks: a block may hold grid markup of its own
-                column.children('.header_box').append(options);
+                column.children('.header_box').each(function(){ this.insertAdjacentHTML("beforeend", options); });
                 grid_content_manager(column.children(".grid_sortable_items"));
                 column.children(".grid_sortable_items").children().each(function(){ //contents
                     parse_content_content($(this));
@@ -638,9 +663,9 @@ jQuery(function(){
                 "</ul>"+
                 "</div>";
             content.addClass("drg_item btn btn-default");
-            if(content.children(".header_box").length == 0) content.prepend(html);
+            if(content.children(".header_box").length == 0) content[0].insertAdjacentHTML("afterbegin", html);
             if(!skip_options){
-                content.children('.header_box').append(options);
+                content.children('.header_box').each(function(){ this.insertAdjacentHTML("beforeend", options); });
             }
             // save used libraries
             // TODO: finish or retire the list of libraries a grid uses, a design of the plugin's first
@@ -691,7 +716,7 @@ jQuery(function(){
                 // Stop the link first, in case an export listener throws an error.
                 e.preventDefault();
                 if(!confirm(I18n("grid_editor.clear_editor", "Are you sure to clear the editor?"))) return false;
-                grid_root(editor).html("");
+                empty_node(grid_root(editor)[0]);
                 editor.trigger("auto_save");
                 return false;
             });
@@ -873,7 +898,7 @@ jQuery(function(){
                 var widget = jQuery(this).closest(".drg_column");
                 var widget_clone = widget.clone();
                 // Remove the copy of a block that still fades out: the copy does not fade.
-                widget_clone.children(".grid_sortable_items").children("."+DELETED).remove();
+                widget_clone.children(".grid_sortable_items").children("."+DELETED).gridEditorRemove();
                 widget.after(widget_clone);
                 grid_content_manager(widget_clone.children(".grid_sortable_items"));
                 editor.trigger("auto_save");
@@ -897,7 +922,7 @@ jQuery(function(){
             // Either way the half-built editor goes, the text editor comes back, and the author is told:
             // thrown on, the error would reach only the text editor's button, which shows nothing to the
             // author who has just confirmed the switch. Over ordinary content it is none of the content's doing.
-            editor.remove();
+            editor.gridEditorRemove();
             tinymce_panel.show();
             if(window.console) console.error(error);
             if(saved_body) content_unreadable(); else editor_failed();
@@ -976,12 +1001,13 @@ jQuery(function(){
             var contents = grid.contents().detach(), attributes = attributes_of(grid);
             return {
                 restore: function(){
-                    grid.empty();
+                    empty_node(grid[0]);
                     set_attributes(grid, attributes);
-                    // append() does not run the kept scripts: detach() marked them as run
-                    grid.append(contents);
+                    // The kept nodes go back natively, as fill_grid moves nodes in. The browser does
+                    // not run a script that it inserted or parsed before.
+                    contents.each(function(){ grid[0].appendChild(this); });
                 },
-                release: function(){ contents.remove(); }
+                release: function(){ contents.gridEditorRemove(); }
             };
         }
 
@@ -1010,7 +1036,7 @@ jQuery(function(){
         }
         function set_attributes(element, attributes){
             $.each(attributes_of(element), function(_index, attribute){ element.removeAttr(attribute.name); });
-            $.each(attributes, function(_index, attribute){ element.attr(attribute.name, attribute.value); });
+            $.each(attributes, function(_index, attribute){ element[0].setAttribute(attribute.name, attribute.value); });
         }
 
         // Applies the content that the author changed in the text editor, which is newer than the
@@ -1091,7 +1117,7 @@ jQuery(function(){
             placeholder: "placeholder",
             start: function (e, ui) {
                 ui.helper.css({'width': '' , 'height': ''}).addClass('col-md-' + jQuery(ui.helper).attr('data-col'));
-                ui.placeholder.attr('class', jQuery(ui.helper).attr("class")).gridEditorInertHtml(ui.helper.html()).fadeTo("fast", 0.4);
+                ui.placeholder.attr('class', jQuery(ui.helper).attr("class")).gridEditorInertHtml(ui.helper.gridEditorMarkup()).fadeTo("fast", 0.4);
             },
             over: function (e, ui) {
                 ui.placeholder.attr('class', jQuery(ui.helper).attr("class"));
@@ -1120,7 +1146,7 @@ jQuery(function(){
                 placeholder: "placeholder",
                 start: function (e, ui) {
                     ui.helper.css({'width': '' , 'height': ''}).addClass('col-md-12');
-                    ui.placeholder.attr('class', jQuery(ui.helper).attr("class")).gridEditorInertHtml(ui.helper.html()).fadeTo("fast", 0.4);
+                    ui.placeholder.attr('class', jQuery(ui.helper).attr("class")).gridEditorInertHtml(ui.helper.gridEditorMarkup()).fadeTo("fast", 0.4);
                 },
                 over: function (e, ui) {
                     $(this).addClass("hover-grid");
