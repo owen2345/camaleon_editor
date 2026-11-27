@@ -181,8 +181,11 @@ jQuery(function(){
     };
 
     // Sets up a text editor with the settings of Camaleon for each textarea of a block form. The
-    // forms use tinymce.init and not jQuery's tinymce(), which installs the jQuery plugin of TinyMCE
-    // (see "Grid nodes" above). A form calls this when its modal starts to show. Bootstrap puts the
+    // forms create the text editor with tinymce.createEditor, as jQuery's tinymce() does. They do
+    // not use jQuery's tinymce(), which installs the jQuery plugin of TinyMCE (see "Grid nodes"
+    // above). They do not use tinymce.init, which makes its settings the global settings of TinyMCE.
+    // Camaleon 2.9.4 sets up the text editors of a sorted custom field again with those global
+    // settings. A form calls this when its modal starts to show. Bootstrap puts the
     // modal in the page after that, so the setup starts when the modal is shown. Until the text
     // editor is ready, the textarea is hidden, and the author does not see the markup of the block.
     // A textarea that is not in the page at the setup gets no text editor, and shows again. It
@@ -194,10 +197,15 @@ jQuery(function(){
             var show_area = function(){ area.style.visibility = visibility; };
             var set_up = function(){
                 if(!$.contains(document, area)) return show_area();
-                // The settings of Camaleon find the post fields with a selector, and TinyMCE uses a
-                // selector before a target.
-                tinymce.init($.extend(cama_get_tinymce_settings(settings), {selector: null, target: area}));
-                // TinyMCE registers the text editor in tinymce.init, and makes it ready later.
+                // tinymce.init does these two steps before it creates a text editor.
+                area.id = area.id || tinymce.DOM.uniqueId();
+                remove_destroyed_editor(area);
+                if(!form_editor_of(area)){
+                    var created = tinymce.createEditor(area.id, cama_get_tinymce_settings(settings));
+                    created.targetElm = area;
+                    created.render();
+                }
+                // TinyMCE registers the text editor in createEditor, and makes it ready later.
                 var text_editor = form_editor_of(area);
                 if(text_editor) text_editor.on("init", show_area); else show_area();
             };
@@ -219,8 +227,17 @@ jQuery(function(){
         var text_editor = form_editor_of(area);
         return text_editor && text_editor.getBody() ? text_editor.getContent() : area.value;
     };
-    // TinyMCE gives the textarea an id when it sets up the text editor.
+    // The setup gives the textarea an id before it creates the text editor.
     function form_editor_of(area){ return area.id ? tinymce.get(area.id) : null; }
+    // Removes the text editor with the id of the textarea when its panel has no parent element: the
+    // page removed the panel and kept the text editor. tinymce.init does the same before it creates
+    // a text editor.
+    function remove_destroyed_editor(area){
+        var text_editor = form_editor_of(area);
+        if(text_editor && text_editor.initialized && !(text_editor.getContainer() || text_editor.getBody()).parentNode){
+            text_editor.remove();
+        }
+    }
 
     // An error alert for a request of the editor's own; $.fn.alert lifts the loading overlay too. The
     // alert is core's modal, often the very code whose throw is being reported, and the report runs

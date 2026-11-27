@@ -3,7 +3,8 @@
 # The forms of the Editor, Tabs, Slider and Accordion blocks each set up a text editor for a
 # textarea. TinyMCE's jQuery plugin changes jQuery's val(), html(), remove() and other methods for
 # the whole page the first time that a script calls jQuery's tinymce() with settings. The block
-# forms set up their text editors with tinymce.init, so these methods stay the methods of jQuery.
+# forms set up their text editors with tinymce.createEditor, so these methods stay the methods of
+# jQuery. tinymce.init is not used either: it makes its settings the global settings of TinyMCE.
 RSpec.describe 'the text editor of a block form', :js do
   init_site
 
@@ -144,10 +145,44 @@ RSpec.describe 'the text editor of a block form', :js do
     end
   end
 
+  # Camaleon 2.9.4 sets up the text editors of a sorted custom field again with the global settings
+  # of TinyMCE.
+  it 'leaves the global settings of TinyMCE as they were when a block form sets up its text editor' do
+    store_post_content(@post, grid_post_content(grid_with_block('<p>stored</p>', kind: 'editor')))
+    open_post_in_editor(@post)
+    page.execute_script('window.__cama_tinymce_settings = tinymce.settings;')
+    open_first_block_form
+    find('#ow_inline_modal .mce-tinymce')
+    wait_for_text_editor(text_editor_in('#ow_inline_modal'))
+
+    expect(page.evaluate_script('tinymce.settings === window.__cama_tinymce_settings')).to be(true)
+  end
+
+  # A page can remove the panel of a text editor and keep the text editor. TinyMCE then still has a
+  # text editor with the id of a new textarea, and tinymce.init removes such a text editor.
+  it 'replaces a text editor whose panel the page removed when a textarea with its id gets one' do
+    open_post_in_editor(@post)
+    page.execute_script(<<~JS)
+      window.__cama_holder = jQuery('<div><textarea id="reused_area"></textarea></div>').appendTo('body');
+      window.__cama_holder.find('textarea').gridEditorFormEditor({height: 120});
+    JS
+    wait_for_text_editor("tinymce.get('reused_area')")
+    page.execute_script(<<~JS)
+      var panel = (window.__cama_first_editor = tinymce.get('reused_area')).getContainer();
+      panel.parentNode.removeChild(panel);
+      window.__cama_holder[0].parentNode.removeChild(window.__cama_holder[0]);
+      jQuery('<textarea id="reused_area"></textarea>').appendTo('body').gridEditorFormEditor({height: 120});
+    JS
+    wait_for_text_editor("tinymce.get('reused_area')")
+
+    expect(page.evaluate_script("tinymce.get('reused_area') !== window.__cama_first_editor")).to be(true)
+    expect(page.evaluate_script("jQuery.contains(document, tinymce.get('reused_area').getContainer())")).to be(true)
+  end
+
   it 'shows the textarea of a block form when TinyMCE registers no text editor for it' do
     store_post_content(@post, grid_post_content(grid_with_block('<p>stored</p>', kind: 'editor')))
     open_post_in_editor(@post)
-    page.execute_script('tinymce.init = function(){};')
+    page.execute_script('tinymce.createEditor = function(){ return {render: function(){}}; };')
     open_first_block_form
 
     expect(page).to have_css('#ow_inline_modal textarea')
@@ -155,16 +190,15 @@ RSpec.describe 'the text editor of a block form', :js do
   end
 
   # TinyMCE registers a text editor before it loads the scripts of that editor and makes its body.
-  # Until then, getContent() returns "". The replacement of tinymce.init below registers the text
-  # editor and makes no body, so the text editor stays in that state.
+  # Until then, getContent() returns "". The replacement of tinymce.createEditor below registers the
+  # text editor and makes no body, so the text editor stays in that state.
   it 'stores the content of the textarea when the author saves the form before its text editor is ready' do
     store_post_content(@post, grid_post_content(grid_with_block('<p>stored</p>', kind: 'editor')))
     open_post_in_editor(@post)
     page.execute_script(<<~JS)
-      tinymce.init = function(settings){
-        var area = settings.target;
-        area.id = area.id || tinymce.DOM.uniqueId();
-        tinymce.EditorManager.add(new tinymce.Editor(area.id, settings, tinymce.EditorManager));
+      tinymce.createEditor = function(id, settings){
+        tinymce.EditorManager.add(new tinymce.Editor(id, settings, tinymce.EditorManager));
+        return {render: function(){}};
       };
     JS
     open_first_block_form
