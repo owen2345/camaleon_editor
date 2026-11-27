@@ -176,8 +176,7 @@ RSpec.describe 'scripts in the text editor', :js do
       })(arguments[0])
     JS
 
-    expect(redone).to include('and edited</p>')
-    expect(redone.delete("\n")).to end_with("<script>var name =\u00a0'A B';</script>")
+    expect(redone.delete("\n")).to eq(content.sub('</p>', ' and edited</p>'))
     expect(text).to eq("var name =\u00a0'A B';")
   end
 
