@@ -1406,6 +1406,35 @@ jQuery(function(){
             });
         }
 
+        // An undo level holds the markup of the editor's document, not a read of its content. When
+        // the editor writes a level back, it reads the content of a script as text, and the marks
+        // stay in the script text. For this reason, the marks are removed from the scripts of the
+        // document before the editor stores a level. A browser does not show a script, so the author
+        // sees no change. The editor makes the level before BeforeAddUndo, from the document with
+        // the marks. The listener asks the editor for a second level, stops it before the editor
+        // stores it, and copies its content into the first level. The caller of add() and the other
+        // listeners then see one level, as when no script has marks.
+        var undo_levels_without_marks = function(editor){
+            var clean_level = null;
+            editor.on("BeforeAddUndo", function(e){
+                if(clean_level){
+                    clean_level.found = e.level;
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    return;
+                }
+                if(e.isDefaultPrevented()) return;
+                var marks = editor.getBody().querySelectorAll("script *");
+                if(!marks.length) return;
+                editor.dom.remove(marks, true);
+                clean_level = {};
+                try { editor.undoManager.add(); } finally {
+                    if(clean_level.found) tinymce.util.Tools.extend(e.level, clean_level.found);
+                    clean_level = null;
+                }
+            });
+        }
+
         // The field has a third writer. Before the page unloads, each text editor writes its raw
         // content into its field: the markup of the editor, with each script under the type that
         // the editor gives it. If the author cancels the unload at the unsaved-changes prompt, the
@@ -1435,7 +1464,7 @@ jQuery(function(){
             });
         }
 
-        // Each text editor of the page gets the seven hooks when TinyMCE adds it, before it reads its
+        // Each text editor of the page gets the eight hooks when TinyMCE adds it, before it reads its
         // settings. The hooks of core do not reach each editor. The settings hook runs when core
         // makes its settings, and the editor hooks run from the setup of those settings. A page can
         // add its own lists to the settings of core, pass its own setup, or set up an editor
@@ -1446,6 +1475,7 @@ jQuery(function(){
             script_takes_no_paragraph(added.editor);
             script_ends_as_in_a_browser(added.editor);
             script_text_alone(added.editor);
+            undo_levels_without_marks(added.editor);
             content_at_unload(added.editor);
             grid_takes_text_editor(added.editor);
         });
