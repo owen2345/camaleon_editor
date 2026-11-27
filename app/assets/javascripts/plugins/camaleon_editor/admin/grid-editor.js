@@ -685,7 +685,9 @@ jQuery(function(){
                 "</ul>"+
                 "</div>";
             content.addClass("drg_item btn btn-default");
-            if(content.children(".header_box").length == 0) content[0].insertAdjacentHTML("afterbegin", html);
+            // The header is parsed in a div. A block can be a script or an iframe, and in such an
+            // element the browser reads markup as text, which the export keeps.
+            if(content.children(".header_box").length == 0) content[0].insertBefore($(html)[0], content[0].firstChild);
             if(!skip_options){
                 content.children('.header_box').each(function(){ this.insertAdjacentHTML("beforeend", options); });
             }
