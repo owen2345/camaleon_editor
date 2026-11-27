@@ -107,7 +107,8 @@ RSpec.describe 'scripts in the text editor', :js do
   # visible no-break space). The editor removes them when its content is read, but not in a script.
   # The grid editor plugin removes them there: a script comes back with only its text. The plugin also
   # removes the marks from the document when the editor stores an undo level (see the next example).
-  # For this reason, the example shows the characters with no level stored, as a key press does.
+  # For this reason, the example shows the characters with no level stored, so that the marks stay in
+  # the script.
   it "gives back a script's text as it was while the editor shows invisible characters" do
     content = "<p>written in the text editor</p><script>var name =\u00a0'A B';</script>"
 
