@@ -1407,10 +1407,10 @@ jQuery(function(){
         }
 
         // An undo level holds the markup of the editor's document, not a read of its content. When
-        // the editor writes a level back, it reads the content of a script as text, and the marks
-        // stay in the script text. For this reason, the listener removes the marks from the scripts
-        // of the document before the editor stores a level. A browser does not show a script, so
-        // the author sees no change.
+        // the editor writes a level back, it reads the content of a script as text, and the markup
+        // of the marks becomes part of the script text. For this reason, the listener removes the
+        // marks from the scripts of the document before the editor stores a level. A browser does
+        // not show a script, so the author sees no change.
         // The editor makes the level before BeforeAddUndo, from the document with the marks. The
         // listener asks the editor for a second level, stops it before the editor stores it, and
         // copies its content into the first level. The caller of add() and the listeners after this

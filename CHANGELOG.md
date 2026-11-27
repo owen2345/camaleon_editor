@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-### Fix: an undo keeps the text of a script as it was
+### Fix: an undo or a redo keeps the text of a script as it was
 
-An undo while the text editor shows invisible characters no longer puts markup into the text of a script. [#28](https://github.com/owen2345/camaleon_editor/pull/28).
+An undo or a redo while the text editor shows invisible characters no longer puts markup into the text of a script. [#28](https://github.com/owen2345/camaleon_editor/pull/28).
 
 ### Fix: the text editors stay safe from jQuery's tinymce()
 
