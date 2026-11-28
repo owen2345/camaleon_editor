@@ -369,6 +369,23 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(kept).to eq(["before #{separator} after", 1, separator, 0])
     end
 
+    # In a comment and in the text of a noscript element, the separator also stays as it was written.
+    it 'gives back the separator in a comment and in the text of a noscript element' do
+      markup = "<p>first page</p><!-- before #{separator} after --><noscript>#{separator}</noscript>"
+      kept = page.evaluate_script(<<~JS, markup)
+        (function(markup){
+          var editor = #{POST_TEXT_EDITOR};
+          editor.setContent(markup);
+          var body = editor.getBody(), walker = editor.getDoc().createTreeWalker(body, 128, null, false);
+          var comments = [], noscript = body.querySelector('noscript'), node;
+          while((node = walker.nextNode())) comments.push(node.data);
+          return [comments, noscript && noscript.textContent, body.querySelectorAll('img').length];
+        })(arguments[0])
+      JS
+
+      expect(kept).to eq([[" before #{separator} after "], separator, 0])
+    end
+
     # The parser of the editor keeps some attribute names that setAttribute() of an older browser
     # refuses, for example a name that starts with a digit. The example makes setAttribute() refuse
     # such a name, as that browser does.
