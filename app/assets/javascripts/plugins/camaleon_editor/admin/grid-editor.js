@@ -1433,6 +1433,9 @@ jQuery(function(){
             // example, a write of a tree of nodes gets no BeforeSetContent.
             var prefix = "mcepagebreak" + Math.random().toString(36).slice(2) + "n", spellings = [], numbers = Object.create(null);
             var tokens = new RegExp(prefix + "(\\d+)x", "g");
+            var as_written = function(text){
+                return text.replace(tokens, function(token, n){ return spellings[n]; });
+            };
             editor.on("BeforeSetContent", function(e){
                 if(!editor.plugins.pagebreak || typeof e.content !== "string") return;
                 var separator = editor.getParam("pagebreak_separator", "<!-- pagebreak -->");
@@ -1442,11 +1445,17 @@ jQuery(function(){
                     return prefix + numbers[spelling] + "x";
                 });
             });
+            // A plugin can keep a part of the content out of the document. For example, the
+            // fullpage plugin keeps the head of the page as markup, and adds it to each read. Each
+            // token in that part becomes the separator as it was written. The listener is added at
+            // PreInit, after the plugins add their listeners, so that it gets the read last.
+            editor.on("PreInit", function(){
+                editor.on("GetContent", function(e){
+                    if(spellings.length && typeof e.content === "string") e.content = as_written(e.content);
+                });
+            });
             editor.on("SetContent", function(){
                 if(!spellings.length) return;
-                var as_written = function(text){
-                    return text.replace(tokens, function(token, n){ return spellings[n]; });
-                };
                 var raw_text = editor.schema.getSpecialElements(), roots = [editor.getBody()], images = [], node, i;
                 // The content of a template element is not in the tree of the document. For this
                 // reason, the walk also goes through the content of each template that it finds.

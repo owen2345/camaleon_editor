@@ -422,6 +422,19 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(answer.delete("\n")).to eq("<p>#{in_a_template}</p>")
     end
 
+    # The fullpage plugin keeps the head of the page out of the document, and adds it to each read.
+    it 'gives back the separator in the head that the fullpage plugin keeps' do
+      set_up_text_editors(%w[full_page], <<~JS)
+        cama_get_tinymce_settings({selector: selector, plugins: 'pagebreak fullpage'})
+      JS
+      head = "<head><title>first #{separator} second</title><script>#{paging_text}</script></head>"
+
+      answer = through_the_text_editor("<html>#{head}<body><p>first page</p></body></html>",
+                                       editor: "tinymce.get('full_page')")
+
+      expect(answer).to include(head)
+    end
+
     # A page can give a text editor its own separator. A script then gets that separator back.
     it "gives back the page's own separator in a script's text" do
       own_separator = '<!-- next page -->'
