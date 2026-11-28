@@ -1497,7 +1497,11 @@ jQuery(function(){
                         if(p % 2) pieces.appendChild(editor.dom.createFragment(image));
                         else if(parts[p]) pieces.appendChild(editor.getDoc().createTextNode(parts[p]));
                     }
-                    images[i].parentNode.replaceChild(pieces, images[i]);
+                    // The pieces go in before the text, and then the text goes out. A caret after
+                    // the text then stays after the pieces. A write through the selection puts the
+                    // caret there before its SetContent.
+                    images[i].parentNode.insertBefore(pieces, images[i]);
+                    images[i].parentNode.removeChild(images[i]);
                 }
             });
         }

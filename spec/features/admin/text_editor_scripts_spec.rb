@@ -334,6 +334,24 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(page_breaks_and_script_text).to eq([1, paging_text])
     end
 
+    # A write through selection.setContent() puts the caret after the written text. The listener
+    # makes the page break after that write, and the caret stays after the text.
+    it 'keeps the caret after a page break that the selection writes' do
+      answer = page.evaluate_script(<<~JS)
+        (function(){
+          var editor = #{POST_TEXT_EDITOR};
+          editor.setContent('<p>ab</p>');
+          editor.focus();
+          editor.selection.setCursorLocation(editor.getBody().firstChild.firstChild, 1);
+          editor.selection.setContent('1#{separator}2');
+          editor.insertContent('Z');
+          return editor.getContent();
+        })()
+      JS
+
+      expect(answer.delete("\n")).to eq("<p>a1#{separator}2Zb</p>")
+    end
+
     # The plugin finds the separator in each letter case. A script keeps the separator as it was
     # written. A page break comes back as the settings spell the separator.
     it "keeps the letter case of the separator in a script's text" do
