@@ -1418,6 +1418,7 @@ jQuery(function(){
         // goes back into the document:
         // - In the text of an element that holds raw text (for example, a script), in a comment and
         //   in an attribute value, the token becomes the separator as it was written.
+        // - In a comment that the protect setting makes, the token becomes the escaped separator.
         // - In other text, the token becomes the placeholder image, as the plugin makes it. The
         //   markup is the markup that the plugin writes (TinyMCE 4.7.4 to 4.9).
         // The listener of the plugin runs after this one, because the editor gets the hooks before it
