@@ -1450,9 +1450,9 @@ jQuery(function(){
             // token in that part becomes the separator as it was written. The listener is added at
             // PreInit, so that it gets the read after the listeners of the plugins.
             // Limit: the Document properties dialog of the fullpage plugin shows the head that the
-            // plugin keeps. A separator in the title or in a meta value shows as a token there, but
-            // the read still gives back the separator as it was written. The text editors of
-            // Camaleon do not load the fullpage plugin.
+            // plugin keeps. A separator in the title or in a meta value shows as a token there. The
+            // read still gives back the separator as it was written. The text editors of Camaleon
+            // do not load the fullpage plugin.
             editor.on("PreInit", function(){
                 editor.on("GetContent", function(e){
                     if(spellings.length && typeof e.content === "string") e.content = as_written(e.content);
