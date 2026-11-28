@@ -1433,8 +1433,8 @@ jQuery(function(){
             // example, a write of a tree of nodes gets no BeforeSetContent.
             var prefix = "mcepagebreak" + Math.random().toString(36).slice(2) + "n", spellings = [], numbers = Object.create(null);
             var tokens = new RegExp(prefix + "(\\d+)x", "g");
-            var as_written = function(text){
-                return text.replace(tokens, function(token, n){ return spellings[n]; });
+            var as_written = function(text, encode){
+                return text.replace(tokens, function(token, n){ return encode ? encode(spellings[n]) : spellings[n]; });
             };
             editor.on("BeforeSetContent", function(e){
                 if(!editor.plugins.pagebreak || typeof e.content !== "string") return;
@@ -1477,7 +1477,11 @@ jQuery(function(){
                             }
                         }
                         else if(node.data.indexOf(prefix) === -1) continue;
-                        else if(node.nodeType === 8 || raw_text.hasOwnProperty(node.parentNode.nodeName.toLowerCase()))
+                        // The protect setting keeps a part of the content as an escaped comment.
+                        // The separator is escaped there too, so that no "-->" ends the comment.
+                        else if(node.nodeType === 8 && node.data.indexOf("mce:protected ") === 0)
+                            node.data = as_written(node.data, escape);
+                        else if(node.nodeType === 8 ||raw_text.hasOwnProperty(node.parentNode.nodeName.toLowerCase()))
                             node.data = as_written(node.data);
                         else images.push(node);
                     }

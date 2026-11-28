@@ -452,6 +452,19 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(answer).to include(head)
     end
 
+    # The protect setting keeps a part of the content as it is, in an escaped comment. The separator
+    # in that part also stays as it was written.
+    it 'gives back the separator in a part that the protect setting keeps' do
+      set_up_text_editors(%w[protected], <<~JS)
+        cama_get_tinymce_settings({selector: selector, protect: [/<%[\\s\\S]*?%>/g]})
+      JS
+      kept = "<p>first page <% pages = '#{separator}' %></p>"
+
+      answer = through_the_text_editor(kept, editor: "tinymce.get('protected')")
+
+      expect(answer.delete("\n")).to eq(kept)
+    end
+
     # A page can give a text editor its own separator. A script then gets that separator back.
     it "gives back the page's own separator in a script's text" do
       own_separator = '<!-- next page -->'
