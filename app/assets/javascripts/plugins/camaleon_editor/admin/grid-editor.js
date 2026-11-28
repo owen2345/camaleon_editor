@@ -1425,40 +1425,38 @@ jQuery(function(){
         // A write without events changes nothing, and the plugin does nothing then too.
         var PAGE_BREAK = '<img src="' + tinymce.Env.transparentSrc + '" class="mce-pagebreak" data-mce-resize="false" data-mce-placeholder />';
         var page_break_separators_kept = function(editor){
-            // A token is the prefix of the editor and the position of its separator in the list. A
-            // write can make a second write before its own SetContent: an insert writes a caret
-            // marker first. The SetContent of that second write comes before the content is in the
-            // document. For this reason, each SetContent puts back the tokens that it finds, and the
-            // list stays until the SetContent of the first write. "open" counts the writes that have
-            // no SetContent yet.
-            var prefix = "mcepagebreak" + Math.random().toString(36).slice(2) + "n", spellings = [], open = 0;
+            // A token is the prefix of the editor and the number of its spelling in the list. Each
+            // spelling gets one number, which it keeps while the editor exists. Thus each token has
+            // its spelling, and each SetContent puts back the tokens that it finds. The SetContent of
+            // a write can come before the content of an earlier write is in the document: an insert
+            // writes a caret marker first. Also, a write can get only one of the two events. For
+            // example, a write of a tree of nodes gets no BeforeSetContent.
+            var prefix = "mcepagebreak" + Math.random().toString(36).slice(2) + "n", spellings = [], numbers = Object.create(null);
             var tokens = new RegExp(prefix + "(\\d+)x", "g");
             editor.on("BeforeSetContent", function(e){
-                open++;
                 if(!editor.plugins.pagebreak || typeof e.content !== "string") return;
                 var separator = editor.getParam("pagebreak_separator", "<!-- pagebreak -->");
                 var found = new RegExp(separator.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&"), "gi");
                 e.content = e.content.replace(found, function(spelling){
-                    spellings.push(spelling);
-                    return prefix + (spellings.length - 1) + "x";
+                    if(!(spelling in numbers)) numbers[spelling] = spellings.push(spelling) - 1;
+                    return prefix + numbers[spelling] + "x";
                 });
             });
             editor.on("SetContent", function(){
-                open = Math.max(open - 1, 0);
                 if(!spellings.length) return;
-                var written = spellings;
-                if(!open) spellings = [];
                 var as_written = function(text){
-                    return text.replace(tokens, function(token, n){ return written[n]; });
+                    return text.replace(tokens, function(token, n){ return spellings[n]; });
                 };
                 var raw_text = editor.schema.getSpecialElements(), images = [], node, i;
                 // elements, texts and comments
                 var walker = editor.getDoc().createTreeWalker(editor.getBody(), 1 | 4 | 128, null, false);
                 while((node = walker.nextNode())){
                     if(node.nodeType === 1){
+                        // The value is set on the attribute itself: setAttribute() of an older
+                        // browser refuses some names that the parser keeps (for example "1x").
                         for(i = 0; i < node.attributes.length; i++){
                             if(node.attributes[i].value.indexOf(prefix) !== -1)
-                                node.setAttribute(node.attributes[i].name, as_written(node.attributes[i].value));
+                                node.attributes[i].value = as_written(node.attributes[i].value);
                         }
                     }
                     else if(node.data.indexOf(prefix) === -1) continue;

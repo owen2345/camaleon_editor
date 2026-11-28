@@ -369,6 +369,46 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(kept).to eq(["before #{separator} after", 1, separator, 0])
     end
 
+    # The parser of the editor keeps some attribute names that setAttribute() of an older browser
+    # refuses, for example a name that starts with a digit. The example makes setAttribute() refuse
+    # such a name, as that browser does.
+    it 'gives back the separator in an attribute whose name setAttribute() refuses' do
+      markup = "<p 1x=\"before #{separator} after\">first page</p>"
+      answer = page.evaluate_script(<<~JS, markup)
+        (function(markup){
+          var editor = #{POST_TEXT_EDITOR}, element = editor.getWin().Element.prototype, set = element.setAttribute;
+          element.setAttribute = function(name){
+            if(/^[^A-Za-z_:]/.test(name)) throw new DOMException('refused', 'InvalidCharacterError');
+            return set.apply(this, arguments);
+          };
+          try { editor.setContent(markup); } catch(error) { return error.name; } finally { element.setAttribute = set; }
+          return editor.getContent();
+        })(arguments[0])
+      JS
+
+      expect(answer.delete("\n")).to eq('<p 1x="before &lt;!-- pagebreak --&gt; after">first page</p>')
+    end
+
+    # A write of a tree of nodes gets a SetContent and no BeforeSetContent. Here such a write comes
+    # in the middle of another write.
+    it 'gives back the separator after a write of a tree in the middle of a write' do
+      answer = page.evaluate_script(<<~JS, content)
+        (function(markup){
+          var editor = #{POST_TEXT_EDITOR}, first = true;
+          editor.on('BeforeSetContent', function(){
+            if(!first) return;
+            first = false;
+            editor.setContent(editor.parser.parse('<p>a tree</p>'));
+          });
+          editor.setContent(markup);
+          return editor.getContent();
+        })(arguments[0])
+      JS
+
+      expect(answer.delete("\n")).to eq(returned)
+      expect(page_breaks_and_script_text).to eq([1, paging_text])
+    end
+
     # A page can give a text editor its own separator. A script then gets that separator back.
     it "gives back the page's own separator in a script's text" do
       own_separator = '<!-- next page -->'
