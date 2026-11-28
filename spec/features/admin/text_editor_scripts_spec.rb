@@ -318,6 +318,30 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(answer.delete("\n")).to include("<script>#{paging_text}</script>", "<p>#{separator}</p>")
       expect(page_breaks_and_script_text).to eq([1, paging_text])
     end
+
+    # A page can give a text editor its own separator. A script then gets that separator back.
+    it "gives back the page's own separator in a script's text" do
+      own_separator = '<!-- next page -->'
+      set_up_text_editors(%w[own_separator], <<~JS)
+        cama_get_tinymce_settings({selector: selector, pagebreak_separator: '#{own_separator}'})
+      JS
+
+      answer = through_the_text_editor(content.gsub(separator, own_separator), editor: "tinymce.get('own_separator')")
+
+      expect(answer.delete("\n")).to eq(returned.gsub(separator, own_separator))
+    end
+
+    # An editor without the page break plugin puts no placeholder markup into a script. The text of a
+    # script stays as it is, also when it holds that markup.
+    it "leaves a script's text as it is in an editor without the page break plugin" do
+      set_up_text_editors(%w[no_page_breaks], '{selector: selector}')
+      placeholder = page.evaluate_script(<<~JS)
+        '<img src="' + tinymce.Env.transparentSrc + '" class="mce-pagebreak" data-mce-resize="false" data-mce-placeholder />'
+      JS
+      kept = "<p>first page</p><script>var image = '#{placeholder}';</script>"
+
+      expect(through_the_text_editor(kept, editor: "tinymce.get('no_page_breaks')").delete("\n")).to eq(kept)
+    end
   end
 
   # The plugin adds the script element to the list of valid elements of each text editor. The source
