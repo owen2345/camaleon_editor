@@ -253,8 +253,8 @@ RSpec.describe 'scripts in the text editor', :js do
   end
 
   # The page break plugin of the editor works on the content as a string. It replaces each page break
-  # separator with the markup of its placeholder image, also in the text of a script or a text area
-  # and in an attribute value. The grid editor plugin hides each separator from the plugin, and makes
+  # separator with the markup of its placeholder image. It does so also in the text of a script or a
+  # text area and in an attribute value. The grid editor plugin hides each separator from the plugin, and makes
   # the placeholder image only where the separator is a page break. Each other separator comes back
   # as it was written.
   context 'with page break separators' do

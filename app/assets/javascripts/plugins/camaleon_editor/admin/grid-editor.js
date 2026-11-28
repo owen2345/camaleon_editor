@@ -1406,9 +1406,9 @@ jQuery(function(){
             });
         }
 
-        // Before the editor reads content, its page break plugin replaces each page break separator
-        // ("<!-- pagebreak -->", in each letter case) with the markup of a placeholder image. The
-        // plugin works on the content as a string. It also replaces a separator in the text of a
+        // The page break separator is "<!-- pagebreak -->", in each letter case. Before the editor
+        // reads content, its page break plugin replaces each separator with the markup of a
+        // placeholder image. The plugin works on the content as a string. It also replaces a separator in the text of a
         // script or a text area, and in an attribute value. There, the markup does not become an
         // image: it stays text, and the editor gives it back. In an attribute value, the quotes of
         // the markup also end the value too early.
