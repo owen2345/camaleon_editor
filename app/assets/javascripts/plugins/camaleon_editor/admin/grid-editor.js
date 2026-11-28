@@ -1447,22 +1447,27 @@ jQuery(function(){
                 var as_written = function(text){
                     return text.replace(tokens, function(token, n){ return spellings[n]; });
                 };
-                var raw_text = editor.schema.getSpecialElements(), images = [], node, i;
-                // elements, texts and comments
-                var walker = editor.getDoc().createTreeWalker(editor.getBody(), 1 | 4 | 128, null, false);
-                while((node = walker.nextNode())){
-                    if(node.nodeType === 1){
-                        // The value is set on the attribute itself: setAttribute() of an older
-                        // browser refuses some names that the parser keeps (for example "1x").
-                        for(i = 0; i < node.attributes.length; i++){
-                            if(node.attributes[i].value.indexOf(prefix) !== -1)
-                                node.attributes[i].value = as_written(node.attributes[i].value);
+                var raw_text = editor.schema.getSpecialElements(), roots = [editor.getBody()], images = [], node, i;
+                // The content of a template element is not in the tree of the document. For this
+                // reason, the walk also goes through the content of each template that it finds.
+                for(var r = 0; r < roots.length; r++){
+                    // elements, texts and comments
+                    var walker = editor.getDoc().createTreeWalker(roots[r], 1 | 4 | 128, null, false);
+                    while((node = walker.nextNode())){
+                        if(node.nodeType === 1){
+                            if(node.nodeName === "TEMPLATE" && node.content) roots.push(node.content);
+                            // The value is set on the attribute itself: setAttribute() of an older
+                            // browser refuses some names that the parser keeps (for example "1x").
+                            for(i = 0; i < node.attributes.length; i++){
+                                if(node.attributes[i].value.indexOf(prefix) !== -1)
+                                    node.attributes[i].value = as_written(node.attributes[i].value);
+                            }
                         }
+                        else if(node.data.indexOf(prefix) === -1) continue;
+                        else if(node.nodeType === 8 || raw_text.hasOwnProperty(node.parentNode.nodeName.toLowerCase()))
+                            node.data = as_written(node.data);
+                        else images.push(node);
                     }
-                    else if(node.data.indexOf(prefix) === -1) continue;
-                    else if(node.nodeType === 8 || raw_text.hasOwnProperty(node.parentNode.nodeName.toLowerCase()))
-                        node.data = as_written(node.data);
-                    else images.push(node);
                 }
                 if(!images.length) return;
                 // The image as the editor makes it from the markup of the plugin.

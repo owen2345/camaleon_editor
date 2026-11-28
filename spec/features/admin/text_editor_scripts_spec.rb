@@ -409,6 +409,19 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(page_breaks_and_script_text).to eq([1, paging_text])
     end
 
+    # A page can let a text editor keep template elements. The content of a template is not in the
+    # tree of the document, but a separator there still becomes a page break.
+    it 'makes a page break in the content of a template' do
+      set_up_text_editors(%w[templates], <<~JS)
+        cama_get_tinymce_settings({selector: selector, extended_valid_elements: 'template[*]'})
+      JS
+      in_a_template = "<template>first page#{separator}second page</template>"
+
+      answer = through_the_text_editor(in_a_template, editor: "tinymce.get('templates')")
+
+      expect(answer.delete("\n")).to eq("<p>#{in_a_template}</p>")
+    end
+
     # A page can give a text editor its own separator. A script then gets that separator back.
     it "gives back the page's own separator in a script's text" do
       own_separator = '<!-- next page -->'
