@@ -1406,6 +1406,107 @@ jQuery(function(){
             });
         }
 
+        // The page break separator is "<!-- pagebreak -->", in each letter case. Before the editor
+        // reads content, its page break plugin replaces each separator with the markup of a
+        // placeholder image. The plugin works on the content as a string. It also replaces a separator in the text of a
+        // script or a text area, and in an attribute value. There, the markup does not become an
+        // image: it stays text, and the editor gives it back. In an attribute value, the quotes of
+        // the markup also end the value too early.
+        // For this reason, the listener replaces each separator before the plugin does, with a token
+        // that holds no markup characters. It keeps each separator as it was written. The plugin then
+        // finds no separator, and each parse keeps the token where it is. After the write, each token
+        // goes back into the document:
+        // - In the text of an element that holds raw text (for example, a script), in a comment and
+        //   in an attribute value, the token becomes the separator as it was written.
+        // - In a comment that the protect setting makes, the token becomes the escaped separator.
+        // - In other text, the token becomes the placeholder image, as the plugin makes it. The
+        //   markup is the markup that the plugin writes (TinyMCE 4.7.4 to 4.9).
+        // The listener of the plugin runs after this one, because the editor gets the hooks before it
+        // loads its plugins. Each write with events gets the tokens, also the write of an undo level.
+        // A write without events changes nothing, and the plugin does nothing then too.
+        var PAGE_BREAK = '<img src="' + tinymce.Env.transparentSrc + '" class="mce-pagebreak" data-mce-resize="false" data-mce-placeholder />';
+        var page_break_separators_kept = function(editor){
+            // A token is the prefix of the editor and the number of its spelling in the list. Each
+            // spelling gets one number, which it keeps while the editor exists. Thus each token has
+            // its spelling, and each SetContent puts back the tokens that it finds. The SetContent of
+            // a write can come before the content of an earlier write is in the document: an insert
+            // writes a caret marker first. Also, a write can get only one of the two events. For
+            // example, a write of a tree of nodes gets no BeforeSetContent.
+            var prefix = "mcepagebreak" + Math.random().toString(36).slice(2) + "n", spellings = [], numbers = Object.create(null);
+            var tokens = new RegExp(prefix + "(\\d+)x", "g");
+            var as_written = function(text, encode){
+                return text.replace(tokens, function(token, n){ return encode ? encode(spellings[n]) : spellings[n]; });
+            };
+            editor.on("BeforeSetContent", function(e){
+                if(!editor.plugins.pagebreak || typeof e.content !== "string") return;
+                var separator = editor.getParam("pagebreak_separator", "<!-- pagebreak -->");
+                var found = new RegExp(separator.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&"), "gi");
+                e.content = e.content.replace(found, function(spelling){
+                    if(!(spelling in numbers)) numbers[spelling] = spellings.push(spelling) - 1;
+                    return prefix + numbers[spelling] + "x";
+                });
+            });
+            // A plugin can keep a part of the content out of the document. For example, the
+            // fullpage plugin keeps the head of the page as markup, and adds it to each read. Each
+            // token in that part becomes the separator as it was written. The listener is added at
+            // PreInit, so that it gets the read after the listeners of the plugins.
+            // Limit: the Document properties dialog of the fullpage plugin shows the head that the
+            // plugin keeps. A separator in the title or in a meta value shows as a token there. The
+            // read still gives back the separator as it was written. The text editors of Camaleon
+            // do not load the fullpage plugin.
+            editor.on("PreInit", function(){
+                editor.on("GetContent", function(e){
+                    if(spellings.length && typeof e.content === "string") e.content = as_written(e.content);
+                });
+            });
+            editor.on("SetContent", function(){
+                if(!spellings.length) return;
+                var raw_text = editor.schema.getSpecialElements(), roots = [editor.getBody()], images = [], node, i;
+                // The content of a template element is not in the tree of the document. For this
+                // reason, the walk also goes through the content of each template that it finds.
+                for(var r = 0; r < roots.length; r++){
+                    // elements, texts and comments
+                    var walker = editor.getDoc().createTreeWalker(roots[r], 1 | 4 | 128, null, false);
+                    while((node = walker.nextNode())){
+                        if(node.nodeType === 1){
+                            if(node.nodeName === "TEMPLATE" && node.content) roots.push(node.content);
+                            // The value is set on the attribute itself: setAttribute() of an older
+                            // browser refuses some names that the parser keeps (for example "1x").
+                            for(i = 0; i < node.attributes.length; i++){
+                                if(node.attributes[i].value.indexOf(prefix) !== -1)
+                                    node.attributes[i].value = as_written(node.attributes[i].value);
+                            }
+                        }
+                        else if(node.data.indexOf(prefix) === -1) continue;
+                        // The protect setting keeps a part of the content as an escaped comment.
+                        // The separator is escaped there too, so that no "-->" ends the comment.
+                        else if(node.nodeType === 8 && node.data.indexOf("mce:protected ") === 0)
+                            node.data = as_written(node.data, escape);
+                        else if(node.nodeType === 8 || raw_text.hasOwnProperty(node.parentNode.nodeName.toLowerCase()))
+                            node.data = as_written(node.data);
+                        else images.push(node);
+                    }
+                }
+                if(!images.length) return;
+                // The image as the editor makes it from the markup of the plugin.
+                var image = new tinymce.html.Serializer({validate: editor.settings.validate}, editor.schema)
+                    .serialize(editor.parser.parse(PAGE_BREAK, {forced_root_block: false, isRootContent: true}));
+                for(i = 0; i < images.length; i++){
+                    // The split gives the texts around each token, and the number of each token.
+                    var parts = images[i].data.split(tokens), pieces = editor.getDoc().createDocumentFragment();
+                    for(var p = 0; p < parts.length; p++){
+                        if(p % 2) pieces.appendChild(editor.dom.createFragment(image));
+                        else if(parts[p]) pieces.appendChild(editor.getDoc().createTextNode(parts[p]));
+                    }
+                    // The pieces go in before the text, and then the text goes out. A caret after
+                    // the text then stays after the pieces. A write through the selection puts the
+                    // caret there before its SetContent.
+                    images[i].parentNode.insertBefore(pieces, images[i]);
+                    images[i].parentNode.removeChild(images[i]);
+                }
+            });
+        }
+
         // An undo level holds the markup of the editor's document, not a read of its content. When
         // the editor writes a level back, it reads the content of a script as text, and the markup
         // of the marks becomes part of the script text. For this reason, the listener removes the
@@ -1466,7 +1567,7 @@ jQuery(function(){
             });
         }
 
-        // Each text editor of the page gets the eight hooks when TinyMCE adds it, before it reads its
+        // Each text editor of the page gets the nine hooks when TinyMCE adds it, before it reads its
         // settings. The hooks of core do not reach each editor. The settings hook runs when core
         // makes its settings, and the editor hooks run from the setup of those settings. A page can
         // add its own lists to the settings of core, pass its own setup, or set up an editor
@@ -1477,6 +1578,7 @@ jQuery(function(){
             script_takes_no_paragraph(added.editor);
             script_ends_as_in_a_browser(added.editor);
             script_text_alone(added.editor);
+            page_break_separators_kept(added.editor);
             undo_levels_without_marks(added.editor);
             content_at_unload(added.editor);
             grid_takes_text_editor(added.editor);

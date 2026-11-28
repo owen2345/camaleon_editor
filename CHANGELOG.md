@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix: the page break separator stays text outside a page break
+
+Where the text `<!-- pagebreak -->` is not a page break, it stays as written in a text editor. This applies to a comment, an attribute value and the text of a script, a style, a text area or a similar element. A page break still works as before. [#29](https://github.com/owen2345/camaleon_editor/pull/29).
+
 ### Fix: an undo or a redo keeps the text of a script as it was
 
 An undo or a redo while the text editor shows invisible characters no longer puts markup into the text of a script. [#28](https://github.com/owen2345/camaleon_editor/pull/28).

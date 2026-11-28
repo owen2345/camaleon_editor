@@ -252,6 +252,264 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
   end
 
+  # The page break plugin of the editor works on the content as a string. It replaces each page break
+  # separator with the markup of its placeholder image. It does so also in the text of a script or a
+  # text area and in an attribute value. The grid editor plugin hides each separator from the plugin, and makes
+  # the placeholder image only where the separator is a page break. Each other separator comes back
+  # as it was written.
+  context 'with page break separators' do
+    def separator
+      '<!-- pagebreak -->'
+    end
+
+    def paging_text
+      "var pages = text.split('#{separator}');"
+    end
+
+    # A page break between two paragraphs, and a script whose text holds the separator. The editor
+    # returns the page break in a paragraph.
+    def content
+      "<p>first page</p>#{separator}<p>second page</p><script>#{paging_text}</script>"
+    end
+
+    def returned
+      "<p>first page</p><p>#{separator}</p><p>second page</p><script>#{paging_text}</script>"
+    end
+
+    # The markup of the placeholder image that the page break plugin writes.
+    def placeholder
+      page.evaluate_script(<<~JS)
+        '<img src="' + tinymce.Env.transparentSrc + '" class="mce-pagebreak" data-mce-resize="false" data-mce-placeholder />'
+      JS
+    end
+
+    # The number of placeholder images in the document of the post's text editor, and the text of its
+    # script.
+    def page_breaks_and_script_text
+      page.evaluate_script(<<~JS)
+        (function(){
+          var body = #{POST_TEXT_EDITOR}.getBody(), script = body.querySelector('script');
+          return [body.querySelectorAll('img.mce-pagebreak').length, script && script.text];
+        })()
+      JS
+    end
+
+    it "gives back the separator in a script's text, and a page break outside the script" do
+      expect(through_the_text_editor(content).delete("\n")).to eq(returned)
+      expect(page_breaks_and_script_text).to eq([1, paging_text])
+    end
+
+    it 'makes a page break in the text of a paragraph' do
+      in_a_paragraph = "<p>first page#{separator}second page</p>"
+
+      expect(through_the_text_editor(in_a_paragraph).delete("\n")).to eq(in_a_paragraph)
+      expect(page_breaks_and_script_text).to eq([1, nil])
+    end
+
+    # An undo writes the markup of an undo level back into the editor. The page break plugin replaces
+    # the separator in that markup too.
+    it "gives back the separator in a script's text after an undo" do
+      undone = page.evaluate_script(<<~JS, content)
+        (function(markup){
+          var editor = #{POST_TEXT_EDITOR};
+          editor.setContent(markup);
+          editor.undoManager.clear();
+          editor.undoManager.add();
+          editor.selection.select(editor.getBody().firstChild, true);
+          editor.selection.collapse(false);
+          editor.insertContent(' and edited');
+          editor.undoManager.undo();
+          return editor.getContent();
+        })(arguments[0])
+      JS
+
+      expect(undone.delete("\n")).to eq(returned)
+      expect(page_breaks_and_script_text).to eq([1, paging_text])
+    end
+
+    it 'gives back the separator in the text of a script put in at the caret' do
+      answer = through_the_text_editor('<p>written in the text editor</p>', inserted: content)
+
+      expect(answer.delete("\n")).to include("<script>#{paging_text}</script>", "<p>#{separator}</p>")
+      expect(page_breaks_and_script_text).to eq([1, paging_text])
+    end
+
+    # A write through selection.setContent() puts the caret after the written text. The listener
+    # makes the page break after that write, and the caret stays after the text.
+    it 'keeps the caret after a page break that the selection writes' do
+      answer = page.evaluate_script(<<~JS)
+        (function(){
+          var editor = #{POST_TEXT_EDITOR};
+          editor.setContent('<p>ab</p>');
+          editor.focus();
+          editor.selection.setCursorLocation(editor.getBody().firstChild.firstChild, 1);
+          editor.selection.setContent('1#{separator}2');
+          editor.insertContent('Z');
+          return editor.getContent();
+        })()
+      JS
+
+      expect(answer.delete("\n")).to eq("<p>a1#{separator}2Zb</p>")
+    end
+
+    # The plugin finds the separator in each letter case. A script keeps the separator as it was
+    # written. A page break comes back as the settings spell the separator.
+    it "keeps the letter case of the separator in a script's text" do
+      written = content.sub(separator, '<!-- PageBreak -->').sub(paging_text, paging_text.upcase)
+
+      expect(through_the_text_editor(written).delete("\n")).to eq(returned.sub(paging_text, paging_text.upcase))
+      expect(page_breaks_and_script_text).to eq([1, paging_text.upcase])
+    end
+
+    # The text of a script can hold the markup of the placeholder image itself. That text is not a
+    # page break, and it stays as it is.
+    it "keeps the markup of the placeholder image in a script's text" do
+      kept = "<p>first page</p><script>var image = '#{placeholder}';</script>"
+
+      expect(through_the_text_editor(kept).delete("\n")).to eq(kept)
+      expect(page_breaks_and_script_text.first).to eq(0)
+    end
+
+    # In an attribute value, the quotes of the placeholder markup ended the value and made more
+    # attributes. In a text area, the markup stayed text.
+    it 'gives back the separator in an attribute value and in the text of a text area' do
+      markup = "<p title=\"before #{separator} after\">first page</p><textarea>#{separator}</textarea>"
+      kept = page.evaluate_script(<<~JS, markup)
+        (function(markup){
+          var editor = #{POST_TEXT_EDITOR};
+          editor.setContent(markup);
+          var body = editor.getBody();
+          return [body.querySelector('p').getAttribute('title'), body.querySelector('p').attributes.length,
+                  body.querySelector('textarea').value, body.querySelectorAll('img').length];
+        })(arguments[0])
+      JS
+
+      expect(kept).to eq(["before #{separator} after", 1, separator, 0])
+    end
+
+    # In a comment and in the text of a noscript element, the separator also stays as it was written.
+    it 'gives back the separator in a comment and in the text of a noscript element' do
+      markup = "<p>first page</p><!-- before #{separator} after --><noscript>#{separator}</noscript>"
+      kept = page.evaluate_script(<<~JS, markup)
+        (function(markup){
+          var editor = #{POST_TEXT_EDITOR};
+          editor.setContent(markup);
+          var body = editor.getBody(), walker = editor.getDoc().createTreeWalker(body, 128, null, false);
+          var comments = [], noscript = body.querySelector('noscript'), node;
+          while((node = walker.nextNode())) comments.push(node.data);
+          return [comments, noscript && noscript.textContent, body.querySelectorAll('img').length];
+        })(arguments[0])
+      JS
+
+      expect(kept).to eq([[" before #{separator} after "], separator, 0])
+    end
+
+    # The parser of the editor keeps some attribute names that setAttribute() of an older browser
+    # refuses, for example a name that starts with a digit. The example makes setAttribute() refuse
+    # such a name, as that browser does.
+    it 'gives back the separator in an attribute whose name setAttribute() refuses' do
+      markup = "<p 1x=\"before #{separator} after\">first page</p>"
+      answer = page.evaluate_script(<<~JS, markup)
+        (function(markup){
+          var editor = #{POST_TEXT_EDITOR}, element = editor.getWin().Element.prototype, set = element.setAttribute;
+          element.setAttribute = function(name){
+            if(/^[^A-Za-z_:]/.test(name)) throw new DOMException('refused', 'InvalidCharacterError');
+            return set.apply(this, arguments);
+          };
+          try { editor.setContent(markup); } catch(error) { return error.name; } finally { element.setAttribute = set; }
+          return editor.getContent();
+        })(arguments[0])
+      JS
+
+      expect(answer.delete("\n")).to eq('<p 1x="before &lt;!-- pagebreak --&gt; after">first page</p>')
+    end
+
+    # A write of a tree of nodes gets a SetContent and no BeforeSetContent. Here such a write comes
+    # in the middle of another write.
+    it 'gives back the separator after a write of a tree in the middle of a write' do
+      answer = page.evaluate_script(<<~JS, content)
+        (function(markup){
+          var editor = #{POST_TEXT_EDITOR}, first = true;
+          editor.on('BeforeSetContent', function(){
+            if(!first) return;
+            first = false;
+            editor.setContent(editor.parser.parse('<p>a tree</p>'));
+          });
+          editor.setContent(markup);
+          return editor.getContent();
+        })(arguments[0])
+      JS
+
+      expect(answer.delete("\n")).to eq(returned)
+      expect(page_breaks_and_script_text).to eq([1, paging_text])
+    end
+
+    # A page can let a text editor keep template elements. The content of a template is not in the
+    # tree of the document, but a separator there still becomes a page break.
+    it 'makes a page break in the content of a template' do
+      set_up_text_editors(%w[templates], <<~JS)
+        cama_get_tinymce_settings({selector: selector, extended_valid_elements: 'template[*]'})
+      JS
+      in_a_template = "<template>first page#{separator}second page</template>"
+
+      answer = through_the_text_editor(in_a_template, editor: "tinymce.get('templates')")
+
+      expect(answer.delete("\n")).to eq("<p>#{in_a_template}</p>")
+      # The read alone can give back the separator from a token. The template must hold the image.
+      expect(page.evaluate_script(<<~JS)).to eq(1)
+        tinymce.get('templates').getBody().querySelector('template').content.querySelectorAll('img.mce-pagebreak').length
+      JS
+    end
+
+    # The fullpage plugin keeps the head of the page out of the document, and adds it to each read.
+    it 'gives back the separator in the head that the fullpage plugin keeps' do
+      set_up_text_editors(%w[full_page], <<~JS)
+        cama_get_tinymce_settings({selector: selector, plugins: 'pagebreak fullpage'})
+      JS
+      head = "<head><title>first #{separator} second</title><script>#{paging_text}</script></head>"
+
+      answer = through_the_text_editor("<html>#{head}<body><p>first page</p></body></html>",
+                                       editor: "tinymce.get('full_page')")
+
+      expect(answer).to include(head)
+    end
+
+    # The protect setting keeps a part of the content as it is, in an escaped comment. The separator
+    # in that part also stays as it was written.
+    it 'gives back the separator in a part that the protect setting keeps' do
+      set_up_text_editors(%w[protected], <<~JS)
+        cama_get_tinymce_settings({selector: selector, protect: [/<%[\\s\\S]*?%>/g]})
+      JS
+      kept = "<p>first page <% pages = '#{separator}' %></p>"
+
+      answer = through_the_text_editor(kept, editor: "tinymce.get('protected')")
+
+      expect(answer.delete("\n")).to eq(kept)
+    end
+
+    # A page can give a text editor its own separator. A script then gets that separator back.
+    it "gives back the page's own separator in a script's text" do
+      own_separator = '<!-- next page -->'
+      set_up_text_editors(%w[own_separator], <<~JS)
+        cama_get_tinymce_settings({selector: selector, pagebreak_separator: '#{own_separator}'})
+      JS
+
+      answer = through_the_text_editor(content.gsub(separator, own_separator), editor: "tinymce.get('own_separator')")
+
+      expect(answer.delete("\n")).to eq(returned.gsub(separator, own_separator))
+    end
+
+    # An editor without the page break plugin makes no page break. The separator stays a comment of
+    # the content, and the text of a script stays as it is.
+    it 'leaves the separators as they are in an editor without the page break plugin' do
+      set_up_text_editors(%w[no_page_breaks], '{selector: selector}')
+
+      answer = through_the_text_editor(content, editor: "tinymce.get('no_page_breaks')")
+
+      expect(answer.delete("\n")).to eq(content)
+    end
+  end
+
   # The plugin adds the script element to the list of valid elements of each text editor. The source
   # of the list does not matter. It can be the default of core, or a list that the page gives to the
   # settings of core or adds later. It can also be in settings that are not from core.
