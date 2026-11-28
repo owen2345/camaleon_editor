@@ -1449,6 +1449,10 @@ jQuery(function(){
             // fullpage plugin keeps the head of the page as markup, and adds it to each read. Each
             // token in that part becomes the separator as it was written. The listener is added at
             // PreInit, after the plugins add their listeners, so that it gets the read last.
+            // Limit: the Document properties dialog of the fullpage plugin shows the head that the
+            // plugin keeps. A separator in the title or in a meta value shows as a token there, but
+            // the read still gives back the separator as it was written. The text editors of
+            // Camaleon do not load the fullpage plugin.
             editor.on("PreInit", function(){
                 editor.on("GetContent", function(e){
                     if(spellings.length && typeof e.content === "string") e.content = as_written(e.content);
