@@ -253,10 +253,11 @@ RSpec.describe 'scripts in the text editor', :js do
   end
 
   # The page break plugin of the editor works on the content as a string. It replaces each page break
-  # separator with the markup of its placeholder image, also in the text of a script. The grid editor
-  # plugin puts the separator back into the text of each script. A page break outside a script still
-  # shows as the placeholder image in the editor, and comes back as the separator.
-  context 'with a page break separator in the text of a script' do
+  # separator with the markup of its placeholder image, also in the text of a script or a text area
+  # and in an attribute value. The grid editor plugin hides each separator from the plugin, and makes
+  # the placeholder image only where the separator is a page break. Each other separator comes back
+  # as it was written.
+  context 'with page break separators' do
     def separator
       '<!-- pagebreak -->'
     end
@@ -275,13 +276,20 @@ RSpec.describe 'scripts in the text editor', :js do
       "<p>first page</p><p>#{separator}</p><p>second page</p><script>#{paging_text}</script>"
     end
 
+    # The markup of the placeholder image that the page break plugin writes.
+    def placeholder
+      page.evaluate_script(<<~JS)
+        '<img src="' + tinymce.Env.transparentSrc + '" class="mce-pagebreak" data-mce-resize="false" data-mce-placeholder />'
+      JS
+    end
+
     # The number of placeholder images in the document of the post's text editor, and the text of its
     # script.
     def page_breaks_and_script_text
       page.evaluate_script(<<~JS)
         (function(){
-          var body = #{POST_TEXT_EDITOR}.getBody();
-          return [body.querySelectorAll('img.mce-pagebreak').length, body.querySelector('script').text];
+          var body = #{POST_TEXT_EDITOR}.getBody(), script = body.querySelector('script');
+          return [body.querySelectorAll('img.mce-pagebreak').length, script && script.text];
         })()
       JS
     end
@@ -289,6 +297,13 @@ RSpec.describe 'scripts in the text editor', :js do
     it "gives back the separator in a script's text, and a page break outside the script" do
       expect(through_the_text_editor(content).delete("\n")).to eq(returned)
       expect(page_breaks_and_script_text).to eq([1, paging_text])
+    end
+
+    it 'makes a page break in the text of a paragraph' do
+      in_a_paragraph = "<p>first page#{separator}second page</p>"
+
+      expect(through_the_text_editor(in_a_paragraph).delete("\n")).to eq(in_a_paragraph)
+      expect(page_breaks_and_script_text).to eq([1, nil])
     end
 
     # An undo writes the markup of an undo level back into the editor. The page break plugin replaces
@@ -319,6 +334,41 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(page_breaks_and_script_text).to eq([1, paging_text])
     end
 
+    # The plugin finds the separator in each letter case. A script keeps the separator as it was
+    # written. A page break comes back as the settings spell the separator.
+    it "keeps the letter case of the separator in a script's text" do
+      written = content.sub(separator, '<!-- PageBreak -->').sub(paging_text, paging_text.upcase)
+
+      expect(through_the_text_editor(written).delete("\n")).to eq(returned.sub(paging_text, paging_text.upcase))
+      expect(page_breaks_and_script_text).to eq([1, paging_text.upcase])
+    end
+
+    # The text of a script can hold the markup of the placeholder image itself. That text is not a
+    # page break, and it stays as it is.
+    it "keeps the markup of the placeholder image in a script's text" do
+      kept = "<p>first page</p><script>var image = '#{placeholder}';</script>"
+
+      expect(through_the_text_editor(kept).delete("\n")).to eq(kept)
+      expect(page_breaks_and_script_text.first).to eq(0)
+    end
+
+    # In an attribute value, the quotes of the placeholder markup ended the value and made more
+    # attributes. In a text area, the markup stayed text.
+    it 'gives back the separator in an attribute value and in the text of a text area' do
+      markup = "<p title=\"before #{separator} after\">first page</p><textarea>#{separator}</textarea>"
+      kept = page.evaluate_script(<<~JS, markup)
+        (function(markup){
+          var editor = #{POST_TEXT_EDITOR};
+          editor.setContent(markup);
+          var body = editor.getBody();
+          return [body.querySelector('p').getAttribute('title'), body.querySelector('p').attributes.length,
+                  body.querySelector('textarea').value, body.querySelectorAll('img').length];
+        })(arguments[0])
+      JS
+
+      expect(kept).to eq(["before #{separator} after", 1, separator, 0])
+    end
+
     # A page can give a text editor its own separator. A script then gets that separator back.
     it "gives back the page's own separator in a script's text" do
       own_separator = '<!-- next page -->'
@@ -331,16 +381,14 @@ RSpec.describe 'scripts in the text editor', :js do
       expect(answer.delete("\n")).to eq(returned.gsub(separator, own_separator))
     end
 
-    # An editor without the page break plugin puts no placeholder markup into a script. The text of a
-    # script stays as it is, also when it holds that markup.
-    it "leaves a script's text as it is in an editor without the page break plugin" do
+    # An editor without the page break plugin makes no page break. The separator stays a comment of
+    # the content, and the text of a script stays as it is.
+    it 'leaves the separators as they are in an editor without the page break plugin' do
       set_up_text_editors(%w[no_page_breaks], '{selector: selector}')
-      placeholder = page.evaluate_script(<<~JS)
-        '<img src="' + tinymce.Env.transparentSrc + '" class="mce-pagebreak" data-mce-resize="false" data-mce-placeholder />'
-      JS
-      kept = "<p>first page</p><script>var image = '#{placeholder}';</script>"
 
-      expect(through_the_text_editor(kept, editor: "tinymce.get('no_page_breaks')").delete("\n")).to eq(kept)
+      answer = through_the_text_editor(content, editor: "tinymce.get('no_page_breaks')")
+
+      expect(answer.delete("\n")).to eq(content)
     end
   end
 

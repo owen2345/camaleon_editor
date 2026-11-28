@@ -1407,24 +1407,77 @@ jQuery(function(){
         }
 
         // Before the editor reads content, its page break plugin replaces each page break separator
-        // ("<!-- pagebreak -->") with the markup of a placeholder image. The plugin works on the
-        // content as a string, so it also replaces a separator in the text of a script. There, the
-        // markup stays text, and the editor gives it back in the script. For this reason, the
-        // separator goes back into the text of each script after each write into the editor, also
-        // after an undo. The markup is the markup that the plugin writes (TinyMCE 4.7.4 to 4.9). The
-        // plugin finds the separator in each letter case: a script then gets it as the settings
-        // spell it.
+        // ("<!-- pagebreak -->", in each letter case) with the markup of a placeholder image. The
+        // plugin works on the content as a string. It also replaces a separator in the text of a
+        // script or a text area, and in an attribute value. There, the markup does not become an
+        // image: it stays text, and the editor gives it back. In an attribute value, the quotes of
+        // the markup also end the value too early.
+        // For this reason, the listener replaces each separator before the plugin does, with a token
+        // that holds no markup characters. It keeps each separator as it was written. The plugin then
+        // finds no separator, and each parse keeps the token where it is. After the write, each token
+        // goes back into the document:
+        // - In the text of an element that holds raw text (for example, a script), in a comment and
+        //   in an attribute value, the token becomes the separator as it was written.
+        // - In other text, the token becomes the placeholder image, as the plugin makes it. The
+        //   markup is the markup that the plugin writes (TinyMCE 4.7.4 to 4.9).
+        // The listener of the plugin runs after this one, because the editor gets the hooks before it
+        // loads its plugins. Each write with events gets the tokens, also the write of an undo level.
+        // A write without events changes nothing, and the plugin does nothing then too.
         var PAGE_BREAK = '<img src="' + tinymce.Env.transparentSrc + '" class="mce-pagebreak" data-mce-resize="false" data-mce-placeholder />';
-        var script_keeps_page_breaks = function(editor){
-            editor.on("SetContent", function(){
-                if(!editor.plugins.pagebreak) return;
+        var page_break_separators_kept = function(editor){
+            // A token is the prefix of the editor and the position of its separator in the list. A
+            // write can make a second write before its own SetContent: an insert writes a caret
+            // marker first. The SetContent of that second write comes before the content is in the
+            // document. For this reason, each SetContent puts back the tokens that it finds, and the
+            // list stays until the SetContent of the first write. "open" counts the writes that have
+            // no SetContent yet.
+            var prefix = "mcepagebreak" + Math.random().toString(36).slice(2) + "n", spellings = [], open = 0;
+            var tokens = new RegExp(prefix + "(\\d+)x", "g");
+            editor.on("BeforeSetContent", function(e){
+                open++;
+                if(!editor.plugins.pagebreak || typeof e.content !== "string") return;
                 var separator = editor.getParam("pagebreak_separator", "<!-- pagebreak -->");
-                var scripts = editor.getBody().getElementsByTagName("script");
-                for(var i = 0; i < scripts.length; i++){
-                    for(var node = scripts[i].firstChild; node; node = node.nextSibling){
-                        if(node.nodeType === 3 && node.data.indexOf(PAGE_BREAK) !== -1)
-                            node.data = node.data.split(PAGE_BREAK).join(separator);
+                var found = new RegExp(separator.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&"), "gi");
+                e.content = e.content.replace(found, function(spelling){
+                    spellings.push(spelling);
+                    return prefix + (spellings.length - 1) + "x";
+                });
+            });
+            editor.on("SetContent", function(){
+                open = Math.max(open - 1, 0);
+                if(!spellings.length) return;
+                var written = spellings;
+                if(!open) spellings = [];
+                var as_written = function(text){
+                    return text.replace(tokens, function(token, n){ return written[n]; });
+                };
+                var raw_text = editor.schema.getSpecialElements(), images = [], node, i;
+                // elements, texts and comments
+                var walker = editor.getDoc().createTreeWalker(editor.getBody(), 1 | 4 | 128, null, false);
+                while((node = walker.nextNode())){
+                    if(node.nodeType === 1){
+                        for(i = 0; i < node.attributes.length; i++){
+                            if(node.attributes[i].value.indexOf(prefix) !== -1)
+                                node.setAttribute(node.attributes[i].name, as_written(node.attributes[i].value));
+                        }
                     }
+                    else if(node.data.indexOf(prefix) === -1) continue;
+                    else if(node.nodeType === 8 || raw_text.hasOwnProperty(node.parentNode.nodeName.toLowerCase()))
+                        node.data = as_written(node.data);
+                    else images.push(node);
+                }
+                if(!images.length) return;
+                // The image as the editor makes it from the markup of the plugin.
+                var image = new tinymce.html.Serializer({validate: editor.settings.validate}, editor.schema)
+                    .serialize(editor.parser.parse(PAGE_BREAK, {forced_root_block: false, isRootContent: true}));
+                for(i = 0; i < images.length; i++){
+                    // The split gives the texts around each token, and the number of each token.
+                    var parts = images[i].data.split(tokens), pieces = editor.getDoc().createDocumentFragment();
+                    for(var p = 0; p < parts.length; p++){
+                        if(p % 2) pieces.appendChild(editor.dom.createFragment(image));
+                        else if(parts[p]) pieces.appendChild(editor.getDoc().createTextNode(parts[p]));
+                    }
+                    images[i].parentNode.replaceChild(pieces, images[i]);
                 }
             });
         }
@@ -1500,7 +1553,7 @@ jQuery(function(){
             script_takes_no_paragraph(added.editor);
             script_ends_as_in_a_browser(added.editor);
             script_text_alone(added.editor);
-            script_keeps_page_breaks(added.editor);
+            page_break_separators_kept(added.editor);
             undo_levels_without_marks(added.editor);
             content_at_unload(added.editor);
             grid_takes_text_editor(added.editor);
