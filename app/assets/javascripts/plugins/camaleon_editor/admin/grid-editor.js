@@ -1481,7 +1481,7 @@ jQuery(function(){
                         // The separator is escaped there too, so that no "-->" ends the comment.
                         else if(node.nodeType === 8 && node.data.indexOf("mce:protected ") === 0)
                             node.data = as_written(node.data, escape);
-                        else if(node.nodeType === 8 ||raw_text.hasOwnProperty(node.parentNode.nodeName.toLowerCase()))
+                        else if(node.nodeType === 8 || raw_text.hasOwnProperty(node.parentNode.nodeName.toLowerCase()))
                             node.data = as_written(node.data);
                         else images.push(node);
                     }
