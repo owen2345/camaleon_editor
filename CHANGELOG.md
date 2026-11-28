@@ -4,7 +4,7 @@
 
 ### Fix: a script keeps the page break separator in its text
 
-A script that holds the text `<!-- pagebreak -->` keeps that text when its content goes through a text editor. A page break outside a script still works as before. [#29](https://github.com/owen2345/camaleon_editor/pull/29).
+A script that holds the text `<!-- pagebreak -->` keeps that text when the post goes through a text editor. A page break outside a script still works as before. [#29](https://github.com/owen2345/camaleon_editor/pull/29).
 
 ### Fix: an undo or a redo keeps the text of a script as it was
 
