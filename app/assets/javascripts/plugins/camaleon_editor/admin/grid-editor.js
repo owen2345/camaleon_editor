@@ -1448,7 +1448,7 @@ jQuery(function(){
             // A plugin can keep a part of the content out of the document. For example, the
             // fullpage plugin keeps the head of the page as markup, and adds it to each read. Each
             // token in that part becomes the separator as it was written. The listener is added at
-            // PreInit, after the plugins add their listeners, so that it gets the read last.
+            // PreInit, so that it gets the read after the listeners of the plugins.
             // Limit: the Document properties dialog of the fullpage plugin shows the head that the
             // plugin keeps. A separator in the title or in a meta value shows as a token there, but
             // the read still gives back the separator as it was written. The text editors of
