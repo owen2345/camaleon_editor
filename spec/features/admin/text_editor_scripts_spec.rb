@@ -252,6 +252,74 @@ RSpec.describe 'scripts in the text editor', :js do
     expect(script_types_in_the_text_editor).to eq(['mce-no/type'])
   end
 
+  # The page break plugin of the editor works on the content as a string. It replaces each page break
+  # separator with the markup of its placeholder image, also in the text of a script. The grid editor
+  # plugin puts the separator back into the text of each script. A page break outside a script still
+  # shows as the placeholder image in the editor, and comes back as the separator.
+  context 'with a page break separator in the text of a script' do
+    def separator
+      '<!-- pagebreak -->'
+    end
+
+    def paging_text
+      "var pages = text.split('#{separator}');"
+    end
+
+    # A page break between two paragraphs, and a script whose text holds the separator. The editor
+    # returns the page break in a paragraph.
+    def content
+      "<p>first page</p>#{separator}<p>second page</p><script>#{paging_text}</script>"
+    end
+
+    def returned
+      "<p>first page</p><p>#{separator}</p><p>second page</p><script>#{paging_text}</script>"
+    end
+
+    # The number of placeholder images in the document of the post's text editor, and the text of its
+    # script.
+    def page_breaks_and_script_text
+      page.evaluate_script(<<~JS)
+        (function(){
+          var body = #{POST_TEXT_EDITOR}.getBody();
+          return [body.querySelectorAll('img.mce-pagebreak').length, body.querySelector('script').text];
+        })()
+      JS
+    end
+
+    it "gives back the separator in a script's text, and a page break outside the script" do
+      expect(through_the_text_editor(content).delete("\n")).to eq(returned)
+      expect(page_breaks_and_script_text).to eq([1, paging_text])
+    end
+
+    # An undo writes the markup of an undo level back into the editor. The page break plugin replaces
+    # the separator in that markup too.
+    it "gives back the separator in a script's text after an undo" do
+      undone = page.evaluate_script(<<~JS, content)
+        (function(markup){
+          var editor = #{POST_TEXT_EDITOR};
+          editor.setContent(markup);
+          editor.undoManager.clear();
+          editor.undoManager.add();
+          editor.selection.select(editor.getBody().firstChild, true);
+          editor.selection.collapse(false);
+          editor.insertContent(' and edited');
+          editor.undoManager.undo();
+          return editor.getContent();
+        })(arguments[0])
+      JS
+
+      expect(undone.delete("\n")).to eq(returned)
+      expect(page_breaks_and_script_text).to eq([1, paging_text])
+    end
+
+    it 'gives back the separator in the text of a script put in at the caret' do
+      answer = through_the_text_editor('<p>written in the text editor</p>', inserted: content)
+
+      expect(answer.delete("\n")).to include("<script>#{paging_text}</script>", "<p>#{separator}</p>")
+      expect(page_breaks_and_script_text).to eq([1, paging_text])
+    end
+  end
+
   # The plugin adds the script element to the list of valid elements of each text editor. The source
   # of the list does not matter. It can be the default of core, or a list that the page gives to the
   # settings of core or adds later. It can also be in settings that are not from core.

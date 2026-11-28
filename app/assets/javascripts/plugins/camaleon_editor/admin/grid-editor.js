@@ -1406,6 +1406,29 @@ jQuery(function(){
             });
         }
 
+        // Before the editor reads content, its page break plugin replaces each page break separator
+        // ("<!-- pagebreak -->") with the markup of a placeholder image. The plugin works on the
+        // content as a string, so it also replaces a separator in the text of a script. There, the
+        // markup stays text, and the editor gives it back in the script. For this reason, the
+        // separator goes back into the text of each script after each write into the editor, also
+        // after an undo. The markup is the markup that the plugin writes (TinyMCE 4.7.4 to 4.9). The
+        // plugin finds the separator in each letter case: a script then gets it as the settings
+        // spell it.
+        var PAGE_BREAK = '<img src="' + tinymce.Env.transparentSrc + '" class="mce-pagebreak" data-mce-resize="false" data-mce-placeholder />';
+        var script_keeps_page_breaks = function(editor){
+            editor.on("SetContent", function(){
+                if(!editor.plugins.pagebreak) return;
+                var separator = editor.getParam("pagebreak_separator", "<!-- pagebreak -->");
+                var scripts = editor.getBody().getElementsByTagName("script");
+                for(var i = 0; i < scripts.length; i++){
+                    for(var node = scripts[i].firstChild; node; node = node.nextSibling){
+                        if(node.nodeType === 3 && node.data.indexOf(PAGE_BREAK) !== -1)
+                            node.data = node.data.split(PAGE_BREAK).join(separator);
+                    }
+                }
+            });
+        }
+
         // An undo level holds the markup of the editor's document, not a read of its content. When
         // the editor writes a level back, it reads the content of a script as text, and the markup
         // of the marks becomes part of the script text. For this reason, the listener removes the
@@ -1466,7 +1489,7 @@ jQuery(function(){
             });
         }
 
-        // Each text editor of the page gets the eight hooks when TinyMCE adds it, before it reads its
+        // Each text editor of the page gets the nine hooks when TinyMCE adds it, before it reads its
         // settings. The hooks of core do not reach each editor. The settings hook runs when core
         // makes its settings, and the editor hooks run from the setup of those settings. A page can
         // add its own lists to the settings of core, pass its own setup, or set up an editor
@@ -1477,6 +1500,7 @@ jQuery(function(){
             script_takes_no_paragraph(added.editor);
             script_ends_as_in_a_browser(added.editor);
             script_text_alone(added.editor);
+            script_keeps_page_breaks(added.editor);
             undo_levels_without_marks(added.editor);
             content_at_unload(added.editor);
             grid_takes_text_editor(added.editor);
