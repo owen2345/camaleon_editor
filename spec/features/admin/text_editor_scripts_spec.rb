@@ -455,6 +455,10 @@ RSpec.describe 'scripts in the text editor', :js do
       answer = through_the_text_editor(in_a_template, editor: "tinymce.get('templates')")
 
       expect(answer.delete("\n")).to eq("<p>#{in_a_template}</p>")
+      # The read alone can give back the separator from a token. The template must hold the image.
+      expect(page.evaluate_script(<<~JS)).to eq(1)
+        tinymce.get('templates').getBody().querySelector('template').content.querySelectorAll('img.mce-pagebreak').length
+      JS
     end
 
     # The fullpage plugin keeps the head of the page out of the document, and adds it to each read.
